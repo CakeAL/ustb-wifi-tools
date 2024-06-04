@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use ustb_wifi_tools::command::*;
+use ustb_wifi_tools::commands::*;
 
 fn main() {
     tauri::Builder::default()

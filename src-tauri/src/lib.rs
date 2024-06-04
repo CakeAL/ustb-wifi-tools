@@ -1,3 +1,4 @@
 mod requests;
 mod entities;
-pub mod command;
+mod utils;
+pub mod commands;
