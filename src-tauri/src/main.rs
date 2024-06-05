@@ -5,7 +5,7 @@ use ustb_wifi_tools::commands::*;
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![load_user_flow])
+        .invoke_handler(tauri::generate_handler![load_user_flow, get_cookie])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

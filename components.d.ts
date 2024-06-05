@@ -9,6 +9,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     Greet: typeof import('./src/components/Greet.vue')['default']
     Menu: typeof import('./src/components/Menu.vue')['default']
+    NButton: typeof import('naive-ui')['NButton']
     NMenu: typeof import('naive-ui')['NMenu']
     NResult: typeof import('naive-ui')['NResult']
     NSplit: typeof import('naive-ui')['NSplit']

@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import { invoke } from "@tauri-apps/api";
 import { ref, onMounted } from "vue";
 
 const login_url = ref("/login");
-const login_html = ref("");
+// const login_html = ref("");
 
 onMounted(() => {
     // load_login_page();
@@ -21,11 +22,19 @@ onMounted(() => {
 //         console.error(e);
 //     }
 // };
+
+const get_cookies = async() => {
+  invoke("get_cookie").catch((err) => console.log(err));
+}
+
 </script>
 
 <template>
   <div class="container">
     <h1>Login</h1>
+    <n-button strong secondary type="primary" @click="get_cookies">
+      Click Me To Set Cookies
+    </n-button>
     <!-- <div v-html="login_html"></div> -->
     <iframe  name = "iframeMap" id="iframeMapViewComponent"  v-bind:src="login_url"
                width="100%" height="100%"
