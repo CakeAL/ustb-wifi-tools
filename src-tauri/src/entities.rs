@@ -1,3 +1,5 @@
+use std::sync::Mutex;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -17,3 +19,6 @@ pub struct GetUserFlowFailed {
     pub result: i32,
     pub msg: String,
 }
+
+#[derive(Debug)]
+pub struct JsessionId(pub Mutex<Option<String>>);

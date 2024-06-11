@@ -9,7 +9,7 @@
 
 ## 开发
 
-大概是 macOS，Windows 和 Linux 都能运行的。 \
+目前只有Windows 7以上支持，需要电脑安装WebView2。 \
 首先确保你已经安装了[`Node.js`](https://nodejs.cn/download/)，[`pnpm`](https://www.pnpm.cn/)以及[`Rust环境`](https://www.rust-lang.org/zh-CN/tools/install)
 
 ```bash

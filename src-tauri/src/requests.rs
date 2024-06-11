@@ -2,7 +2,8 @@ use anyhow::{anyhow, Result};
 use regex::Regex;
 use reqwest::{header::SET_COOKIE, Client};
 use serde_json::Value;
-//  Ciallo～(∠・ω< )⌒☆
+
+// Ciallo～(∠・ω< )⌒☆
 pub async fn get_load_user_flow(account: &str) -> Result<Value> {
     let client = Client::new();
     let url = format!(
@@ -17,6 +18,8 @@ pub async fn get_load_user_flow(account: &str) -> Result<Value> {
     Ok(serde_json::from_str(json_str.unwrap())?)
 }
 
+// 该函数可能用不到了
+#[allow(dead_code)]
 pub async fn get_jsessionid(account: &str, password: &str) -> Result<String> {
     let client = Client::new();
     let check_url = "http://202.204.60.7:8080/nav_login";
@@ -57,24 +60,8 @@ pub async fn get_jsessionid(account: &str, password: &str) -> Result<String> {
 }
 
 pub async fn get_refresh_account(
-    account: &str,
-    password: &str,
     session_id: &str,
-) -> Result<String> {
-    let url = "http://202.204.60.7:8080/LoginAction.action";
-    let params = [
-        ("account", account),
-        ("password", password),
-        // ("code", ""),
-        // ("check_code", check_code),
-        // ("Submit", "登 陆"),
-    ];
-    let client = Client::new();
-    let _ = client.post(url)
-    .header("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36")
-    .header("Cookie", format!("JSESSIONID={}", session_id))
-    .form(&params).send().await?;
-
+) -> Result<Option<String>> {
     let url = "http://202.204.60.7:8080/refreshaccount";
     let client = Client::new();
     let response = client
@@ -88,7 +75,10 @@ pub async fn get_refresh_account(
         .text()
         .await?;
     // println!("{response}");
-    Ok(response)
+    if response.contains("<html>") {
+        return Ok(None); // Cookie无效，没有获取到account信息
+    }
+    Ok(Some(response))
 }
 
 #[cfg(test)]
@@ -125,10 +115,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_refresh_account() {
-        let account = "stu_id".to_string();
-        let password = "md5_password".to_string();
         let session_id = "session_id".to_string();
-        let res = get_refresh_account(&account, &password, &session_id).await;
+        let res = get_refresh_account(&session_id).await;
         println!("{:?}", res);
     }
 }
