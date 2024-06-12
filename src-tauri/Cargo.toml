@@ -18,6 +18,8 @@ reqwest = "0.12.4"
 tokio = { version = "1.37.0", features = ["full"] }
 anyhow = "1.0.86"
 regex = "1.10.4"
+scraper = "0.19.0"
+# 下面这两个不要更新版本
 windows = "0.39.0"
 webview2-com = "0.19.1"
 
