@@ -20,11 +20,11 @@ pub async fn load_user_flow(account: String) -> Result<String, String> {
 pub async fn get_cookie(
     app_state: tauri::State<'_, JsessionId>,
     app_handle: tauri::AppHandle,
-) -> Result<bool, String> {
+) -> Result<(), String> {
     if cfg!(target_os = "windows") {
         let windows = app_handle.windows();
         #[allow(unused_variables)]
-        let url = "https://tauri.localhost/";
+        let url = "http://tauri.localhost";
         #[cfg(debug_assertions)] // 如果是 debug 模式，把 url 替换为debug的
         let url = "http://localhost:1420/";
         let res = get_webview2_cookie(windows.get("main").unwrap(), url).await;
@@ -36,7 +36,7 @@ pub async fn get_cookie(
             Err(_) => return Err("can't get cookies".to_string()),
         }
     }
-    Ok(true)
+    Ok(())
 }
 
 #[tauri::command(async)]

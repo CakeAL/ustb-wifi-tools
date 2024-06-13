@@ -39,10 +39,10 @@ export default defineConfig(async () => ({
       ignored: ["**/src-tauri/**"],
     },
     proxy: {
-      '/login': {
+      '/nav_login': {
         target: 'http://202.204.60.7:8080/nav_login',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/login/, '')
+        rewrite: (path) => path.replace(/^\/nav_login/, '')
       },
       '/LoginAction.action': {
         target: 'http://202.204.60.7:8080/LoginAction.action',

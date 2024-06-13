@@ -11,7 +11,7 @@ edition = "2021"
 tauri-build = { version = "1", features = [] }
 
 [dependencies]
-tauri = { version = "1.6.7", features = ["shell-open"] }
+tauri = { version = "1.6.7", features = [ "http-all", "shell-open"] }
 serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.117"
 reqwest = "0.12.4"
@@ -19,6 +19,7 @@ tokio = { version = "1.37.0", features = ["full"] }
 anyhow = "1.0.86"
 regex = "1.10.4"
 scraper = "0.19.0"
+chrono = "0.4.38"
 # 下面这两个不要更新版本
 windows = "0.39.0"
 webview2-com = "0.19.1"

@@ -9,7 +9,7 @@
 
 ## 开发
 
-目前只有Windows 7以上支持，需要电脑安装WebView2。 \
+目前只有 Windows 7 以上支持，需要电脑安装 WebView2（Windows 10 和 11 默认安装）。 \
 首先确保你已经安装了[`Node.js`](https://nodejs.cn/download/)，[`pnpm`](https://www.pnpm.cn/)以及[`Rust环境`](https://www.rust-lang.org/zh-CN/tools/install)
 
 ```bash

@@ -3,7 +3,8 @@ import { invoke } from "@tauri-apps/api";
 import { ref, onMounted } from "vue";
 import { useMessage } from "naive-ui";
 
-const login_url = ref("/login");
+// SameSite未解决
+const login_url = ref("/nav_login");
 // const login_html = ref("");
 const pop_message = useMessage();
 
@@ -13,12 +14,14 @@ onMounted(() => {
 
 // const load_login_page = async () => {
 //     try {
-//         const response = await fetch(login_url.value);
-//         if (!response.ok) {
-//             throw new Error(`HTTP error! status: ${response.status}`);
-//         }
-//         login_html.value = await response.text();
-//         // console.log(login_html.value);
+//         http.fetch("http://202.204.60.7:8080/nav_login", {
+//           method: "GET",
+//           headers: {
+//             ResponseType: "text",
+//           },
+//         }).then((response) => {
+//           // console.log(response);
+//         });
 //     } catch (e) {
 //         login_html.value = "获取登陆页面失败，可能是没连接校园网？"
 //         console.error(e);
@@ -26,8 +29,7 @@ onMounted(() => {
 // };
 
 const get_cookies = async () => {
-  const res = invoke("get_cookie").catch((err) => pop_message.error(err));
-  console.log(res);
+  invoke("get_cookie").catch((err) => pop_message.error(err));
 };
 </script>
 

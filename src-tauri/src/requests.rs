@@ -1,12 +1,13 @@
 use std::f64;
 
 use anyhow::{anyhow, Result};
+use chrono::NaiveDateTime;
 use regex::Regex;
 use reqwest::{header::SET_COOKIE, Client};
 use scraper::{Html, Selector};
 use serde_json::Value;
 
-use crate::entities::{MonthPayInfo, MonthlyData};
+use crate::entities::{EveryLoginData, MonthPayInfo, MonthlyData, UserLoginLog};
 
 // Ciallo～(∠・ω< )⌒☆
 pub async fn get_load_user_flow(account: &str) -> Result<Value> {
@@ -143,6 +144,132 @@ pub async fn get_month_pay(session_id: &str, year: u16) -> Result<Option<Value>>
     })))
 }
 
+// 已废弃->这里的year_month应该是类似于 202203 或者 202312 这样的格式
+// start_date 2024-05-01 end_date 2024-05-31
+// 校园网的API并不能返回全部数据，有条数限制。
+pub async fn get_user_login_log(
+    session_id: &str,
+    start_date: &str,
+    end_date: &str,
+) -> Result<Option<Value>> {
+    let url = "http://202.204.60.7:8080/UserLoginLogAction.action";
+    // let month = format!("CHECKER.TBLUSERLOGIN{}", year_month); // 按月份已经废了，现在只能按照开始结束日期查
+    let response = Client::new()
+        .post(url)
+        .header("Cookie", format!("JSESSIONID={}", session_id))
+        .form(&[
+            ("type", "4"),
+            ("month", "CHECKER.TBLUSERLOGIN202304"),
+            ("startDate", start_date),
+            ("endDate", end_date),
+        ])
+        .send()
+        .await?
+        .text()
+        .await?;
+    // println!("{response}");
+    if response.contains("nav_login") {
+        return Ok(None); // Cookie无效，没有获取到account信息
+    }
+    let parsed_html = Html::parse_document(&response);
+    let redtext_selector = Selector::parse(".redtext").unwrap();
+    let redtexts = parsed_html
+        .select(&redtext_selector)
+        .flat_map(|ele| ele.text().collect::<Vec<&str>>())
+        .collect::<Vec<&str>>();
+    // println!("{:?}", redtexts);
+    // ["18170.41", "181351.69", "33287.1", "39530.03", "181351.69", "0.0", "85922"]
+    let every_login_data_selector = Selector::parse(".table4 > tbody > tr > td").unwrap();
+    let every_login_data_text = parsed_html
+        .select(&every_login_data_selector)
+        .flat_map(|ele| ele.text().collect::<Vec<&str>>());
+    let mut data_index = 0;
+    let mut every_login_data = EveryLoginData {
+        online_time: 0,
+        offline_time: 0,
+        used_duration: 0,
+        used_flow: 0.0,
+        cost: 0.0,
+        ipv4_up: 0.0,
+        ipv4_down: 0.0,
+        ipv6_up: 0.0,
+        ipv6_down: 0.0,
+        ipv4_addr: String::new(),
+        ipv6_addr: String::new(),
+    };
+    let mut every_login_datas = vec![];
+    //0 "2023-04-01 00:00:04"
+    //1 "2023-04-01 00:12:53"
+    //2 "\n\t\t\t\t\t\t\t13\n\t\t\t\t\t\t"
+    //3 "\n\t\t\t\t\t\t\t28.997\n\t\t\t\t\t\t"
+    //4 "\n\t\t\t\t\t\t\t28.997\n\t\t\t\t\t\t" // hide
+    //5 "\n\t\t\t\t\t\t\t0.00\n\t\t\t\t\t\t"
+    //6 "\n\t\t\t\t\t\t\t2.315\n\t\t\t\t\t\t"
+    //7 "\n\t\t\t\t\t\t\t28.997\n\t\t\t\t\t\t"
+    //8 "\n\t\t\t\t\t\t\t1.800\n\t\t\t\t\t\t"
+    //9 "\n\t\t\t\t\t\t\t23.113\n\t\t\t\t\t\t"
+    //10"ipv4"
+    //11"ipv6"
+    for data in every_login_data_text {
+        // println!("{:?}", data);
+        match data_index {
+            0 => {
+                every_login_data.online_time =
+                    NaiveDateTime::parse_from_str(data, "%Y-%m-%d %H:%M:%S")?
+                        .and_utc()
+                        .timestamp()
+            }
+            1 => {
+                every_login_data.offline_time =
+                    NaiveDateTime::parse_from_str(data, "%Y-%m-%d %H:%M:%S")?
+                        .and_utc()
+                        .timestamp()
+            }
+            2 => every_login_data.used_duration = data.trim().parse()?,
+            3 => every_login_data.used_flow = data.trim().parse()?,
+            4 => (),
+            5 => every_login_data.cost = data.trim().parse()?,
+            6 => every_login_data.ipv4_up = data.trim().parse()?,
+            7 => every_login_data.ipv4_down = data.trim().parse()?,
+            8 => every_login_data.ipv6_up = data.trim().parse()?,
+            9 => every_login_data.ipv6_down = data.trim().parse()?,
+            10 => every_login_data.ipv4_addr = data.to_string(),
+            11 => {
+                // 如果 11 的字符串内容包含'-'，说明已经到下一行了，该行没有ipv6地址
+                if data.contains("-") {
+                    every_login_data.ipv6_addr = "".to_string();
+                    every_login_datas.push(every_login_data.clone());
+                    // 别把这个data数据直接丢了，得把这一行的数据存进去
+                    every_login_data.online_time =
+                        NaiveDateTime::parse_from_str(data, "%Y-%m-%d %H:%M:%S")?
+                            .and_utc()
+                            .timestamp();
+                    data_index = 1; // 所以index直接变成1了
+                    continue; // 开始新一行，从1开始
+                } else {
+                    every_login_data.ipv6_addr = data.to_string();
+                    data_index = 0; // 开始新一行
+                    every_login_datas.push(every_login_data.clone());
+                    continue;
+                }
+            }
+            _ => (),
+        }
+        data_index += 1;
+    }
+    // dbg!(every_login_datas);
+    Ok(Some(serde_json::json!(UserLoginLog {
+        ipv4_up: redtexts.get(0).unwrap().trim().parse()?,
+        ipv4_down: redtexts.get(1).unwrap().trim().parse()?,
+        ipv6_up: redtexts.get(2).unwrap().trim().parse()?,
+        ipv6_down: redtexts.get(3).unwrap().trim().parse()?,
+        used_flow: redtexts.get(4).unwrap().trim().parse()?,
+        cost: redtexts.get(5).unwrap().trim().parse()?,
+        used_duration: redtexts.get(6).unwrap().trim().parse()?,
+        every_login_data: every_login_datas,
+    })))
+}
+
 #[cfg(test)]
 mod tests {
     // use crate::entities::{GetUserFlowFailed, UserFlow};
@@ -182,6 +309,16 @@ mod tests {
         let session_id = "session_id";
         let year = 2024u16;
         let res = get_month_pay(session_id, year).await;
-        dbg!(res);
+        dbg!(res.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_get_user_login_log() {
+        let session_id = "session_id";
+        // let year_month = "202405";
+        let start_date = "2024-05-01";
+        let end_date = "2024-05-31";
+        let res = get_user_login_log(session_id, start_date, end_date).await;
+        dbg!(res.unwrap());
     }
 }
