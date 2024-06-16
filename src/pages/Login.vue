@@ -31,11 +31,18 @@ onMounted(() => {
 const get_cookies = async () => {
   invoke("get_cookie").catch((err) => pop_message.error(err));
 };
+
+const open_nav_login = async() => {
+  invoke("open_nav_login").catch((err) => pop_message.error(err));
+}
 </script>
 
 <template>
   <div class="container">
     <h1>Login</h1>
+    <n-button strong secondary type="primary" @click="open_nav_login">
+      Click Me To Open nav_login
+    </n-button>
     <n-button strong secondary type="primary" @click="get_cookies">
       Click Me To Set Cookies
     </n-button>

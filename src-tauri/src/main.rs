@@ -12,7 +12,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             load_user_flow,
             get_cookie,
-            load_refresh_account
+            load_refresh_account,
+            open_nav_login
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
