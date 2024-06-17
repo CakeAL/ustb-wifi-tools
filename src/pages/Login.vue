@@ -3,8 +3,7 @@ import { invoke } from "@tauri-apps/api";
 import { ref, onMounted } from "vue";
 import { useMessage } from "naive-ui";
 
-// SameSite未解决
-const login_url = ref("/nav_login");
+// const login_url = ref("/nav_login");
 // const login_html = ref("");
 const pop_message = useMessage();
 
@@ -29,12 +28,12 @@ onMounted(() => {
 // };
 
 const get_cookies = async () => {
-  invoke("get_cookie").catch((err) => pop_message.error(err));
+    invoke("get_cookie").catch((err) => pop_message.error(err));
 };
 
-const open_nav_login = async() => {
+const open_nav_login = async () => {
   invoke("open_nav_login").catch((err) => pop_message.error(err));
-}
+};
 </script>
 
 <template>
@@ -47,7 +46,7 @@ const open_nav_login = async() => {
       Click Me To Set Cookies
     </n-button>
     <!-- <div v-html="login_html"></div> -->
-    <iframe
+    <!-- <iframe
       name="iframeMap"
       id="iframeMapViewComponent"
       v-bind:src="login_url"
@@ -56,7 +55,7 @@ const open_nav_login = async() => {
       frameborder="0"
       scrolling="yes"
       ref="iframeDom"
-    ></iframe>
+    ></iframe> -->
   </div>
 </template>
 

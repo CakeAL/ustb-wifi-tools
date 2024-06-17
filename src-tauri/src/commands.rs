@@ -14,7 +14,7 @@ pub fn open_nav_login(app_handle: tauri::AppHandle) -> Result<(), String> {
         tauri::WindowUrl::App("http://202.204.60.7:8080/nav_login".into()),
     )
     .build();
-    // 什么Golang😡 
+    // 什么Golang😡
     if nav_login_window.is_ok() != true {
         return Err("Error when building the nav_login window".into());
     };
@@ -40,18 +40,22 @@ pub async fn get_cookie(
     if cfg!(target_os = "windows") {
         let windows = app_handle.windows();
         // #[allow(unused_variables)]
-        // let url = "http://tauri.localhost";
+        // let url = "https://tauri.localhost";
         // #[cfg(debug_assertions)] // 如果是 debug 模式，把 url 替换为debug的
         // let url = "http://localhost:1420/";
         // let res = get_webview2_cookie(windows.get("main").unwrap(), url).await;
         let url = "http://202.204.60.7:8080/LoginAction.action";
-        let res = get_webview2_cookie(windows.get("nav_login").unwrap(), url).await;
-        match res {
-            Ok(cookies) => {
-                println!("{:?}", cookies[0]);
-                *app_state.0.lock().unwrap() = cookies.get(0).map(|str| str.value.clone());
+        if let Some(window) = windows.get("nav_login") {
+            let res = get_webview2_cookie(window, url).await;
+            match res {
+                Ok(cookies) => {
+                    dbg!(&cookies[0]);
+                    *app_state.0.lock().unwrap() = cookies.get(0).map(|str| str.value.clone());
+                }
+                Err(_) => return Err("Can't get cookies due to unknown error".to_string()),
             }
-            Err(_) => return Err("can't get cookies".to_string()),
+        } else {
+            return Err("Please open the login window.".into());
         }
     }
     Ok(())

@@ -63,5 +63,11 @@ pub struct EveryLoginData {
     pub ipv6_addr: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MacAddress{
+    pub device_name: String, 
+    pub mac_address: String,
+}
+
 #[derive(Debug)]
 pub struct JsessionId(pub Mutex<Option<String>>);

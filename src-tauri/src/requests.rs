@@ -7,7 +7,7 @@ use reqwest::{header::SET_COOKIE, Client};
 use scraper::{Html, Selector};
 use serde_json::Value;
 
-use crate::entities::{EveryLoginData, MonthPayInfo, MonthlyData, UserLoginLog};
+use crate::entities::{EveryLoginData, MacAddress, MonthPayInfo, MonthlyData, UserLoginLog};
 
 // Ciallo～(∠・ω< )⌒☆
 pub async fn get_load_user_flow(account: &str) -> Result<Value> {
@@ -270,6 +270,71 @@ pub async fn get_user_login_log(
     })))
 }
 
+pub async fn get_mac_address(session_id: &str) -> Result<Option<Value>> {
+    let url = "http://202.204.60.7:8080/nav_unBandMacJsp";
+    let response = Client::new()
+        .get(url)
+        .header("Cookie", format!("JSESSIONID={}", session_id))
+        .send()
+        .await?
+        .text()
+        .await?;
+    // println!("{response}");
+    if response.contains("nav_login") {
+        return Ok(None); // Cookie无效，没有获取到account信息
+    }
+    let parsed_html = Html::parse_document(&response);
+    let device_name_selector =
+        Selector::parse(".row > .v-col:first-of-type input[type=\"text\"]").unwrap();
+    let device_names_value = parsed_html
+        .select(&device_name_selector)
+        .flat_map(|ele| ele.value().attr("value"))
+        .collect::<Vec<&str>>();
+    let mac_address_selector =
+        Selector::parse(".row > .v-col:nth-of-type(2) input[type=\"text\"][name=\"macs\"]")
+            .unwrap();
+    let mac_address_value = parsed_html
+        .select(&mac_address_selector)
+        .flat_map(|ele| ele.value().attr("value"))
+        .collect::<Vec<&str>>();
+    // dbg!(device_names);
+    // dbg!(mac_address);
+    let mac_address = device_names_value
+        .iter()
+        .zip(mac_address_value.iter())
+        .map(|(device_name, mac_address)| MacAddress {
+            device_name: device_name.to_string(),
+            mac_address: mac_address.to_string(),
+        })
+        .collect::<Vec<_>>();
+
+    Ok(Some(serde_json::json!(mac_address)))
+}
+
+// 这里传进来的是 **不需要** 解绑的macs
+pub async fn unbind_macs(session_id: &str, macs: &Vec<String>) -> Result<Option<()>> {
+    let url = "http://202.204.60.7:8080/nav_unbindMACAction.action";
+    let mut mac_str = String::new();
+    for mac in macs{
+        mac_str = format!("{};{}", mac, mac_str);
+    } 
+    let _ = mac_str.pop(); // 删末尾分号
+    dbg!(&mac_str);
+    let response = Client::new()
+        .post(url)
+        .header("Cookie", format!("JSESSIONID={}", session_id))
+        .form(&[
+            ("macStr", mac_str),
+            ("Submit", "解绑".to_string())
+        ])
+        .send().await?.text().await?;
+    if response.contains("nav_login") {
+        return Ok(None); // Cookie无效，没有获取到account信息
+    }
+
+    Ok(Some(()))
+}
+
 #[cfg(test)]
 mod tests {
     // use crate::entities::{GetUserFlowFailed, UserFlow};
@@ -319,6 +384,22 @@ mod tests {
         let start_date = "2024-05-01";
         let end_date = "2024-05-31";
         let res = get_user_login_log(session_id, start_date, end_date).await;
+        dbg!(res.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_get_mac_address() {
+        let session_id = "session_id";
+        let res = get_mac_address(session_id).await;
+        dbg!(res.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_unbind_macs() {
+        let session_id = "session_id";
+        let macs = vec![]; // such as "ABCD12345678".to_string()
+        // macs 为空执行此 test 会导致退出全部你的校园网账号
+        let res = unbind_macs(&session_id, &macs).await;
         dbg!(res.unwrap());
     }
 }
