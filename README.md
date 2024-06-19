@@ -1,5 +1,7 @@
 # USTB Wifi Tools 贝壳校园网实用工具
 
+# ***该项目仍未完成***
+
 ## 简介
 
 使用 Tauri 构建的跨平台 APP，前端使用 Vue + NaiveUI，后端使用 Rust。 \
