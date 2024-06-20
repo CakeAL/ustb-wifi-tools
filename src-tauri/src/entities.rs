@@ -1,4 +1,4 @@
-use std::sync::Mutex;
+use std::sync::RwLock;
 
 use serde::{Deserialize, Serialize};
 
@@ -64,10 +64,13 @@ pub struct EveryLoginData {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MacAddress{
-    pub device_name: String, 
+pub struct MacAddress {
+    pub device_name: String,
     pub mac_address: String,
 }
 
 #[derive(Debug)]
-pub struct JsessionId(pub Mutex<Option<String>>);
+pub struct AppState {
+    pub jsessionid: RwLock<Option<String>>,
+    pub account: RwLock<Option<String>>,
+}

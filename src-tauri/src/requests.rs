@@ -69,9 +69,6 @@ pub async fn get_refresh_account(session_id: &str) -> Result<Option<String>> {
     let response = Client::new()
         .get(url)
         .header("Cookie", format!("JSESSIONID={}", session_id))
-        .header("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36")
-        .header("Referer", "http://202.204.60.7:8080/LoginAction.action")
-        .header("Host", "202.204.60.7:8080")
         .send()
         .await?
         .text()

@@ -1,67 +1,36 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api";
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import { useMessage } from "naive-ui";
 
 // const login_url = ref("/nav_login");
 // const login_html = ref("");
 const pop_message = useMessage();
-
-onMounted(() => {
-  // load_login_page();
-});
-
-// const load_login_page = async () => {
-//     try {
-//         http.fetch("http://202.204.60.7:8080/nav_login", {
-//           method: "GET",
-//           headers: {
-//             ResponseType: "text",
-//           },
-//         }).then((response) => {
-//           // console.log(response);
-//         });
-//     } catch (e) {
-//         login_html.value = "获取登陆页面失败，可能是没连接校园网？"
-//         console.error(e);
-//     }
-// };
+const sessionid = ref<string>("");
 
 const get_cookies = async () => {
-    invoke("get_cookie").catch((err) => pop_message.error(err));
+  sessionid.value = await invoke("get_cookie").catch((err) => pop_message.error(err)) as string;
 };
 
 const open_nav_login = async () => {
-  invoke("open_nav_login").catch((err) => pop_message.error(err));
+  await invoke("open_nav_login").catch((err) => pop_message.error(err));
 };
 </script>
 
 <template>
   <div class="container">
-    <h1>Login</h1>
+    <h2>首先点击下方按钮，弹出校园网登录页</h2>
     <n-button strong secondary type="primary" @click="open_nav_login">
-      Click Me To Open nav_login
+      点我打开登录页
     </n-button>
+    <h2>然后在弹出的窗口登录自助服务系统</h2>
+    <h2>确保已经登录成功，点击下方按钮确认</h2>
     <n-button strong secondary type="primary" @click="get_cookies">
-      Click Me To Set Cookies
+      登录成功后点我
     </n-button>
-    <!-- <div v-html="login_html"></div> -->
-    <!-- <iframe
-      name="iframeMap"
-      id="iframeMapViewComponent"
-      v-bind:src="login_url"
-      width="100%"
-      height="100%"
-      frameborder="0"
-      scrolling="yes"
-      ref="iframeDom"
-    ></iframe> -->
+    <h3>当前有效JSESSIONID（请不要截图给他人）：{{ sessionid }}</h3>
   </div>
 </template>
 
 <style scoped>
-#iframeMapViewComponent {
-  height: 90vh;
-  width: 100%;
-}
 </style>

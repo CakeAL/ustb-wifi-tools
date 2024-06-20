@@ -12,6 +12,7 @@ import type { MenuOption } from "naive-ui";
 import {
   LogInOutline,
   InformationCircleOutline,
+  ListOutline,
 } from "@vicons/ionicons5";
 
 function renderIcon(icon: Component) {
@@ -30,6 +31,18 @@ const menuOptions: MenuOption[] = [
       ),
     key: "login",
     icon: renderIcon(LogInOutline),
+  },
+  {
+    label: () =>
+      h(
+        "a",
+        {
+          href: "#/userinfo",
+        },
+        "当前账号使用详情"
+      ),
+    key: "userinfo",
+    icon: renderIcon(ListOutline),
   },
   {
     label: () =>
