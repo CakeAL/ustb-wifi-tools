@@ -312,19 +312,19 @@ pub async fn get_mac_address(session_id: &str) -> Result<Option<Value>> {
 pub async fn unbind_macs(session_id: &str, macs: &Vec<String>) -> Result<Option<()>> {
     let url = "http://202.204.60.7:8080/nav_unbindMACAction.action";
     let mut mac_str = String::new();
-    for mac in macs{
+    for mac in macs {
         mac_str = format!("{};{}", mac, mac_str);
-    } 
+    }
     let _ = mac_str.pop(); // 删末尾分号
     dbg!(&mac_str);
     let response = Client::new()
         .post(url)
         .header("Cookie", format!("JSESSIONID={}", session_id))
-        .form(&[
-            ("macStr", mac_str),
-            ("Submit", "解绑".to_string())
-        ])
-        .send().await?.text().await?;
+        .form(&[("macStr", mac_str), ("Submit", "解绑".to_string())])
+        .send()
+        .await?
+        .text()
+        .await?;
     if response.contains("nav_login") {
         return Ok(None); // Cookie无效，没有获取到account信息
     }
@@ -395,7 +395,7 @@ mod tests {
     async fn test_unbind_macs() {
         let session_id = "session_id";
         let macs = vec![]; // such as "ABCD12345678".to_string()
-        // macs 为空执行此 test 会导致退出全部你的校园网账号
+                           // macs 为空执行此 test 会导致退出全部你的校园网账号
         let res = unbind_macs(&session_id, &macs).await;
         dbg!(res.unwrap());
     }

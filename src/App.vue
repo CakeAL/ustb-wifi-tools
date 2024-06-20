@@ -5,7 +5,8 @@ import { ref, computed, Ref, DefineComponent } from "vue";
 import Login from "./pages/Login.vue";
 import About from "./pages/About.vue";
 import NotFound from "./pages/NotFound.vue";
-import UserInfo from "./pages/UserInfo.vue"
+import UserInfo from "./pages/UserInfo.vue";
+import MonthPay from "./pages/MonthPay.vue";
 type RouteComponent = DefineComponent<{}, {}, any>;
 
 interface Routes {
@@ -16,6 +17,7 @@ const routes: Routes = {
   "/": Login,
   "/about": About,
   "/userinfo": UserInfo,
+  "/monthpay": MonthPay,
 };
 
 // Ref for current path

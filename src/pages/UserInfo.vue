@@ -87,13 +87,14 @@ const remain_flow = computed(() => {
 });
 
 const remain_percentage = computed(() => {
-    if (
+  if (
     account_info.value?.note.leftFlow !== undefined &&
     account_flow.value?.data.v4 !== undefined
   ) {
     let per =
       (parseFloat(account_info.value?.note.leftFlow) -
-      account_flow.value?.data.v4) / parseFloat(account_info.value?.note.leftFlow);
+        account_flow.value?.data.v4) /
+      parseFloat(account_info.value?.note.leftFlow);
     return parseFloat((per * 100).toFixed(2));
   }
 });
@@ -117,11 +118,14 @@ const remain_percentage = computed(() => {
       ipv6 下行(不计费)：{{ account_flow?.data.v6 }} MB，约合
       {{ mb2gb(account_flow?.data.v6) }} GB
     </p>
-    <p>当前剩余 ipv4 下行流量：{{ remain_flow }} GB，大概是 {{ remain_percentage }} %</p>
-    <br/>
-    <p>Tips: </p>
+    <p>
+      当前剩余 ipv4 下行流量：{{ remain_flow }} GB，大概是
+      {{ remain_percentage }} %
+    </p>
+    <br />
+    <p>Tips:</p>
     <p>ipv6 上下行，ipv4 上行都是不计费的~</p>
-    <p>ipv4 下行超出 120 GB 的部分大约 0.6 RMB/GB </p>
+    <p>ipv4 下行超出 120 GB 的部分大约 0.6 RMB/GB</p>
   </div>
 </template>
 

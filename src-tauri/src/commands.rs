@@ -3,7 +3,7 @@ use tauri::Manager;
 
 use crate::{
     entities::AppState,
-    requests::{get_load_user_flow, get_refresh_account},
+    requests::{get_load_user_flow, get_month_pay, get_refresh_account},
     utils::get_webview2_cookie,
 };
 
@@ -88,7 +88,8 @@ pub async fn load_refresh_account(app_state: tauri::State<'_, AppState>) -> Resu
         Some(s) => s,
         None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
     };
-    let res = match get_refresh_account(&session_id).await {
+
+    match get_refresh_account(&session_id).await {
         Ok(Some(str)) => {
             // 存一下用户名
             Regex::new(r#""welcome":\s*"([^"]+)\([^"]*\)""#)
@@ -99,13 +100,16 @@ pub async fn load_refresh_account(app_state: tauri::State<'_, AppState>) -> Resu
                     *app_state.account.write().unwrap() =
                         caps.get(1).map(|str| str.as_str().to_string())
                 });
-            str
+            Ok(str)
         }
         Ok(None) => return Err("请确认是否已经登录".to_string()),
-        Err(_) => return Err("Request Error，检查是否在校园网内".to_string()),
-    };
-    // dbg!(res);
-    Ok(res)
+        Err(e) => {
+            return Err(format!(
+                "Request Error，检查是否在校园网内: {}",
+                e.to_string()
+            ))
+        }
+    }
 }
 
 #[tauri::command(async)]
@@ -119,5 +123,25 @@ pub async fn load_user_flow_by_state(
             .map_err(|e| format!("Error while loading user flow: {}", e.to_string()))
             .map(|res| res.to_string())?),
         None => Err("Account is none, try again".to_string()),
+    }
+}
+
+#[tauri::command(async)]
+pub async fn load_month_pay(
+    app_state: tauri::State<'_, AppState>,
+    year: u16,
+) -> Result<String, String> {
+    let session_id = match app_state.jsessionid.read().unwrap().clone() {
+        Some(s) => s,
+        None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
+    };
+
+    match get_month_pay(&session_id, year).await {
+        Ok(Some(value)) => Ok(value.to_string()),
+        Ok(None) => Err("请确认是否已经登录".to_string()),
+        Err(e) => Err(format!(
+            "Request Error，检查是否在校园网内: {}",
+            e.to_string()
+        )),
     }
 }
