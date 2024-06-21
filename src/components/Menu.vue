@@ -15,6 +15,8 @@ import {
   ListOutline,
   CashOutline,
   BookOutline,
+  BrowsersOutline,
+  SpeedometerOutline,
 } from "@vicons/ionicons5";
 
 function renderIcon(icon: Component) {
@@ -69,6 +71,30 @@ const menuOptions: MenuOption[] = [
       ),
     key: "userloginlog",
     icon: renderIcon(BookOutline),
+  },
+  {
+    label: () =>
+      h(
+        "a",
+        {
+          href: "#/unbindmacs",
+        },
+        "解绑MAC地址"
+      ),
+    key: "unbindmacs",
+    icon: renderIcon(BrowsersOutline),
+  },
+  {
+    label: () =>
+      h(
+        "a",
+        {
+          href: "#/speedtest",
+        },
+        "测个速"
+      ),
+    key: "speedtest",
+    icon: renderIcon(SpeedometerOutline),
   },
   {
     label: () =>

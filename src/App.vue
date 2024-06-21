@@ -8,6 +8,8 @@ import NotFound from "./pages/NotFound.vue";
 import UserInfo from "./pages/UserInfo.vue";
 import MonthPay from "./pages/MonthPay.vue";
 import UserLoginLog from "./pages/UserLoginLog.vue"
+import UnbindMacs from "./pages/UnbindMacs.vue";
+import SpeedTest from "./pages/SpeedTest.vue"
 type RouteComponent = DefineComponent<{}, {}, any>;
 
 interface Routes {
@@ -19,7 +21,9 @@ const routes: Routes = {
   "/about": About,
   "/userinfo": UserInfo,
   "/monthpay": MonthPay,
-  "/userloginlog": UserLoginLog
+  "/userloginlog": UserLoginLog,
+  "/unbindmacs": UnbindMacs,
+  "/speedtest": SpeedTest,
 };
 
 // Ref for current path

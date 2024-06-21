@@ -20,6 +20,10 @@ fn main() {
             load_user_flow_by_state,
             load_month_pay,
             load_user_login_log,
+            load_mac_address,
+            get_current_device_mac,
+            do_unbind_macs,
+            open_speed_test
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -20,7 +20,8 @@
         "all":true,
         "request": true,
         "scope": [
-          "http://202.204.60.7:8080/*"
+          "http://202.204.60.7:8080/*",
+          "http://speed.ustb.edu.cn/*"
         ]
       }
     },

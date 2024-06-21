@@ -200,7 +200,7 @@ pub async fn load_mac_address(app_state: tauri::State<'_, AppState>) -> Result<S
 
 #[tauri::command]
 pub fn get_current_device_mac() -> Result<String, String> {
-    mac_address::get_mac_address()
+    mac_address::mac_address_by_name("WLAN")
         .map_err(|e| format!("获取MAC地址错误: {}", e.to_string()))
         .map(|mac_address| mac_address.unwrap_or_default().to_string())
 }
@@ -224,4 +224,26 @@ pub async fn do_unbind_macs(
             e.to_string()
         )),
     }
+}
+
+#[tauri::command(async)]
+pub fn open_speed_test(app_handle: tauri::AppHandle) -> Result<(), String> {
+    // 判断该窗口是否已存在
+    if let Some(_) = app_handle.get_window("speed_test") {
+        return Err("已经打开一个测速窗口了".to_string());
+    }
+
+    tauri::WindowBuilder::new(
+        &app_handle,
+        "speed_test",
+        tauri::WindowUrl::App("http://speed.ustb.edu.cn/".into()),
+    )
+    .build()
+    .map_err(|e| {
+        format!(
+            "Error when building the speed_test window: {}",
+            e.to_string()
+        )
+    })
+    .map(|_| ())
 }
