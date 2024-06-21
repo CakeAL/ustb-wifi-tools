@@ -156,7 +156,7 @@ pub async fn get_user_login_log(
         .header("Cookie", format!("JSESSIONID={}", session_id))
         .form(&[
             ("type", "4"),
-            ("month", "CHECKER.TBLUSERLOGIN202304"),
+            ("month", "CHECKER.TBLUSERLOGIN202304"), // 按月已经没用了，这里是固定写法，传过去也没用
             ("startDate", start_date),
             ("endDate", end_date),
         ])

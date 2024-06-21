@@ -19,6 +19,7 @@ fn main() {
             open_nav_login,
             load_user_flow_by_state,
             load_month_pay,
+            load_user_login_log,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

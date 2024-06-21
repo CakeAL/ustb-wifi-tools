@@ -1,9 +1,13 @@
+use chrono::DateTime;
 use regex::Regex;
 use tauri::Manager;
 
 use crate::{
     entities::AppState,
-    requests::{get_load_user_flow, get_month_pay, get_refresh_account},
+    requests::{
+        get_load_user_flow, get_mac_address, get_month_pay, get_refresh_account,
+        get_user_login_log, unbind_macs,
+    },
     utils::get_webview2_cookie,
 };
 
@@ -138,6 +142,82 @@ pub async fn load_month_pay(
 
     match get_month_pay(&session_id, year).await {
         Ok(Some(value)) => Ok(value.to_string()),
+        Ok(None) => Err("请确认是否已经登录".to_string()),
+        Err(e) => Err(format!(
+            "Request Error，检查是否在校园网内: {}",
+            e.to_string()
+        )),
+    }
+}
+
+#[tauri::command(async)]
+pub async fn load_user_login_log(
+    app_state: tauri::State<'_, AppState>,
+    start_date: i64,
+    end_date: i64,
+) -> Result<String, String> {
+    if start_date >= end_date {
+        return Err("起始日期比结束日期更大。。。".to_string());
+    }
+    let session_id = match app_state.jsessionid.read().unwrap().clone() {
+        Some(s) => s,
+        None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
+    };
+    let start_date = DateTime::from_timestamp(start_date, 0)
+        .unwrap()
+        .format("%Y-%m-%d")
+        .to_string();
+    let end_date = DateTime::from_timestamp(end_date, 0)
+        .unwrap()
+        .format("%Y-%m-%d")
+        .to_string();
+    match get_user_login_log(&session_id, &start_date, &end_date).await {
+        Ok(Some(value)) => Ok(value.to_string()),
+        Ok(None) => Err("请确认是否已经登录".to_string()),
+        Err(e) => Err(format!(
+            "Request Error，检查是否在校园网内: {}",
+            e.to_string()
+        )),
+    }
+}
+
+#[tauri::command(async)]
+pub async fn load_mac_address(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
+    let session_id = match app_state.jsessionid.read().unwrap().clone() {
+        Some(s) => s,
+        None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
+    };
+
+    match get_mac_address(&session_id).await {
+        Ok(Some(value)) => Ok(value.to_string()),
+        Ok(None) => Err("请确认是否已经登录".to_string()),
+        Err(e) => Err(format!(
+            "Request Error，检查是否在校园网内: {}",
+            e.to_string()
+        )),
+    }
+}
+
+#[tauri::command]
+pub fn get_current_device_mac() -> Result<String, String> {
+    mac_address::get_mac_address()
+        .map_err(|e| format!("获取MAC地址错误: {}", e.to_string()))
+        .map(|mac_address| mac_address.unwrap_or_default().to_string())
+}
+
+// 传进来的应该是不需要解绑的，提醒。
+#[tauri::command(async)]
+pub async fn do_unbind_macs(
+    app_state: tauri::State<'_, AppState>,
+    macs: Vec<String>,
+) -> Result<(), String> {
+    let session_id = match app_state.jsessionid.read().unwrap().clone() {
+        Some(s) => s,
+        None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
+    };
+
+    match unbind_macs(&session_id, &macs).await {
+        Ok(Some(())) => Ok(()),
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => Err(format!(
             "Request Error，检查是否在校园网内: {}",
