@@ -91,7 +91,7 @@ const mb2gb = (mb: number | undefined) => {
       @update:value="load_month_pay"
     />
     <div v-if="month_pay !== undefined" class="show-data">
-      <p>这一年移一共花费 {{ month_pay?.year_cost }} 元。</p>
+      <p>这一年一共花费 {{ month_pay?.year_cost }} 元。</p>
       <p>
         总共使用时长 {{ month_pay?.year_used_duration }} 分钟，约合
         {{ min2hour(month_pay?.year_used_duration) }} 小时。

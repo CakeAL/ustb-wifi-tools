@@ -156,7 +156,7 @@ pub async fn load_user_login_log(
     start_date: i64,
     end_date: i64,
 ) -> Result<String, String> {
-    if start_date >= end_date {
+    if start_date > end_date {
         return Err("起始日期比结束日期更大。。。".to_string());
     }
     let session_id = match app_state.jsessionid.read().unwrap().clone() {

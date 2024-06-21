@@ -7,6 +7,7 @@ import About from "./pages/About.vue";
 import NotFound from "./pages/NotFound.vue";
 import UserInfo from "./pages/UserInfo.vue";
 import MonthPay from "./pages/MonthPay.vue";
+import UserLoginLog from "./pages/UserLoginLog.vue"
 type RouteComponent = DefineComponent<{}, {}, any>;
 
 interface Routes {
@@ -18,6 +19,7 @@ const routes: Routes = {
   "/about": About,
   "/userinfo": UserInfo,
   "/monthpay": MonthPay,
+  "/userloginlog": UserLoginLog
 };
 
 // Ref for current path

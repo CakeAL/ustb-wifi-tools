@@ -11,11 +11,13 @@ declare module 'vue' {
     Menu: typeof import('./src/components/Menu.vue')['default']
     NButton: typeof import('naive-ui')['NButton']
     NDataTable: typeof import('naive-ui')['NDataTable']
+    NDatePicker: typeof import('naive-ui')['NDatePicker']
     NIcon: typeof import('naive-ui')['NIcon']
     NMenu: typeof import('naive-ui')['NMenu']
     NMessageProvider: typeof import('naive-ui')['NMessageProvider']
     NResult: typeof import('naive-ui')['NResult']
     NSelect: typeof import('naive-ui')['NSelect']
     NSplit: typeof import('naive-ui')['NSplit']
+    NTable: typeof import('naive-ui')['NTable']
   }
 }

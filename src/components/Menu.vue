@@ -14,6 +14,7 @@ import {
   InformationCircleOutline,
   ListOutline,
   CashOutline,
+  BookOutline,
 } from "@vicons/ionicons5";
 
 function renderIcon(icon: Component) {
@@ -56,6 +57,18 @@ const menuOptions: MenuOption[] = [
       ),
     key: "monthpay",
     icon: renderIcon(CashOutline),
+  },
+  {
+    label: () =>
+      h(
+        "a",
+        {
+          href: "#/userloginlog",
+        },
+        "每日使用详情"
+      ),
+    key: "userloginlog",
+    icon: renderIcon(BookOutline),
   },
   {
     label: () =>
