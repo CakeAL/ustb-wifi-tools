@@ -103,7 +103,7 @@ const menuOptions: MenuOption[] = [
         {
           href: "#/about",
         },
-        "关于作者"
+        "关于作者以及Tips"
       ),
     key: "about",
     icon: renderIcon(InformationCircleOutline),

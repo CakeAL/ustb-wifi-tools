@@ -1,7 +1,5 @@
 # USTB Wifi Tools 贝壳校园网实用工具
 
-# ***该项目仍未完成***
-
 ## 简介
 
 使用 Tauri 构建的跨平台 APP，前端使用 Vue + NaiveUI，后端使用 Rust。 \
@@ -9,9 +7,15 @@
 旨在可以让大家更方便的获取 USTB 校园网每日使用情况，查询流量，解绑 MAC 地址等。 \
 通过调用校园网的 API，并且数据都在本地进行存储。
 
+## 截图
+
+![](pics\image1.png)
+![](pics\image2.png)
+![](pics\image3.png)
+
 ## 开发
 
-目前只有 Windows 7 以上支持，需要电脑安装 WebView2（Windows 10 和 11 默认安装）。 \
+目前只有 Windows 7 以上 x86 64 设备支持，需要电脑安装 WebView2（Windows 10 和 11 默认安装）。 \
 首先确保你已经安装了[`Node.js`](https://nodejs.cn/download/)，[`pnpm`](https://www.pnpm.cn/)以及[`Rust环境`](https://www.rust-lang.org/zh-CN/tools/install)
 
 ```bash

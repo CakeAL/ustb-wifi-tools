@@ -11,6 +11,7 @@ interface MacAddress {
 const pop_message = useMessage();
 const this_mac = ref<string>("");
 const mac_addrs = ref<MacAddress[] | null>(null);
+const unbind_macs = ref<Array<boolean>>([]);
 
 onMounted(() => {
   get_current_device_mac();
@@ -28,6 +29,26 @@ const load_mac_address = async () => {
     pop_message.error(err)
   );
   mac_addrs.value = JSON.parse(res as string);
+  if (mac_addrs.value !== null) {
+    for (let i = 0; i < mac_addrs.value.length; i += 1) {
+      unbind_macs.value.push(false);
+    }
+  }
+};
+
+const unbind = async () => {
+  // console.log(unbind_macs.value); 传入 false 的
+  let macs: string[] = [];
+  let i: number;
+  for (i = 0; i < unbind_macs.value.length; i += 1) {
+    if (unbind_macs.value[i] === false && mac_addrs.value !== null) {
+      macs.push(mac_addrs.value[i].mac_address);
+    }
+  }
+  // console.log(macs);
+  await invoke("do_unbind_macs", {
+    macs: macs,
+  }).catch((err) => pop_message.error(err));
 };
 </script>
 
@@ -55,10 +76,15 @@ const load_mac_address = async () => {
             <th>{{ index + 1 }}</th>
             <th>{{ mac_addr.device_name }}</th>
             <th>{{ mac_addr.mac_address }}</th>
-            <th>1</th>
+            <th>
+              <n-checkbox size="large" v-model:checked="unbind_macs[index]" />
+            </th>
           </tr>
         </tbody>
       </n-table>
+      <n-button strong secondary type="info" @click="unbind">
+        确定解绑
+      </n-button>
     </div>
   </div>
 </template>
