@@ -28,7 +28,7 @@ const show1 = ref(false);
         <n-collapse-transition :show="show">
           <n-image
             width="200"
-            src="/public/4243a50e827cbd72c4213247dd0833bb_720.jpg"
+            src="/4243a50e827cbd72c4213247dd0833bb_720.jpg"
           />
         </n-collapse-transition>
         <h4>关于作者：一个来自USTB计院物联网工程的老东西。</h4>
@@ -42,7 +42,7 @@ const show1 = ref(false);
         <n-collapse-transition :show="show1">
           <n-image
             width="500"
-            src="/public/A250E7A1CDCE4161894E703B177AC0C6_频繁掉线.jpg"
+            src="/A250E7A1CDCE4161894E703B177AC0C6_频繁掉线.jpg"
           />
         </n-collapse-transition>
         <p>USTB-V6接入说明：http://cipp.ustb.edu.cn/app.IAManage/index.jsp?m=iamanage&c=Notice&a=noticeInfo&id=22</p>

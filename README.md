@@ -9,9 +9,9 @@
 
 ## 截图
 
-![](pics\image1.png)
-![](pics\image2.png)
-![](pics\image3.png)
+![](pics/image1.png)
+![](pics/image2.png)
+![](pics/image3.png)
 
 ## 开发
 
