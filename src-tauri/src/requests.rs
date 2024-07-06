@@ -233,7 +233,7 @@ pub async fn get_user_login_log(
             10 => every_login_data.ipv4_addr = data.to_string(),
             11 => {
                 // 如果 11 的字符串内容包含'-'，说明已经到下一行了，该行没有ipv6地址
-                if data.contains("-") {
+                if data.contains('-') {
                     every_login_data.ipv6_addr = "".to_string();
                     every_login_datas.push(every_login_data.clone());
                     // 别把这个data数据直接丢了，得把这一行的数据存进去

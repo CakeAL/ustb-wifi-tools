@@ -1,11 +1,8 @@
 use anyhow::Result;
-use tauri::Window;
-use tokio::sync::oneshot;
-use webview2_com::{
-    take_pwstr, GetCookiesCompletedHandler,
-    Microsoft::Web::WebView2::Win32::{ICoreWebView2Cookie, ICoreWebView2_2},
-};
-use windows::core::{Interface, HSTRING, PWSTR};
+use headless_chrome::{Browser, LaunchOptions, Tab};
+use std::{path::PathBuf, sync::Arc};
+
+use crate::entities::Account;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Cookie {
@@ -15,65 +12,120 @@ pub struct Cookie {
     pub path: String,
 }
 
-// 通过 webview2 API 获取 cookie
-pub async fn get_webview2_cookie(
-    win: &Window,
-    url: &'static str, // cookie 的网址
-) -> Result<Vec<Cookie>> {
-    // 使用 oneshot::channel 传输数据
-    let (tx, rx) = oneshot::channel::<Vec<Cookie>>();
-    win.with_webview(move |webview| unsafe {
-        // 获取 webview2 的 com 接口
-        let core = webview.controller().CoreWebView2().unwrap();
-        // 获取 webview2 的 com 接口 IcoreWebView2_2
-        let core2 = Interface::cast::<ICoreWebView2_2>(&core).unwrap();
-        // 将字符串转换为 Windows 系统的宽字符格式应该 WinRT string
-        let uri = HSTRING::from(url);
-        // 获取浏览器的 cookie 的管理模块
-        let manager = core2.CookieManager().unwrap();
-        // 异步获取 cookie
-        GetCookiesCompletedHandler::wait_for_async_operation(
-            Box::new(move |handler| {
-                manager.GetCookies(&uri, &handler)?;
-                Ok(())
-            }),
-            Box::new(move |hresult, list| {
-                hresult?;
-                match list {
-                    Some(list) => {
-                        let mut count: u32 = 0;
-                        list.Count(&mut count)?;
-                        // tracing::info!("count: {}", count);
-                        let mut cookies = vec![];
-                        for i in 0..count {
-                            let cookie: ICoreWebView2Cookie = list.GetValueAtIndex(i)?;
-                            let mut name = PWSTR::null();
-                            let mut value = PWSTR::null();
-                            let mut domain = PWSTR::null();
-                            let mut path = PWSTR::null();
-                            cookie.Name(&mut name)?;
-                            cookie.Value(&mut value)?;
-                            cookie.Domain(&mut domain)?;
-                            cookie.Path(&mut path)?;
-                            cookies.push(Cookie {
-                                name: take_pwstr(name),
-                                value: take_pwstr(value),
-                                domain: take_pwstr(domain),
-                                path: take_pwstr(path),
-                            });
-                        }
-                        tx.send(cookies).unwrap();
-                    }
-                    None => {
-                        // 没得数据
-                    }
-                };
-                Ok(())
-            }),
-        )
-        .unwrap()
-    })
-    .unwrap();
-    let cookies = rx.await.unwrap();
-    Ok(cookies)
+pub fn get_browser_path() -> Option<PathBuf> {
+    match std::env::consts::OS {
+        "windows" => {
+            let edge =
+                PathBuf::from("C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe");
+            let chrome =
+                PathBuf::from("C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe");
+            if edge.exists() {
+                Some(edge.clone())
+            } else if chrome.exists() {
+                Some(chrome.clone())
+            } else {
+                None
+            }
+        }
+        "macos" => {
+            todo!()
+        }
+        _ => None,
+    }
+}
+
+pub fn open_headless_browser(browser_path: PathBuf) -> Result<(Browser, Arc<Tab>)> {
+    let browser = Browser::new(LaunchOptions {
+        headless: false,
+        window_size: Some((1600, 900)),
+        path: Some(browser_path),
+        ..Default::default()
+    })?;
+
+    let tab = browser.new_tab()?;
+
+    tab.navigate_to("http://202.204.60.7:8080/nav_login")?
+        .wait_until_navigated()?;
+
+    // 保持浏览器开启状态，保持登录状态
+    Ok((browser, tab))
+}
+
+pub fn login_via_headless_browser(tab: &Arc<Tab>, account: Account) -> Result<Vec<Cookie>> {
+    let user_name_ele =
+        tab.find_element_by_xpath(r#"/html/body/div/div/div[3]/div/div/form/div[3]/input"#)?;
+    let password_ele =
+        tab.find_element_by_xpath(r#"/html/body/div/div/div[3]/div/div/form/div[4]/input"#)?;
+    let check_code_ele =
+        tab.find_element_by_xpath(r#"/html/body/div/div/div[3]/div/div/form/div[5]/input[1]"#)?;
+
+    user_name_ele.call_js_fn(
+        "function(str) { this.value = str }",
+        vec![serde_json::json!(account.user_name)],
+        false,
+    )?;
+    password_ele.call_js_fn(
+        "function(str) { this.value = str }",
+        vec![serde_json::json!(account.password)],
+        false,
+    )?;
+
+    if account.check_code.is_some() {
+        check_code_ele.call_js_fn(
+            "function(str) { this.value = str }",
+            vec![serde_json::json!(account.check_code.unwrap())],
+            false,
+        )?;
+    }
+
+    let submit_button_ele =
+        tab.find_element_by_xpath(r#"/html/body/div/div/div[3]/div/div/form/div[6]/input"#)?;
+    submit_button_ele.click()?;
+    tab.wait_until_navigated()?;
+
+    let mut res = vec![];
+
+    // 获取不到这个元素，说明登录成功了
+    if tab
+        .find_element_by_xpath(r#"/html/body/div/div/div[3]/div/div/form/div[3]/input"#)
+        .is_err()
+    {
+        let c = tab.get_cookies()?.first().unwrap().clone();
+        res.push(Cookie {
+            name: c.name,
+            value: c.value,
+            domain: c.domain,
+            path: c.path,
+        })
+    } else {
+        return Err(anyhow::anyhow!("登录失败，检查用户名和密码".to_string()));
+    }
+
+    Ok(res)
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_get_browser_path() {
+        let path = get_browser_path();
+        dbg!(path.unwrap().to_str());
+    }
+
+    #[test]
+    fn test_login_via_headless_browser() {
+        let account: Account = Account {
+            user_name: "user_name".to_string(),
+            password: "password".to_string(),
+            check_code: None,
+        };
+        let browser_path = get_browser_path().unwrap();
+        let (browser, tab) = open_headless_browser(browser_path).unwrap();
+        let res = login_via_headless_browser(&tab, account);
+
+        drop(browser);
+        dbg!(res.unwrap());
+    }
 }

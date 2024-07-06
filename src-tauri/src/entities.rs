@@ -1,5 +1,6 @@
-use std::sync::RwLock;
+use std::sync::{Arc, RwLock};
 
+use headless_chrome::{Browser, Tab};
 use serde::{Deserialize, Serialize};
 
 // #[derive(Debug, Serialize, Deserialize)]
@@ -19,6 +20,13 @@ use serde::{Deserialize, Serialize};
 //     pub result: i32,
 //     pub msg: String,
 // }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Account {
+    pub user_name: String,
+    pub password: String,
+    pub check_code: Option<String>,
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MonthPayInfo {
@@ -69,8 +77,10 @@ pub struct MacAddress {
     pub mac_address: String,
 }
 
-#[derive(Debug)]
 pub struct AppState {
     pub jsessionid: RwLock<Option<String>>,
     pub account: RwLock<Option<String>>,
+    pub browser: RwLock<Option<Browser>>,
+    pub tab: RwLock<Option<Arc<Tab>>>,
+    pub browser_state: RwLock<bool>,
 }

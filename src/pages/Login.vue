@@ -9,7 +9,7 @@ const pop_message = useMessage();
 const sessionid = ref<string>("");
 
 const get_cookies = async () => {
-  sessionid.value = await invoke("get_cookie").catch((err) => pop_message.error(err)) as string;
+  sessionid.value = await invoke("get_cookie", {userName: "todo", password: "todo"}).catch((err) => pop_message.error(err)) as string;
 };
 
 const open_nav_login = async () => {

@@ -15,7 +15,7 @@
 
 ## 开发
 
-目前只有 Windows 7 以上 x86 64 设备支持，需要电脑安装 WebView2（Windows 10 和 11 默认安装）。 \
+目前支持 Windows 7 以上 x86 64 设备或 macOS，需要电脑安装 WebView2（Windows 10 和 11 默认安装），以及Edge或者Chrome浏览器，提供浏览器路径选择。 \
 首先确保你已经安装了[`Node.js`](https://nodejs.cn/download/)，[`pnpm`](https://www.pnpm.cn/)以及[`Rust环境`](https://www.rust-lang.org/zh-CN/tools/install)
 
 ```bash
@@ -23,6 +23,9 @@
 cargo install create-tauri-app --locked
 # 安装tauri 命令行 https://tauri.app/zh-cn/blog/2022/09/15/tauri-1-1/#cargo-binstall-support-for-tauri-cli
 # 运行
+# 如果安装了 just
+just d
+# 或者
 cargo tauri dev
 # 或者
 pnpm i
@@ -32,6 +35,9 @@ pnpm tauri dev
 ## 构建
 
 ```bash
+# 如果安装了 just
+just b
+# 或者
 cargo tauri build
 # 或者
 pnpm tauri build
