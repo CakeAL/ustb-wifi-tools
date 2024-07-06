@@ -182,9 +182,15 @@ pub async fn load_mac_address(app_state: tauri::State<'_, AppState>) -> Result<S
 
 #[tauri::command]
 pub fn get_current_device_mac() -> Result<String, String> {
-    mac_address::mac_address_by_name("WLAN")
-        .map_err(|e| format!("获取MAC地址错误: {}", e))
-        .map(|mac_address| mac_address.unwrap_or_default().to_string())
+    match std::env::consts::OS {
+        "windows" => mac_address::mac_address_by_name("WLAN")
+            .map_err(|e| format!("获取 MAC 地址错误: {}", e))
+            .map(|mac_address| mac_address.unwrap_or_default().to_string()),
+        "macos" => mac_address::mac_address_by_name("en0")
+            .map_err(|e| format!("获取 MAC 地址错误: {}", e))
+            .map(|mac_address| mac_address.unwrap_or_default().to_string()),
+        _ => Ok("不支持当前系统获取 MAC 地址".to_string()),
+    }
 }
 
 // 传进来的应该是不需要解绑的，提醒。

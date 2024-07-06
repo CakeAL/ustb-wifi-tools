@@ -28,7 +28,20 @@ pub fn get_browser_path() -> Option<PathBuf> {
             }
         }
         "macos" => {
-            todo!()
+            let edge =
+                PathBuf::from("/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge");
+            let chromium = PathBuf::from("/Applications/Chromium.app/Contents/MacOS/Chromium");
+            let chrome =
+                PathBuf::from("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
+            if chrome.exists() {
+                Some(chrome.clone())
+            } else if chromium.exists() {
+                Some(chromium.clone())
+            } else if edge.exists() {
+                Some(edge.clone())
+            } else {
+                None
+            }
         }
         _ => None,
     }

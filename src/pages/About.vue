@@ -12,7 +12,7 @@ const show1 = ref(false);
         <p>更方便的获取 USTB 校园网每日使用情况，查询流量，解绑 MAC 地址等。</p>
         <p>
           通过调用校园网的
-          API，并且数据都在本地进行存储。（事实上没有存储任何数据）
+          API，并且数据都在本地进行存储。
         </p>
         <p>
           源代码可以在 https://github.com/CakeAL/ustb-wifi-tools/
