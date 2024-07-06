@@ -38,7 +38,9 @@ fn main() {
             load_mac_address,
             get_current_device_mac,
             do_unbind_macs,
-            open_speed_test
+            open_speed_test,
+            check_browser_state,
+            set_browser_path
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application")

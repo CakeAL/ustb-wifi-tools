@@ -49,8 +49,8 @@ pub fn get_browser_path() -> Option<PathBuf> {
 
 pub fn open_headless_browser(browser_path: PathBuf) -> Result<(Browser, Arc<Tab>)> {
     let browser = Browser::new(LaunchOptions {
-        headless: false,
-        window_size: Some((1600, 900)),
+        // headless: false,
+        // window_size: Some((1600, 900)),
         path: Some(browser_path),
         ..Default::default()
     })?;

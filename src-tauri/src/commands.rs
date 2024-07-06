@@ -1,7 +1,8 @@
-use std::borrow::Borrow;
+use std::{borrow::Borrow, path::PathBuf};
 
 use chrono::DateTime;
 use regex::Regex;
+use rfd::FileDialog;
 use tauri::Manager;
 
 use crate::{
@@ -10,7 +11,7 @@ use crate::{
         get_load_user_flow, get_mac_address, get_month_pay, get_refresh_account,
         get_user_login_log, unbind_macs,
     },
-    utils::login_via_headless_browser,
+    utils::{login_via_headless_browser, open_headless_browser},
 };
 
 #[tauri::command(async)]
@@ -49,7 +50,7 @@ pub async fn load_user_flow(account: String) -> Result<String, String> {
         .map(|res| res.to_string())
 }
 
-// 用来获取WebView当前页面的Cookie
+// 对 headless browser 进行操作，获取登陆后的 Cookie
 #[tauri::command(async)]
 pub async fn get_cookie(
     app_state: tauri::State<'_, AppState>,
@@ -226,4 +227,37 @@ pub fn open_speed_test(app_handle: tauri::AppHandle) -> Result<(), String> {
     .build()
     .map_err(|e| format!("Error when building the speed_test window: {}", e))
     .map(|_| ())
+}
+
+#[tauri::command(async)]
+pub fn check_browser_state(app_state: tauri::State<'_, AppState>) -> Result<bool, String> {
+    let browser_state = app_state.browser_state.read().unwrap().to_owned();
+    Ok(browser_state)
+}
+
+#[tauri::command(async)]
+pub fn set_browser_path(app_state: tauri::State<'_, AppState>) -> Result<bool, String> {
+    let mut browser_path: PathBuf;
+    match FileDialog::new().pick_file() {
+        Some(path) => browser_path = path.to_owned(),
+        None => return Err("没有选择任何文件".to_string()),
+    }
+    if std::env::consts::OS == "macos" {
+        let app_name = browser_path.file_name().unwrap().to_str().unwrap();
+        browser_path.push(format!(
+            "Contents/MacOS/{}",
+            &app_name[..app_name.len() - 4]
+        ));
+    }
+
+    let res = open_headless_browser(browser_path);
+    match res {
+        Ok((b, t)) => {
+            *app_state.browser.write().unwrap() = Some(b);
+            *app_state.tab.write().unwrap() = Some(t);
+            *app_state.browser_state.write().unwrap() = true;
+            Ok(true)
+        }
+        Err(e) => Err(format!("在该路径找不到浏览器可执行文件：{}", e)),
+    }
 }
