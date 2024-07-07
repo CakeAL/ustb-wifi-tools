@@ -1,6 +1,6 @@
 use anyhow::Result;
-use headless_chrome::{Browser, LaunchOptions, Tab};
-use std::{path::PathBuf, sync::Arc};
+use headless_chrome::{Browser, LaunchOptions};
+use std::path::PathBuf;
 
 use crate::entities::Account;
 
@@ -47,7 +47,15 @@ pub fn get_browser_path() -> Option<PathBuf> {
     }
 }
 
-pub fn open_headless_browser(browser_path: PathBuf) -> Result<(Browser, Arc<Tab>)> {
+pub fn try_open_headless_browser(browser_path: PathBuf) -> Result<()> {
+    let _ = Browser::new(LaunchOptions {
+        path: Some(browser_path),
+        ..Default::default()
+    })?;
+    Ok(())
+}
+
+pub fn login_via_headless_browser(browser_path: PathBuf, account: Account) -> Result<Vec<Cookie>> {
     let browser = Browser::new(LaunchOptions {
         // headless: false,
         // window_size: Some((1600, 900)),
@@ -56,15 +64,9 @@ pub fn open_headless_browser(browser_path: PathBuf) -> Result<(Browser, Arc<Tab>
     })?;
 
     let tab = browser.new_tab()?;
-
     tab.navigate_to("http://202.204.60.7:8080/nav_login")?
         .wait_until_navigated()?;
 
-    // 保持浏览器开启状态，保持登录状态
-    Ok((browser, tab))
-}
-
-pub fn login_via_headless_browser(tab: &Arc<Tab>, account: Account) -> Result<Vec<Cookie>> {
     let user_name_ele =
         tab.find_element_by_xpath(r#"/html/body/div/div/div[3]/div/div/form/div[3]/input"#)?;
     let password_ele =
@@ -135,10 +137,7 @@ mod test {
             check_code: None,
         };
         let browser_path = get_browser_path().unwrap();
-        let (browser, tab) = open_headless_browser(browser_path).unwrap();
-        let res = login_via_headless_browser(&tab, account);
-
-        drop(browser);
+        let res = login_via_headless_browser(browser_path, account);
         dbg!(res.unwrap());
     }
 }

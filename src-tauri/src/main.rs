@@ -3,7 +3,6 @@
 
 use std::sync::RwLock;
 
-use tauri::Manager;
 use ustb_wifi_tools::commands::*;
 use ustb_wifi_tools::entities::AppState;
 
@@ -12,9 +11,6 @@ fn main() {
         .manage(AppState {
             jsessionid: RwLock::new(None),
             account: RwLock::new(None),
-            browser: RwLock::new(None),
-            tab: RwLock::new(None),
-            browser_state: RwLock::new(true), // 找到浏览器
         })
         .invoke_handler(tauri::generate_handler![
             load_user_flow,
@@ -28,24 +24,10 @@ fn main() {
             get_current_device_mac,
             do_unbind_macs,
             open_speed_test,
-            check_browser_state,
             set_browser_path,
-            setup_browser
+            check_has_browser,
+            load_ip_address
         ])
-        .build(tauri::generate_context!())
-        .expect("error while running tauri application")
-        .run(|app, event| {
-            if let tauri::RunEvent::WindowEvent { event, .. } = event {
-                if let tauri::WindowEvent::CloseRequested { .. } = event {
-                    // 点击关闭按钮时，关闭 headless 浏览器
-                    let app_state = app.state::<AppState>();
-                    if app_state.browser.read().unwrap().is_some() {
-                        let b = app_state.browser.write().unwrap().take();
-                        if b.is_some() {
-                            drop(b);
-                        }
-                    }
-                }
-            }
-        });
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }

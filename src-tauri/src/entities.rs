@@ -1,6 +1,5 @@
-use std::sync::{Arc, RwLock};
+use std::sync::RwLock;
 
-use headless_chrome::{Browser, Tab};
 use serde::{Deserialize, Serialize};
 
 // #[derive(Debug, Serialize, Deserialize)]
@@ -80,7 +79,4 @@ pub struct MacAddress {
 pub struct AppState {
     pub jsessionid: RwLock<Option<String>>,
     pub account: RwLock<Option<String>>,
-    pub browser: RwLock<Option<Browser>>,
-    pub tab: RwLock<Option<Arc<Tab>>>,
-    pub browser_state: RwLock<bool>,
 }

@@ -40,22 +40,24 @@ const currentView = computed((): RouteComponent => {
 
 <template>
   <n-message-provider>
-    <div class="container">
-      <n-split
-        direction="horizontal"
-        style="height: 100vh"
-        max="300px"
-        min="200px"
-        default-size="200px"
-      >
-        <template #1>
-          <Menu />
-        </template>
-        <template #2>
-          <component :is="currentView" />
-        </template>
-      </n-split>
-    </div>
+    <n-loading-bar-provider>
+      <div class="container">
+        <n-split
+          direction="horizontal"
+          style="height: 100vh"
+          max="300px"
+          min="200px"
+          default-size="200px"
+        >
+          <template #1>
+            <Menu />
+          </template>
+          <template #2>
+            <component :is="currentView" />
+          </template>
+        </n-split>
+      </div>
+    </n-loading-bar-provider>
   </n-message-provider>
 </template>
 

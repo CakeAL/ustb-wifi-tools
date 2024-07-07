@@ -332,6 +332,18 @@ pub async fn unbind_macs(session_id: &str, macs: &Vec<String>) -> Result<Option<
     Ok(Some(()))
 }
 
+pub async fn get_address() -> Result<Vec<String>> {
+    let v4_resp = match Client::new().get("https://4.ipw.cn/").send().await {
+        Ok(resp) => resp.text().await?,
+        Err(_) => "".into(),
+    };
+    let v6_resp = match Client::new().get("https://6.ipw.cn/").send().await {
+        Ok(resp) => resp.text().await?,
+        Err(_) => "".into(),
+    };
+    Ok(vec![v4_resp, v6_resp])
+}
+
 #[cfg(test)]
 mod tests {
     // use crate::entities::{GetUserFlowFailed, UserFlow};
@@ -397,6 +409,12 @@ mod tests {
         let macs = vec![]; // such as "ABCD12345678".to_string()
                            // macs 为空执行此 test 会导致退出全部你的校园网账号
         let res = unbind_macs(&session_id, &macs).await;
+        dbg!(res.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_get_address() {
+        let res = get_address().await;
         dbg!(res.unwrap());
     }
 }

@@ -1,40 +1,28 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api";
-import { onMounted, ref } from "vue";
-import { useMessage } from "naive-ui";
+import { ref, onMounted } from "vue";
+import { useMessage, useLoadingBar } from "naive-ui";
 
+const loadingBar = useLoadingBar();
 const pop_message = useMessage();
-const browser_state = ref<boolean>(false);
+const has_browser = ref<boolean>(false);
 const sessionid = ref<string>("");
 const user_name = ref<string>("");
 const password = ref<string>("");
+const button_disabled = ref<boolean>(false);
 
 onMounted(() => {
-  // // 先获取当前浏览器状态
-  // check_browser_state();
-  // // 尝试设置浏览器
-  // if (browser_state.value === false) {
-  //   setup_browser();
-  // }
-  // // 更新浏览器状态
-  // check_browser_state();
+  check_has_browser();
 });
 
-const check_browser_state = async () => {
-  browser_state.value = (await invoke("check_browser_state").catch((err) =>
+const check_has_browser = async () => {
+  has_browser.value = (await invoke("check_has_browser").catch((err) =>
     pop_message.error(err)
   )) as boolean;
-};
-
-const setup_browser = async () => {
-  await invoke("setup_browser").catch((err) => console.log(err));
 };
 
 const set_browser_path = async () => {
-  (await invoke("set_browser_path").catch((err) =>
-    pop_message.error(err)
-  )) as boolean;
-  check_browser_state();
+  await invoke("set_browser_path").catch((err) => pop_message.error(err));
 };
 
 const get_cookies = async () => {
@@ -42,16 +30,26 @@ const get_cookies = async () => {
     pop_message.error("请先输入学号和密码");
     return;
   }
+  loadingBar.start();
+  button_disabled.value = true;
   sessionid.value = (await invoke("get_cookie", {
     userName: user_name.value,
     password: password.value,
-  }).catch((err) => pop_message.error(err))) as string;
+  })
+    .catch((err) => {
+      pop_message.error(err);
+      loadingBar.error();
+    })
+    .finally(() => {
+      loadingBar.finish();
+      button_disabled.value = false;
+    })) as string;
 };
 </script>
 
 <template>
   <div class="container">
-    <div v-if="!browser_state">
+    <div v-if="!has_browser">
       <h3>
         非常不幸，您的电脑上貌似没有
         <b>Edge/Chrome</b> 浏览器，或许它们只是被安装到其他地方了？
@@ -82,7 +80,13 @@ const get_cookies = async () => {
         placeholder="密码"
         round
       />
-      <n-button strong secondary type="primary" @click="get_cookies">
+      <n-button
+        strong
+        secondary
+        type="primary"
+        @click="get_cookies"
+        :disabled="button_disabled"
+      >
         点我登陆获取 cookie⭐️
       </n-button>
       <h3>当前有效JSESSIONID：{{ sessionid }}</h3>
