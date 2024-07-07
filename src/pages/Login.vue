@@ -10,17 +10,32 @@ const user_name = ref<string>("");
 const password = ref<string>("");
 
 onMounted(() => {
-  check_browser_state();
+  // // 先获取当前浏览器状态
+  // check_browser_state();
+  // // 尝试设置浏览器
+  // if (browser_state.value === false) {
+  //   setup_browser();
+  // }
+  // // 更新浏览器状态
+  // check_browser_state();
 });
 
 const check_browser_state = async () => {
-  browser_state.value = await invoke("check_browser_state").catch((err) => pop_message.error(err)) as boolean;
+  browser_state.value = (await invoke("check_browser_state").catch((err) =>
+    pop_message.error(err)
+  )) as boolean;
+};
+
+const setup_browser = async () => {
+  await invoke("setup_browser").catch((err) => console.log(err));
 };
 
 const set_browser_path = async () => {
-  await invoke("set_browser_path").catch((err) => pop_message.error(err)) as boolean;
+  (await invoke("set_browser_path").catch((err) =>
+    pop_message.error(err)
+  )) as boolean;
   check_browser_state();
-}
+};
 
 const get_cookies = async () => {
   if (user_name.value.length === 0 || password.value.length === 0) {
@@ -37,9 +52,14 @@ const get_cookies = async () => {
 <template>
   <div class="container">
     <div v-if="!browser_state">
-      <h3>非常不幸，您的电脑上貌似没有 <b>Edge/Chrome</b> 浏览器，或许它们只是被安装到其他地方了？</h3>
+      <h3>
+        非常不幸，您的电脑上貌似没有
+        <b>Edge/Chrome</b> 浏览器，或许它们只是被安装到其他地方了？
+      </h3>
       <h3>或许您可以手动选择浏览器可执行文件位置？</h3>
-      <h4>Windows 上：请选择后缀名为 <b>.exe</b> 的可执行文件（不是快捷方式！）。 </h4>
+      <h4>
+        Windows 上：请选择后缀名为 <b>.exe</b> 的可执行文件（不是快捷方式！）。
+      </h4>
       <h4>macOS 上：请选择“应用程序”文件夹中的 APP</h4>
       <n-button strong secondary type="primary" @click="set_browser_path">
         点我来选择浏览器可执行文件

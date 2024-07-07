@@ -11,7 +11,7 @@ use crate::{
         get_load_user_flow, get_mac_address, get_month_pay, get_refresh_account,
         get_user_login_log, unbind_macs,
     },
-    utils::{login_via_headless_browser, open_headless_browser},
+    utils::{get_browser_path, login_via_headless_browser, open_headless_browser},
 };
 
 #[tauri::command(async)]
@@ -233,6 +233,19 @@ pub fn open_speed_test(app_handle: tauri::AppHandle) -> Result<(), String> {
 pub fn check_browser_state(app_state: tauri::State<'_, AppState>) -> Result<bool, String> {
     let browser_state = app_state.browser_state.read().unwrap().to_owned();
     Ok(browser_state)
+}
+
+#[tauri::command(async)]
+pub fn setup_browser(app_state: tauri::State<'_, AppState>) -> Result<(), String> {
+    match get_browser_path() {
+        Some(path) => {
+            let (b, t) = open_headless_browser(path).unwrap();
+            *app_state.browser.write().unwrap() = Some(b);
+            *app_state.tab.write().unwrap() = Some(t);
+        }
+        None => *app_state.browser_state.write().unwrap() = false, // 没找到浏览器
+    }
+    Ok(())
 }
 
 #[tauri::command(async)]

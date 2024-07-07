@@ -6,27 +6,16 @@ use std::sync::RwLock;
 use tauri::Manager;
 use ustb_wifi_tools::commands::*;
 use ustb_wifi_tools::entities::AppState;
-use ustb_wifi_tools::utils::{get_browser_path, open_headless_browser};
 
 fn main() {
-    let app_state = AppState {
-        jsessionid: RwLock::new(None),
-        account: RwLock::new(None),
-        browser: RwLock::new(None),
-        tab: RwLock::new(None),
-        browser_state: RwLock::new(true), // 找到浏览器
-    };
-    match get_browser_path() {
-        Some(path) => {
-            let (b, t) = open_headless_browser(path).unwrap();
-            *app_state.browser.write().unwrap() = Some(b);
-            *app_state.tab.write().unwrap() = Some(t);
-        }
-        None => *app_state.browser_state.write().unwrap() = false, // 没找到浏览器
-    }
-
     tauri::Builder::default()
-        .manage(app_state)
+        .manage(AppState {
+            jsessionid: RwLock::new(None),
+            account: RwLock::new(None),
+            browser: RwLock::new(None),
+            tab: RwLock::new(None),
+            browser_state: RwLock::new(true), // 找到浏览器
+        })
         .invoke_handler(tauri::generate_handler![
             load_user_flow,
             get_cookie,
@@ -40,7 +29,8 @@ fn main() {
             do_unbind_macs,
             open_speed_test,
             check_browser_state,
-            set_browser_path
+            set_browser_path,
+            setup_browser
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application")
