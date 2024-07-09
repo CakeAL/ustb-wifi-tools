@@ -1,8 +1,17 @@
 default: 
     @just --list
 
-b: 
+alias b := build
+alias d := dev
+alias ba := build-all
+
+build: 
     cargo tauri build
 
-d: 
+dev: 
     cargo tauri dev
+
+build-all: 
+    cargo tauri build --target aarch64-apple-darwin
+    cargo tauri build --target x86_64-apple-darwin
+    cargo tauri build --target x86_64-pc-windows-gnu
