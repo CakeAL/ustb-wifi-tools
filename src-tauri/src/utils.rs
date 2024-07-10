@@ -55,7 +55,7 @@ pub fn try_open_headless_browser(browser_path: PathBuf) -> Result<()> {
     Ok(())
 }
 
-pub fn login_via_headless_browser(browser_path: PathBuf, account: Account) -> Result<Vec<Cookie>> {
+pub fn login_via_headless_browser(browser_path: PathBuf, account: &Account) -> Result<Vec<Cookie>> {
     let browser = Browser::new(LaunchOptions {
         // headless: false,
         // window_size: Some((1600, 900)),
@@ -88,7 +88,7 @@ pub fn login_via_headless_browser(browser_path: PathBuf, account: Account) -> Re
     if account.check_code.is_some() {
         check_code_ele.call_js_fn(
             "function(str) { this.value = str }",
-            vec![serde_json::json!(account.check_code.unwrap())],
+            vec![serde_json::json!(account.check_code.clone().unwrap())],
             false,
         )?;
     }
@@ -137,7 +137,7 @@ mod test {
             check_code: None,
         };
         let browser_path = get_browser_path().unwrap();
-        let res = login_via_headless_browser(browser_path, account);
+        let res = login_via_headless_browser(browser_path, &account);
         dbg!(res.unwrap());
     }
 }

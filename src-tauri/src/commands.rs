@@ -8,7 +8,8 @@ use tauri::Manager;
 use crate::{
     entities::{Account, AppState},
     requests::{
-        get_address, get_load_user_flow, get_mac_address, get_month_pay, get_refresh_account, get_user_login_log, unbind_macs
+        get_address, get_load_user_flow, get_mac_address, get_month_pay, get_refresh_account,
+        get_user_login_log, unbind_macs,
     },
     utils::{get_browser_path, login_via_headless_browser, try_open_headless_browser},
 };
@@ -62,11 +63,16 @@ pub async fn get_cookie(
         check_code: None,
     };
     let browser_path = get_browser_path().unwrap();
-    let res = login_via_headless_browser(browser_path, account);
+    let res = login_via_headless_browser(browser_path, &account);
     match res {
         Ok(cookies) => {
             dbg!(&cookies[0]);
             *app_state.jsessionid.write().unwrap() = cookies.first().map(|str| str.value.clone());
+            app_state
+                .setting
+                .write()
+                .unwrap()
+                .set_account(account.user_name, account.password);
         }
         Err(err) => return Err(format!("Can't get cookies due to unknown error: {}", err)),
     }
@@ -214,22 +220,18 @@ pub fn open_speed_test(app_handle: tauri::AppHandle, site_num: i32) -> Result<()
         return Err("已经打开一个测速窗口了".to_string());
     }
     let url = match site_num {
-        1 => "http://speed.ustb.edu.cn/", // 北科 内网
-        2 => "https://test6.ustc.edu.cn/", // 中科大 ipv6
-        3 => "https://speed.neu6.edu.cn/", // 东北大学 ipv6
-        4 => "https://test6.nju.edu.cn/", // 南京大学 ipv6
+        1 => "http://speed.ustb.edu.cn/",      // 北科 内网
+        2 => "https://test6.ustc.edu.cn/",     // 中科大 ipv6
+        3 => "https://speed.neu6.edu.cn/",     // 东北大学 ipv6
+        4 => "https://test6.nju.edu.cn/",      // 南京大学 ipv6
         5 => "https://speedtest6.shu.edu.cn/", // 上海大学 ipv6
-        6 => "http://speed6.ujs.edu.cn/", // 江苏大学 ipv6
+        6 => "http://speed6.ujs.edu.cn/",      // 江苏大学 ipv6
         _ => return Err("未知测速网站".to_string()),
     };
-    tauri::WindowBuilder::new(
-        &app_handle,
-        "speed_test",
-        tauri::WindowUrl::App(url.into()),
-    )
-    .build()
-    .map_err(|e| format!("Error when building the speed_test window: {}", e))
-    .map(|_| ())
+    tauri::WindowBuilder::new(&app_handle, "speed_test", tauri::WindowUrl::App(url.into()))
+        .build()
+        .map_err(|e| format!("Error when building the speed_test window: {}", e))
+        .map(|_| ())
 }
 
 #[tauri::command(async)]
@@ -241,7 +243,7 @@ pub fn check_has_browser() -> Result<bool, String> {
 }
 
 #[tauri::command(async)]
-pub fn set_browser_path() -> Result<(), String> {
+pub fn set_browser_path(app_state: tauri::State<'_, AppState>) -> Result<(), String> {
     let mut browser_path: PathBuf;
     match FileDialog::new().pick_file() {
         Some(path) => browser_path = path.to_owned(),
@@ -255,13 +257,18 @@ pub fn set_browser_path() -> Result<(), String> {
         ));
     }
 
-    let res = try_open_headless_browser(browser_path);
+    let res = try_open_headless_browser(browser_path.clone());
     match res {
         Ok(()) => {
             // *app_state.browser.write().unwrap() = Some(b);
             // *app_state.tab.write().unwrap() = Some(t);
             // *app_state.browser_state.write().unwrap() = true;
             // do nothing
+            app_state
+                .setting
+                .write()
+                .unwrap()
+                .set_browser_path(browser_path.to_str().map(|str: &str| str.to_owned()));
             Ok(())
         }
         Err(e) => Err(format!("在该路径找不到浏览器可执行文件：{}", e)),
@@ -274,4 +281,24 @@ pub async fn load_ip_address() -> Result<String, String> {
         Ok(ips) => Ok(format!("[\"{}\", \"{}\"]", ips[0], ips[1])),
         Err(e) => Err(format!("获取 IP 地址失败：{}", e)),
     }
+}
+
+#[tauri::command(async)]
+pub fn get_jsessionid(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
+    Ok(app_state
+        .jsessionid
+        .read()
+        .unwrap()
+        .clone()
+        .unwrap_or(String::default()))
+}
+
+#[tauri::command(async)]
+pub fn set_setting(app_state: tauri::State<'_, AppState>) -> Result<(), String> {
+    app_state
+        .setting
+        .read()
+        .unwrap()
+        .write_setting()
+        .map_err(|err| format!("{}", err))
 }

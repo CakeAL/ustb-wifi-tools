@@ -10,10 +10,20 @@ const sessionid = ref<string>("");
 const user_name = ref<string>("");
 const password = ref<string>("");
 const button_disabled = ref<boolean>(false);
+const login_state = ref<boolean>(false);
 
 onMounted(() => {
   check_has_browser();
+  check_login_state();
 });
+
+const check_login_state = async () => {
+  let res = await invoke("get_jsessionid") as string;
+  if (res.length > 0) {
+    sessionid.value = res;
+    login_state.value = true;
+  }
+}
 
 const check_has_browser = async () => {
   has_browser.value = (await invoke("check_has_browser").catch((err) =>
@@ -43,8 +53,14 @@ const get_cookies = async () => {
     .finally(() => {
       loadingBar.finish();
       button_disabled.value = false;
+      // 登录成功
+      set_setting();
     })) as string;
 };
+
+const set_setting = async () => {
+  await invoke("set_setting").catch((err) => pop_message.error(err));
+}
 </script>
 
 <template>
@@ -64,6 +80,7 @@ const get_cookies = async () => {
       </n-button>
     </div>
     <n-space vertical v-else>
+    <div v-if="!login_state">
       <h3>
         在下方输入学号和密码（如果没改过，是身份证后8位，数据均在本地存储）：
       </h3>
@@ -89,6 +106,10 @@ const get_cookies = async () => {
       >
         点我登陆获取 cookie⭐️
       </n-button>
+    </div>
+    <div v-else>
+      <h3>您已登录，如果其他页面不能获取到信息，请关闭软件重新打开。</h3>
+    </div>
       <h3>当前有效JSESSIONID：{{ sessionid }}</h3>
       <h4>
         ⬆️这个东西是当前打开应用期间的访问你的校园网数据的一个凭证，如果你发给其他人，那么一段时间内别人也可以看你的数据，这很危险，孩子。

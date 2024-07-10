@@ -2,6 +2,8 @@ use std::sync::RwLock;
 
 use serde::{Deserialize, Serialize};
 
+use crate::setting::Setting;
+
 // #[derive(Debug, Serialize, Deserialize)]
 // pub struct Flow {
 //     pub v4: f64,
@@ -79,4 +81,5 @@ pub struct MacAddress {
 pub struct AppState {
     pub jsessionid: RwLock<Option<String>>,
     pub account: RwLock<Option<String>>,
+    pub setting: RwLock<Setting>,
 }

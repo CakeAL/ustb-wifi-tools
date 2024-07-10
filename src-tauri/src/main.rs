@@ -5,12 +5,14 @@ use std::sync::RwLock;
 
 use ustb_wifi_tools::commands::*;
 use ustb_wifi_tools::entities::AppState;
+use ustb_wifi_tools::setting::Setting;
 
 fn main() {
     tauri::Builder::default()
         .manage(AppState {
             jsessionid: RwLock::new(None),
             account: RwLock::new(None),
+            setting: RwLock::new(Setting::default()),
         })
         .invoke_handler(tauri::generate_handler![
             load_user_flow,
@@ -26,7 +28,9 @@ fn main() {
             open_speed_test,
             set_browser_path,
             check_has_browser,
-            load_ip_address
+            load_ip_address,
+            get_jsessionid,
+            set_setting
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

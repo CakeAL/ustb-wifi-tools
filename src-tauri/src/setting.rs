@@ -40,6 +40,15 @@ impl Setting {
         file.write_all(json_str.as_bytes())?;
         Ok(())
     }
+
+    pub fn set_account(&mut self, username: String, password: String) {
+        self.username = Some(username);
+        self.password = Some(password);
+    }
+
+    pub fn set_browser_path(&mut self, path: Option<String>) {
+        self.browser_path = path;
+    }
 }
 
 
