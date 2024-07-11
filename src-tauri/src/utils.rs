@@ -57,14 +57,15 @@ pub fn try_open_headless_browser(browser_path: PathBuf) -> Result<()> {
 
 pub fn login_via_headless_browser(browser_path: PathBuf, account: &Account) -> Result<Vec<Cookie>> {
     let browser = Browser::new(LaunchOptions {
-        // headless: false,
+        headless: false,
         // window_size: Some((1600, 900)),
         path: Some(browser_path),
         ..Default::default()
     })?;
 
     let tab = browser.new_tab()?;
-    tab.navigate_to("http://202.204.60.7:8080/nav_login")?
+    tab.set_default_timeout(std::time::Duration::from_secs(5))
+        .navigate_to("http://202.204.60.7:8080/nav_login")?
         .wait_until_navigated()?;
 
     let user_name_ele =
@@ -99,21 +100,20 @@ pub fn login_via_headless_browser(browser_path: PathBuf, account: &Account) -> R
     tab.wait_until_navigated()?;
 
     let mut res = vec![];
-
-    // 获取不到这个元素，说明登录成功了
-    if tab
-        .find_element_by_xpath(r#"/html/body/div/div/div[3]/div/div/form/div[3]/input"#)
-        .is_err()
-    {
-        let c = tab.get_cookies()?.first().unwrap().clone();
-        res.push(Cookie {
-            name: c.name,
-            value: c.value,
-            domain: c.domain,
-            path: c.path,
-        })
-    } else {
-        return Err(anyhow::anyhow!("登录失败，检查用户名和密码".to_string()));
+    match tab.find_element_by_xpath(r#"/html/body/div/div[1]/div[3]/div/div[1]/div[1]/div[1]/div/div/div[1]"#) {
+        Ok(_) => {
+            let c = tab.get_cookies()?.first().unwrap().clone();
+            res.push(Cookie {
+                name: c.name,
+                value: c.value,
+                domain: c.domain,
+                path: c.path,
+            });
+        }
+        Err(_) => {
+            let ele = tab.find_element_by_xpath(r#"/html/body/div/div/div[3]/div/div/form/div[2]/div[1]/div"#).unwrap();
+            return Err(anyhow::anyhow!(format!("{}", ele.get_inner_text().unwrap_or_default())));
+        }
     }
 
     Ok(res)

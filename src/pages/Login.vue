@@ -13,6 +13,7 @@ const button_disabled = ref<boolean>(false);
 const login_state = ref<boolean>(false);
 
 onMounted(() => {
+  check_login_state();
   load_setting()
     .then(check_has_browser)
     .then(() => {
@@ -20,8 +21,7 @@ onMounted(() => {
       if (has_browser.value === true && login_state.value === false) {
         get_cookies();
       }
-    })
-    .then(check_login_state);
+    });
 });
 
 const load_setting = async () => {
@@ -60,6 +60,7 @@ const get_cookies = async () => {
   }
   loadingBar.start();
   button_disabled.value = true;
+  let has_error = false;
   sessionid.value = (await invoke("get_cookie", {
     userName: user_name.value,
     password: password.value,
@@ -67,12 +68,21 @@ const get_cookies = async () => {
     .catch((err) => {
       pop_message.error(err);
       loadingBar.error();
+      has_error = true;
+      // 登录失败
+      login_state.value = false;
     })
     .finally(() => {
-      loadingBar.finish();
       button_disabled.value = false;
-      // 登录成功
-      set_setting();
+      if (has_error === false) {
+        // 登录成功
+        loadingBar.finish();
+        login_state.value = true;
+        set_setting();
+      } else {
+        // 失败
+        login_state.value = false;
+      }
     })) as string;
 };
 
@@ -124,6 +134,7 @@ const set_setting = async () => {
         >
           点我登陆获取 cookie⭐️
         </n-button>
+        <h3 v-if="button_disabled === true">登录中...</h3>
       </div>
       <div v-else>
         <h3>您已登录，如果其他页面不能获取到信息，请关闭软件重新打开。</h3>

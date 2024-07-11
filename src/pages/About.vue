@@ -48,10 +48,11 @@ const show1 = ref(false);
         <p>USTB-V6接入说明：http://cipp.ustb.edu.cn/app.IAManage/index.jsp?m=iamanage&c=Notice&a=noticeInfo&id=22</p>
         <p>一个原来能看校园网出口出入流量的网站，现在已经打不开了：http://traffic.ustb.edu.cn/</p>
         <p>校园网 Radius 超时可能解决方法：</p>
+        <p>0. 尝试手动打开http://login.ustb.edu.cn/登录</p>
         <p>1. 不要使用注销页直接登陆，首先忽略此网络（忘记），然后重开Wi-Fi，再进行登陆，会跳出登录页（虽然ip和注销页是一样的）</p>
         <p>2. 关掉代理，再重新进行上述操作。</p>
         <p>3. 重启电脑。</p>
-        <p>注销页网址：http://202.204.48.66/ (你知道么，学号是可以点击的)</p>
+        <p>注销页和登录页网址：http://202.204.48.66/ 或者 http://login.ustb.edu.cn/ (你知道么，学号是可以点击的)</p>
     </n-space>
     </n-card>
   </div>

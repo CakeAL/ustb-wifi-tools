@@ -74,7 +74,7 @@ pub async fn get_cookie(
                 .unwrap()
                 .set_account(account.user_name, account.password);
         }
-        Err(err) => return Err(format!("请检查是否在校园网内: {}", err)),
+        Err(err) => return Err(format!("{}", err)),
     }
     Ok(app_state
         .jsessionid
