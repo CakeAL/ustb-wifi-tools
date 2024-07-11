@@ -256,6 +256,7 @@ pub async fn get_user_login_log(
     }
     // dbg!(every_login_datas);
     Ok(Some(serde_json::json!(UserLoginLog {
+        #[allow(clippy::get_first)]
         ipv4_up: redtexts.get(0).unwrap().trim().parse()?,
         ipv4_down: redtexts.get(1).unwrap().trim().parse()?,
         ipv6_up: redtexts.get(2).unwrap().trim().parse()?,

@@ -11,7 +11,6 @@ fn main() {
     tauri::Builder::default()
         .manage(AppState {
             jsessionid: RwLock::new(None),
-            account: RwLock::new(None),
             setting: RwLock::new(Setting::default()),
         })
         .invoke_handler(tauri::generate_handler![
@@ -30,7 +29,8 @@ fn main() {
             check_has_browser,
             load_ip_address,
             get_jsessionid,
-            set_setting
+            set_setting,
+            load_setting
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

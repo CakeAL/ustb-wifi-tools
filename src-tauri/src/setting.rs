@@ -6,7 +6,7 @@ use std::{
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Setting {
     pub username: Option<String>,
     pub password: Option<String>,
@@ -50,7 +50,6 @@ impl Setting {
         self.browser_path = path;
     }
 }
-
 
 #[cfg(test)]
 mod tests {

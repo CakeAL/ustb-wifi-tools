@@ -13,17 +13,35 @@ const button_disabled = ref<boolean>(false);
 const login_state = ref<boolean>(false);
 
 onMounted(() => {
-  check_has_browser();
-  check_login_state();
+  load_setting()
+    .then(check_has_browser)
+    .then(() => {
+      // 有浏览器并且没登录时候
+      if (has_browser.value === true && login_state.value === false) {
+        get_cookies();
+      }
+    })
+    .then(check_login_state);
 });
 
+const load_setting = async () => {
+  let res = (await invoke("load_setting").catch((err) =>
+    pop_message.error(err)
+  )) as string;
+  if (res.length > 0) {
+    let settings = JSON.parse(res);
+    user_name.value = settings.username;
+    password.value = settings.password;
+  }
+};
+
 const check_login_state = async () => {
-  let res = await invoke("get_jsessionid") as string;
+  let res = (await invoke("get_jsessionid")) as string;
   if (res.length > 0) {
     sessionid.value = res;
     login_state.value = true;
   }
-}
+};
 
 const check_has_browser = async () => {
   has_browser.value = (await invoke("check_has_browser").catch((err) =>
@@ -60,7 +78,7 @@ const get_cookies = async () => {
 
 const set_setting = async () => {
   await invoke("set_setting").catch((err) => pop_message.error(err));
-}
+};
 </script>
 
 <template>
@@ -80,36 +98,36 @@ const set_setting = async () => {
       </n-button>
     </div>
     <n-space vertical v-else>
-    <div v-if="!login_state">
-      <h3>
-        在下方输入学号和密码（如果没改过，是身份证后8位，数据均在本地存储）：
-      </h3>
-      <n-input
-        v-model:value="user_name"
-        type="text"
-        placeholder="学号/工号"
-        round
-      />
-      <n-input
-        v-model:value="password"
-        type="password"
-        show-password-on="mousedown"
-        placeholder="密码"
-        round
-      />
-      <n-button
-        strong
-        secondary
-        type="primary"
-        @click="get_cookies"
-        :disabled="button_disabled"
-      >
-        点我登陆获取 cookie⭐️
-      </n-button>
-    </div>
-    <div v-else>
-      <h3>您已登录，如果其他页面不能获取到信息，请关闭软件重新打开。</h3>
-    </div>
+      <div v-if="!login_state">
+        <h3>
+          在下方输入学号和密码（如果没改过，是身份证后8位，数据均在本地存储）：
+        </h3>
+        <n-input
+          v-model:value="user_name"
+          type="text"
+          placeholder="学号/工号"
+          round
+        />
+        <n-input
+          v-model:value="password"
+          type="password"
+          show-password-on="mousedown"
+          placeholder="密码"
+          round
+        />
+        <n-button
+          strong
+          secondary
+          type="primary"
+          @click="get_cookies"
+          :disabled="button_disabled"
+        >
+          点我登陆获取 cookie⭐️
+        </n-button>
+      </div>
+      <div v-else>
+        <h3>您已登录，如果其他页面不能获取到信息，请关闭软件重新打开。</h3>
+      </div>
       <h3>当前有效JSESSIONID：{{ sessionid }}</h3>
       <h4>
         ⬆️这个东西是当前打开应用期间的访问你的校园网数据的一个凭证，如果你发给其他人，那么一段时间内别人也可以看你的数据，这很危险，孩子。

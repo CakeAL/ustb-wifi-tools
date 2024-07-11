@@ -14,4 +14,7 @@ dev:
 build-all: 
     cargo tauri build --target aarch64-apple-darwin
     cargo tauri build --target x86_64-apple-darwin
-    cargo tauri build --target x86_64-pc-windows-gnu
+    # cargo tauri build --target x86_64-pc-windows-gnu
+
+clippy: 
+    cd src-tauri && cargo clippy

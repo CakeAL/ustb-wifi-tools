@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 
 use chrono::DateTime;
-use regex::Regex;
 use rfd::FileDialog;
 use tauri::Manager;
 
@@ -11,6 +10,7 @@ use crate::{
         get_address, get_load_user_flow, get_mac_address, get_month_pay, get_refresh_account,
         get_user_login_log, unbind_macs,
     },
+    setting::Setting,
     utils::{get_browser_path, login_via_headless_browser, try_open_headless_browser},
 };
 
@@ -74,7 +74,7 @@ pub async fn get_cookie(
                 .unwrap()
                 .set_account(account.user_name, account.password);
         }
-        Err(err) => return Err(format!("Can't get cookies due to unknown error: {}", err)),
+        Err(err) => return Err(format!("请检查是否在校园网内: {}", err)),
     }
     Ok(app_state
         .jsessionid
@@ -92,18 +92,7 @@ pub async fn load_refresh_account(app_state: tauri::State<'_, AppState>) -> Resu
     };
 
     match get_refresh_account(&session_id).await {
-        Ok(Some(str)) => {
-            // 存一下用户名
-            Regex::new(r#""welcome":\s*"([^"]+)\([^"]*\)""#)
-                .unwrap()
-                .captures(&str)
-                .map(|caps| {
-                    dbg!(&caps.get(1).map(|str| str.as_str().to_string()));
-                    *app_state.account.write().unwrap() =
-                        caps.get(1).map(|str| str.as_str().to_string())
-                });
-            Ok(str)
-        }
+        Ok(Some(str)) => Ok(str),
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
     }
@@ -113,7 +102,7 @@ pub async fn load_refresh_account(app_state: tauri::State<'_, AppState>) -> Resu
 pub async fn load_user_flow_by_state(
     app_state: tauri::State<'_, AppState>,
 ) -> Result<String, String> {
-    let account = app_state.account.read().unwrap().clone();
+    let account = app_state.setting.read().unwrap().username.clone();
     match account {
         Some(account) => Ok(get_load_user_flow(&account)
             .await
@@ -235,7 +224,10 @@ pub fn open_speed_test(app_handle: tauri::AppHandle, site_num: i32) -> Result<()
 }
 
 #[tauri::command(async)]
-pub fn check_has_browser() -> Result<bool, String> {
+pub fn check_has_browser(app_state: tauri::State<'_, AppState>) -> Result<bool, String> {
+    if app_state.setting.read().unwrap().browser_path.is_some() {
+        return Ok(true);
+    }
     match get_browser_path() {
         Some(_) => Ok(true),
         None => Ok(false),
@@ -290,7 +282,7 @@ pub fn get_jsessionid(app_state: tauri::State<'_, AppState>) -> Result<String, S
         .read()
         .unwrap()
         .clone()
-        .unwrap_or(String::default()))
+        .unwrap_or_default())
 }
 
 #[tauri::command(async)]
@@ -301,4 +293,15 @@ pub fn set_setting(app_state: tauri::State<'_, AppState>) -> Result<(), String> 
         .unwrap()
         .write_setting()
         .map_err(|err| format!("{}", err))
+}
+
+#[tauri::command(async)]
+pub fn load_setting(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
+    match Setting::load_setting() {
+        Ok(setting) => {
+            *app_state.setting.write().unwrap() = setting.clone();
+            Ok(serde_json::to_string(&setting).unwrap())
+        }
+        Err(err) => Err(format!("{err}")),
+    }
 }

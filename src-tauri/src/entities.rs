@@ -80,6 +80,5 @@ pub struct MacAddress {
 
 pub struct AppState {
     pub jsessionid: RwLock<Option<String>>,
-    pub account: RwLock<Option<String>>,
     pub setting: RwLock<Setting>,
 }
