@@ -62,7 +62,17 @@ pub async fn get_cookie(
         password,
         check_code: None,
     };
-    let browser_path = get_browser_path().unwrap();
+
+    let browser_path = match app_state.setting.read().unwrap().browser_path.clone() {
+        None => get_browser_path().unwrap(),
+        Some(path) => {
+            if path.is_empty() {
+                get_browser_path().unwrap()
+            } else {
+                PathBuf::from(path)
+            }
+        }
+    };
     let res = login_via_headless_browser(browser_path, &account);
     match res {
         Ok(cookies) => {
@@ -225,7 +235,9 @@ pub fn open_speed_test(app_handle: tauri::AppHandle, site_num: i32) -> Result<()
 
 #[tauri::command(async)]
 pub fn check_has_browser(app_state: tauri::State<'_, AppState>) -> Result<bool, String> {
-    if app_state.setting.read().unwrap().browser_path.is_some() {
+    let path = app_state.setting.read().unwrap().browser_path.clone();
+    // 存在路径，并且路径不是空的
+    if path.is_some() && !path.unwrap_or_default().is_empty() {
         return Ok(true);
     }
     match get_browser_path() {
@@ -235,7 +247,10 @@ pub fn check_has_browser(app_state: tauri::State<'_, AppState>) -> Result<bool, 
 }
 
 #[tauri::command(async)]
-pub fn set_browser_path(app_state: tauri::State<'_, AppState>) -> Result<(), String> {
+pub fn set_browser_path(
+    app_state: tauri::State<'_, AppState>,
+    window: tauri::Window,
+) -> Result<(), String> {
     let mut browser_path: PathBuf;
     match FileDialog::new().pick_file() {
         Some(path) => browser_path = path.to_owned(),
@@ -252,15 +267,20 @@ pub fn set_browser_path(app_state: tauri::State<'_, AppState>) -> Result<(), Str
     let res = try_open_headless_browser(browser_path.clone());
     match res {
         Ok(()) => {
-            // *app_state.browser.write().unwrap() = Some(b);
-            // *app_state.tab.write().unwrap() = Some(t);
-            // *app_state.browser_state.write().unwrap() = true;
-            // do nothing
             app_state
                 .setting
                 .write()
                 .unwrap()
                 .set_browser_path(browser_path.to_str().map(|str: &str| str.to_owned()));
+            app_state
+                .setting
+                .write()
+                .unwrap()
+                .write_setting()
+                .map_err(|err| format!("写入配置错误: {}", err))?;
+            window
+                .eval("window.location.reload();")
+                .map_err(|err| format!("刷新网页错误：{}", err))?;
             Ok(())
         }
         Err(e) => Err(format!("在该路径找不到浏览器可执行文件：{}", e)),
