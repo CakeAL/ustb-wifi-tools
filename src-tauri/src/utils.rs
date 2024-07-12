@@ -1,6 +1,6 @@
 use anyhow::Result;
 use headless_chrome::{Browser, LaunchOptions};
-use std::path::PathBuf;
+use std::{path::PathBuf, thread, time::Duration};
 
 use crate::entities::Account;
 
@@ -97,10 +97,20 @@ pub fn login_via_headless_browser(browser_path: PathBuf, account: &Account) -> R
     let submit_button_ele =
         tab.find_element_by_xpath(r#"/html/body/div/div/div[3]/div/div/form/div[6]/input"#)?;
     submit_button_ele.click()?;
-    tab.wait_until_navigated()?;
+
+    loop {
+        thread::sleep(Duration::from_millis(20));
+        // 等待网址变更
+        if tab.get_url() == "http://202.204.60.7:8080/LoginAction.action" {
+            tab.wait_until_navigated()?;
+            break;
+        }
+    }
 
     let mut res = vec![];
-    match tab.find_element_by_xpath(r#"/html/body/div/div[1]/div[3]/div/div[1]/div[1]/div[1]/div/div/div[1]"#) {
+    match tab.find_element_by_xpath(
+        r#"/html/body/div/div[1]/div[3]/div/div[1]/div[1]/div[1]/div/div/div[1]"#,
+    ) {
         Ok(_) => {
             let c = tab.get_cookies()?.first().unwrap().clone();
             res.push(Cookie {
