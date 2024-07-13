@@ -227,7 +227,8 @@ pub fn open_speed_test(app_handle: tauri::AppHandle, site_num: i32) -> Result<()
         6 => "http://speed6.ujs.edu.cn/",      // 江苏大学 ipv6
         _ => return Err("未知测速网站".to_string()),
     };
-    tauri::WindowBuilder::new(&app_handle, "speed_test", tauri::WindowUrl::App(url.into()))
+    
+    tauri::WindowBuilder::new(&app_handle, "speed_test", tauri::WindowUrl::External(url.parse().unwrap()))
         .build()
         .map_err(|e| format!("Error when building the speed_test window: {}", e))
         .map(|_| ())

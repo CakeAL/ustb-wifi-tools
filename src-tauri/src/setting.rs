@@ -1,10 +1,12 @@
 use std::{
-    fs::{File, OpenOptions},
+    fs::{create_dir, File, OpenOptions},
     io::{Read, Write},
+    path::PathBuf,
 };
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
+use tauri::Config;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Setting {
@@ -19,7 +21,7 @@ impl Setting {
     }
 
     pub fn load_setting() -> Result<Self> {
-        match File::open("setting.json") {
+        match File::open(get_config_path()?) {
             Ok(mut json_file) => {
                 let mut buf = String::new();
                 json_file.read_to_string(&mut buf)?;
@@ -36,7 +38,7 @@ impl Setting {
             .create(true)
             .write(true)
             .truncate(true)
-            .open("setting.json")?;
+            .open(get_config_path()?)?;
         file.write_all(json_str.as_bytes())?;
         Ok(())
     }
@@ -49,6 +51,23 @@ impl Setting {
     pub fn set_browser_path(&mut self, path: Option<String>) {
         self.browser_path = path;
     }
+}
+
+fn get_config_path() -> Result<PathBuf> {
+    let path = match tauri::api::path::app_data_dir(&Config::default()) {
+        Some(mut p) => {
+            p.push("ustb-wifi-tools");
+            if !p.exists() {
+                // 如果不存在这个文件夹先创建
+                create_dir(&p)?
+            }
+            p.push("config.json");
+            p
+        }
+        None => return Err(anyhow!("There is no such app data dir!")),
+    };
+    dbg!(&path);
+    Ok(path)
 }
 
 #[cfg(test)]
@@ -68,5 +87,11 @@ mod tests {
     fn test_load_setting() {
         let setting = Setting::load_setting().unwrap();
         println!("{:?}", setting);
+    }
+
+    #[test]
+    fn test_get_config_path() {
+        let path = get_config_path().unwrap();
+        println!("{:?}", path.to_str());
     }
 }
