@@ -30,7 +30,8 @@ fn main() {
             load_ip_address,
             get_jsessionid,
             set_setting,
-            load_setting
+            load_setting,
+            logout
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

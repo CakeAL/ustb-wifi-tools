@@ -86,6 +86,17 @@ const get_cookies = async () => {
     })) as string;
 };
 
+const logout = async () => {
+  let has_error = false;
+  let res = await invoke("logout").catch((err) => {
+    pop_message.error(err);
+    has_error = true;
+  });
+  if (has_error === false) {
+    pop_message.success(res as string);
+  }
+};
+
 const set_setting = async () => {
   await invoke("set_setting").catch((err) => pop_message.error(err));
 };
@@ -143,6 +154,10 @@ const set_setting = async () => {
       <h4>
         ⬆️这个东西是当前打开应用期间的访问你的校园网数据的一个凭证，如果你发给其他人，那么一段时间内别人也可以看你的数据，这很危险，孩子。
       </h4>
+      <n-button strong secondary type="info" @click="logout"> 登出 </n-button>
+      <h4>如果想自己更改配置文件：</h4>
+       <p>Windows: C:\Users\用户名\AppData\Roaming\ustb-wifi-tools\config.json</p>
+       <p>macOS: /Users/用户名/Library/Application Support/ustb-wifi-tools/config.json</p>
     </n-space>
   </div>
 </template>

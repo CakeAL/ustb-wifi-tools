@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use chrono::DateTime;
 use rfd::FileDialog;
-use tauri::Manager;
+use tauri::{utils::config::WindowConfig, Manager};
 
 use crate::{
     entities::{Account, AppState},
@@ -92,6 +92,26 @@ pub async fn get_cookie(
         .unwrap()
         .clone()
         .unwrap_or_default())
+}
+
+#[tauri::command(async)]
+pub fn logout(
+    app_state: tauri::State<'_, AppState>,
+    window: tauri::Window,
+) -> Result<String, String> {
+    if app_state.jsessionid.read().unwrap().is_none() {
+        return Err("没登录之前不许登出😠".into());
+    }
+    *app_state.jsessionid.write().unwrap() = None;
+    Setting::write_setting(&Setting {
+        browser_path: app_state.setting.read().unwrap().browser_path.to_owned(),
+        ..Default::default()
+    })
+    .map_err(|err| format!("写入配置错误: {}", err))?;
+    window
+        .eval("window.location.reload();")
+        .map_err(|err| format!("刷新网页错误：{}", err))?;
+    Ok("登出成功🤔".into())
 }
 
 #[tauri::command(async)]
@@ -227,11 +247,20 @@ pub fn open_speed_test(app_handle: tauri::AppHandle, site_num: i32) -> Result<()
         6 => "http://speed6.ujs.edu.cn/",      // 江苏大学 ipv6
         _ => return Err("未知测速网站".to_string()),
     };
-    
-    tauri::WindowBuilder::new(&app_handle, "speed_test", tauri::WindowUrl::External(url.parse().unwrap()))
-        .build()
-        .map_err(|e| format!("Error when building the speed_test window: {}", e))
-        .map(|_| ())
+
+    tauri::WindowBuilder::from_config(
+        &app_handle,
+        WindowConfig {
+            title: "测速".to_string(),
+            label: "speed_test".to_string(),
+            url: tauri::WindowUrl::External(url.parse().unwrap()),
+            // transparent: true,
+            ..Default::default()
+        },
+    )
+    .build()
+    .map_err(|e| format!("Error when building the speed_test window: {}", e))
+    .map(|_| ())
 }
 
 #[tauri::command(async)]
