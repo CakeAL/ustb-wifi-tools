@@ -49,9 +49,9 @@ fn background_init(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error
         Some(window_vibrancy::NSVisualEffectState::Active),
         None,
     )
-    .map_err(|err| format!("启动错误{}", err))?;
+    .map_err(|err| format!("启动错误: {}", err))?;
 
     #[cfg(target_os = "windows")]
-    apply_blur(&window, Some((18, 18, 18, 125))).map_err(|err| format!("启动错误{}", err))?;
+    window_vibrancy::apply_mica(&win, None).map_err(|err| format!("启动错误: {}", err))?;
     Ok(())
 }
