@@ -17,12 +17,20 @@
         "open": true
       },
       "http": {
-        "all":true,
+        "all": true,
         "request": true,
-        "scope": [
-          "http://202.204.60.7:8080/*",
-          "http://speed.ustb.edu.cn/*"
-        ]
+        "scope": ["http://202.204.60.7:8080/*", "http://speed.ustb.edu.cn/*"]
+      },
+      "window": {
+        "all": false,
+        "close": true,
+        "hide": true,
+        "show": true,
+        "maximize": true,
+        "minimize": true,
+        "unmaximize": true,
+        "unminimize": true,
+        "startDragging": true
       }
     },
     "windows": [
@@ -32,7 +40,8 @@
         "width": 800,
         "height": 600,
         "minHeight": 600,
-        "minWidth": 800
+        "minWidth": 800,
+        "transparent": true
       }
     ],
     "security": {
@@ -53,6 +62,7 @@
         "minimumSystemVersion": "10.13",
         "entitlements": "Info.plist"
       }
-    }
+    },
+    "macOSPrivateApi": true
   }
 }

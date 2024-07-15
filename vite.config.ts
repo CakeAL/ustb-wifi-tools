@@ -37,33 +37,6 @@ export default defineConfig(async () => ({
     watch: {
       // 3. tell vite to ignore watching `src-tauri`
       ignored: ["**/src-tauri/**"],
-    },
-    proxy: {
-      '/nav_login': {
-        target: 'http://202.204.60.7:8080/nav_login',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/nav_login/, '')
-      },
-      '/LoginAction.action': {
-        target: 'http://202.204.60.7:8080/LoginAction.action',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/LoginAction.action/, '')
-      },
-      '/RandomCodeAction.action': {
-        target: 'http://202.204.60.7:8080/RandomCodeAction.action',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/RandomCodeAction.action/, '')
-      },
-      '/js': {
-        target: 'http://202.204.60.7:8080/js',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/js/, '')
-      },
-      '/style': {
-        target: 'http://202.204.60.7:8080/style',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/style/, '')
-      }
-    },
+    }
   },
 }));

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, Ref, DefineComponent } from "vue";
+import { darkTheme } from "naive-ui";
 
 // routers
 import Login from "./pages/Login.vue";
@@ -36,27 +37,41 @@ window.addEventListener("hashchange", () => {
 const currentView = computed((): RouteComponent => {
   return routes[currentPath.value.slice(1) || "/"] || NotFound;
 });
+
+// Theme
+const theme = ref<any | undefined>(undefined);
+window.matchMedia('(prefers-color-scheme: dark)')
+      .addEventListener('change', event => {
+  if (event.matches) {
+    theme.value = darkTheme;
+  } else {
+    theme.value = undefined;
+  }
+})
+
 </script>
 
 <template>
   <n-message-provider>
     <n-loading-bar-provider>
-      <div class="container">
-        <n-split
-          direction="horizontal"
-          style="height: 100vh"
-          max="300px"
-          min="200px"
-          default-size="200px"
-        >
-          <template #1>
-            <Menu />
-          </template>
-          <template #2>
-            <component :is="currentView" />
-          </template>
-        </n-split>
-      </div>
+      <n-config-provider :theme="theme">
+        <div class="container">
+          <n-split
+            direction="horizontal"
+            style="height: 100vh"
+            max="300px"
+            min="200px"
+            default-size="200px"
+          >
+            <template #1>
+              <Menu />
+            </template>
+            <template #2>
+              <component :is="currentView" />
+            </template>
+          </n-split>
+        </div>
+      </n-config-provider>
     </n-loading-bar-provider>
   </n-message-provider>
 </template>

@@ -3,6 +3,7 @@
 
 use std::sync::RwLock;
 
+use tauri::Manager;
 use ustb_wifi_tools::commands::*;
 use ustb_wifi_tools::entities::AppState;
 use ustb_wifi_tools::setting::Setting;
@@ -33,6 +34,24 @@ fn main() {
             load_setting,
             logout
         ])
+        .setup(background_init)
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+fn background_init(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    let win = app.get_window("main").unwrap();
+
+    #[cfg(target_os = "macos")]
+    window_vibrancy::apply_vibrancy(
+        &win,
+        window_vibrancy::NSVisualEffectMaterial::HudWindow,
+        Some(window_vibrancy::NSVisualEffectState::Active),
+        None,
+    )
+    .map_err(|err| format!("启动错误{}", err))?;
+
+    #[cfg(target_os = "windows")]
+    apply_blur(&window, Some((18, 18, 18, 125))).map_err(|err| format!("启动错误{}", err))?;
+    Ok(())
 }

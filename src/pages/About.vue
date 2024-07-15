@@ -7,7 +7,7 @@ const show1 = ref(false);
 
 <template>
   <div class="container">
-    <n-card title="本软件动机：" hoverable>
+    <n-card title="本软件动机：" hoverable class="my-card">
       <n-space vertical>
         <p>更方便的获取 USTB 校园网每日使用情况，查询流量，解绑 MAC 地址等。</p>
         <p>
@@ -62,5 +62,9 @@ const show1 = ref(false);
 .container {
   height: 100vh;
   overflow: auto;
+}
+
+.my-card {
+  background: rgba(255, 255, 255, 0.05);
 }
 </style>
