@@ -45,7 +45,7 @@ fn background_init(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error
     #[cfg(target_os = "macos")]
     window_vibrancy::apply_vibrancy(
         &win,
-        window_vibrancy::NSVisualEffectMaterial::HudWindow,
+        window_vibrancy::NSVisualEffectMaterial::Sidebar,
         Some(window_vibrancy::NSVisualEffectState::Active),
         None,
     )

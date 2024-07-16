@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { CSSProperties, ref } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { useMessage } from "naive-ui";
 import dayjs from "dayjs";
@@ -31,33 +31,76 @@ interface EveryLoginData {
 
 const pop_message = useMessage();
 const date_range = ref<[number, number]>([Date.now(), Date.now()]);
+const a_date = ref<number>(Date.now());
 const user_login_log = ref<UserLoginLog | null>(null);
+const the_switch = ref(false);
 
 const get_user_login_log = async () => {
-  let res = await invoke("load_user_login_log", {
-    startDate: Math.floor(date_range.value[0] / 1000),
-    endDate: Math.floor(date_range.value[1] / 1000),
-  }).catch((err) => pop_message.error(err));
-  // console.log(res as string);
-  user_login_log.value = JSON.parse(res as string);
-  if (user_login_log.value !== null) {
+  if (the_switch.value === true) {
+    let res = await invoke("load_user_login_log", {
+      startDate: Math.floor(date_range.value[0] / 1000) + 8 * 3600,
+      endDate: Math.floor(date_range.value[1] / 1000) + 8 * 3600,
+    }).catch((err) => pop_message.error(err));
+    // console.log(res as string);
+    user_login_log.value = JSON.parse(res as string);
+  } else {
+    let res = await invoke("load_user_login_log", {
+      startDate: Math.floor(a_date.value / 1000) + 8 * 3600,
+      endDate: Math.floor(a_date.value / 1000) + 8 * 3600,
+    }).catch((err) => pop_message.error(err));
+    // console.log(res as string);
+    user_login_log.value = JSON.parse(res as string);
   }
 };
 
 const unix_format = (unix: number) => {
   return dayjs.unix(unix - 8 * 3600).format("YYYY-MM-DD HH:mm:ss");
 };
+
+const railStyle = ({
+  focused,
+  checked,
+}: {
+  focused: boolean;
+  checked: boolean;
+}) => {
+  const style: CSSProperties = {};
+  if (checked) {
+    style.background = "#4b9e5f";
+    if (focused) {
+      style.boxShadow = "0 0 0 2px #dbecdfff";
+    }
+  } else {
+    style.background = "#2080f0";
+    if (focused) {
+      style.boxShadow = "0 0 0 2px #2080f040";
+    }
+  }
+  return style;
+};
 </script>
 
 <template>
   <div class="container">
     <h2>每日使用详情</h2>
-    <p>选择一个时间段：</p>
+    <n-switch v-model:value="the_switch" :rail-style="railStyle">
+      <template #checked> 选很多天 </template>
+      <template #unchecked> 选一天 </template>
+    </n-switch>
+
     <n-date-picker
       v-model:value="date_range"
       type="daterange"
       clearable
       @update:value="get_user_login_log"
+      v-if="the_switch === true"
+    />
+    <n-date-picker
+      v-model:value="a_date"
+      type="date"
+      clearable
+      @update:value="get_user_login_log"
+      v-else
     />
     <div v-if="user_login_log !== null" class="show-data">
       <p>该段时间：</p>

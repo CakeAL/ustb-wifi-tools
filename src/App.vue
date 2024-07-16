@@ -40,8 +40,13 @@ const currentView = computed((): RouteComponent => {
 
 // Theme
 const theme = ref<any | undefined>(undefined);
-window.matchMedia('(prefers-color-scheme: dark)')
-      .addEventListener('change', event => {
+const themeMedia = window.matchMedia('(prefers-color-scheme: dark)')
+if (themeMedia.matches) {
+  theme.value = darkTheme;
+} else {
+  theme.value = undefined;
+}
+themeMedia.addEventListener('change', event => {
   if (event.matches) {
     theme.value = darkTheme;
   } else {

@@ -64,7 +64,7 @@ pub fn login_via_headless_browser(browser_path: PathBuf, account: &Account) -> R
     })?;
 
     let tab = browser.new_tab()?;
-    tab.set_default_timeout(std::time::Duration::from_secs(5))
+    tab.set_default_timeout(std::time::Duration::from_secs(2))
         .navigate_to("http://202.204.60.7:8080/nav_login")?
         .wait_until_navigated()?;
 
