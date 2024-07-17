@@ -7,6 +7,7 @@ use tauri::Manager;
 use ustb_wifi_tools::commands::*;
 use ustb_wifi_tools::entities::AppState;
 use ustb_wifi_tools::setting::Setting;
+use ustb_wifi_tools::utils::get_windows_build_number;
 
 fn main() {
     tauri::Builder::default()
@@ -52,6 +53,11 @@ fn background_init(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error
     .map_err(|err| format!("启动错误: {}", err))?;
 
     #[cfg(target_os = "windows")]
-    window_vibrancy::apply_mica(&win, None).map_err(|err| format!("启动错误: {}", err))?;
+    if get_windows_build_number()? >= 22000 {
+        window_vibrancy::apply_mica(&win, None).map_err(|err| format!("启动错误: {}", err))?;
+    } else {
+        window_vibrancy::apply_blur(&win, Some((18, 18, 18, 125))).map_err(|err| format!("启动错误: {}", err))?;
+    }
+    
     Ok(())
 }
