@@ -1,0 +1,56 @@
+name: "release"
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  publish-tauri:
+    permissions: 
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'macos-latest' # for Arm based macs (M1 and above).
+            args: '--target aarch64-apple-darwin'
+          - platform: 'macos-latest' # for Intel based macs.
+            args: '--target x86_64-apple-darwin'
+          - platform: 'windows-latest'
+            args: '--target aarch64-pc-windows-msvc --bundles nsis'
+          - platform: 'windows-latest'
+            args: '--target x86_64-pc-windows-msvc --bundles nsis'
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          target: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || matrix.platform == 'windows-latest' && 'aarch64-pc-windows-msvc,x86_64-pc-windows-msvc' }}
+      
+      - name: install pnpm
+        uses: pnpm/action-setup@v4
+        with: 
+          version: 9
+
+      - name: install frontend dependencies
+        run: pnpm install
+      
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: USTB WiFi Tools v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
+          releaseName: 'App v__VERSION__'
+          releaseBody: 'See the assets to download this version and install.'
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
