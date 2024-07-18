@@ -135,6 +135,7 @@ pub fn login_via_headless_browser(browser_path: PathBuf, account: &Account) -> R
 
     Ok(res)
 }
+
 #[cfg(target_os = "windows")]
 pub fn get_windows_build_number() -> Result<u32, Box<dyn std::error::Error>> {
     use std::{process::Command, str::from_utf8};
@@ -177,6 +178,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(target_os = "windows")]
     fn test_get_windows_build_number() {
         let res = get_windows_build_number();
         dbg!(res.unwrap());
