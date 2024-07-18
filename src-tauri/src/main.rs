@@ -32,7 +32,8 @@ fn main() {
             get_jsessionid,
             set_setting,
             load_setting,
-            logout
+            logout,
+            is_windows
         ])
         .setup(background_init)
         .run(tauri::generate_context!())
@@ -51,17 +52,16 @@ fn background_init(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error
     )
     .map_err(|err| format!("启动错误: {}", err))?;
     
-    // 有 bug，会导致白屏
-    // #[cfg(target_os = "windows")]
-    // {
-    //     use ustb_wifi_tools::utils::get_windows_build_number;
-    //     if get_windows_build_number()? >= 22000 {
-    //         window_vibrancy::apply_mica(&win, None).map_err(|err| format!("启动错误: {}", err))?;
-    //     } else {
-    //         window_vibrancy::apply_blur(&win, Some((18, 18, 18, 125)))
-    //             .map_err(|err| format!("启动错误: {}", err))?;
-    //     }
-    // }
+    #[cfg(target_os = "windows")]
+    {
+        use ustb_wifi_tools::utils::get_windows_build_number;
+        if get_windows_build_number()? >= 22000 {
+            window_vibrancy::apply_mica(&win, None).map_err(|err| format!("启动错误: {}", err))?;
+        } else {
+            window_vibrancy::apply_blur(&win, Some((18, 18, 18, 125)))
+                .map_err(|err| format!("启动错误: {}", err))?;
+        }
+    }
 
     Ok(())
 }
