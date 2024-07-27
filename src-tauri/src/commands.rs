@@ -355,15 +355,3 @@ pub fn load_setting(app_state: tauri::State<'_, AppState>) -> Result<String, Str
         Err(err) => Err(format!("{err}")),
     }
 }
-
-#[tauri::command]
-pub fn is_windows() -> Result<bool, String> {
-    match std::env::consts::OS {
-        "windows" => {
-            Ok(true)
-        }
-        _ => {
-            Ok(false)
-        }
-    }
-}

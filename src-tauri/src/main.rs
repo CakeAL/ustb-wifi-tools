@@ -10,6 +10,14 @@ use ustb_wifi_tools::setting::Setting;
 
 fn main() {
     tauri::Builder::default()
+        .setup(|app| {
+            let _window =
+                tauri::WindowBuilder::new(app, "main", tauri::WindowUrl::App("index.html".into()))
+                    .transparent(true)
+                    .build()
+                    .unwrap();
+            Ok(())
+        })
         .manage(AppState {
             jsessionid: RwLock::new(None),
             setting: RwLock::new(Setting::default()),
@@ -33,7 +41,6 @@ fn main() {
             set_setting,
             load_setting,
             logout,
-            is_windows
         ])
         .setup(background_init)
         .run(tauri::generate_context!())
@@ -51,9 +58,10 @@ fn background_init(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error
         None,
     )
     .map_err(|err| format!("启动错误: {}", err))?;
-    
+
     #[cfg(target_os = "windows")]
     {
+        win.set_decorations(true).unwrap();
         use ustb_wifi_tools::utils::get_windows_build_number;
         if get_windows_build_number()? >= 22000 {
             window_vibrancy::apply_mica(&win, None).map_err(|err| format!("启动错误: {}", err))?;

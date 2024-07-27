@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, Ref, DefineComponent, onMounted } from "vue";
+import { ref, computed, Ref, DefineComponent } from "vue";
 import { darkTheme } from "naive-ui";
 
 // routers
@@ -41,34 +41,17 @@ const currentView = computed((): RouteComponent => {
 // Theme
 const theme = ref<any | undefined>(undefined);
 const themeMedia = window.matchMedia("(prefers-color-scheme: dark)");
-const load_theme = () => {
-  if (themeMedia.matches) {
+if (themeMedia.matches) {
+  theme.value = darkTheme;
+} else {
+  theme.value = undefined;
+}
+themeMedia.addEventListener("change", (event) => {
+  if (event.matches) {
     theme.value = darkTheme;
   } else {
     theme.value = undefined;
   }
-  themeMedia.addEventListener("change", (event) => {
-    is_windows(); // 更新时候换一次背景
-    if (event.matches) {
-      theme.value = darkTheme;
-    } else {
-      theme.value = undefined;
-    }
-  });
-};
-// windows
-import { invoke } from "@tauri-apps/api";
-const is_windows = async () => {
-  let res = (await invoke("is_windows")) as unknown as boolean;
-  if (res == true && theme.value != undefined) {
-    document.body.style.backgroundColor = "#000000";
-  } else if (res == true && theme.value == undefined) {
-    document.body.style.backgroundColor = "#ffffff";
-  }
-};
-onMounted(() => {
-  load_theme();
-  is_windows();
 });
 </script>
 
