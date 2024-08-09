@@ -126,11 +126,70 @@ pub fn login_via_headless_browser(browser_path: PathBuf, account: &Account) -> R
                     r#"/html/body/div/div/div[3]/div/div/form/div[2]/div[1]/div"#,
                 )
                 .unwrap();
-            return Err(anyhow::anyhow!(format!(
+            return Err(anyhow::anyhow!(
                 "{}",
                 ele.get_inner_text().unwrap_or_default()
-            )));
+            ));
         }
+    }
+
+    Ok(res)
+}
+
+pub fn login_vpn_via_headless_browser(
+    browser_path: PathBuf,
+    account: &Account,
+) -> Result<Vec<Cookie>> {
+    let browser = Browser::new(LaunchOptions {
+        headless: false,
+        // window_size: Some((1600, 900)),
+        path: Some(browser_path),
+        ..Default::default()
+    })?;
+
+    let tab = browser.new_tab()?;
+    tab.set_default_timeout(std::time::Duration::from_secs(2))
+        .navigate_to("https://elib.ustb.edu.cn/login")?
+        .wait_until_navigated()?;
+
+    let user_name_ele =
+        tab.find_element_by_xpath(r#"/html/body/div[2]/div[2]/div[2]/div/form/div[1]/div/input"#)?;
+    let password_ele =
+        tab.find_element_by_xpath(r#"/html/body/div[2]/div[2]/div[2]/div/form/div[3]/div/input"#)?;
+
+    user_name_ele.call_js_fn(
+        "function(str) { this.value = str }",
+        vec![serde_json::json!(account.user_name)],
+        false,
+    )?;
+    password_ele.call_js_fn(
+        "function(str) { this.value = str }",
+        vec![serde_json::json!(account.password)],
+        false,
+    )?;
+    let submit_button_ele =
+        tab.find_element_by_xpath(r#"/html/body/div[2]/div[2]/div[2]/div/form/button"#)?;
+    submit_button_ele.click()?;
+
+    loop {
+        thread::sleep(Duration::from_millis(20));
+        // 等待网址变更
+        if tab.get_url() == "https://elib.ustb.edu.cn/https/77726476706e69737468656265737421fcfe43d232237c52300d8db9d6562d/" {
+            // tab.wait_until_navigated()?;
+            thread::sleep(Duration::from_millis(50));
+            break;
+        }
+    }
+
+    let mut res = vec![];
+
+    for c in tab.get_cookies()? {
+        res.push(Cookie {
+            name: c.name,
+            value: c.value,
+            domain: c.domain,
+            path: c.path,
+        });
     }
 
     Ok(res)
@@ -174,6 +233,18 @@ mod test {
         };
         let browser_path = get_browser_path().unwrap();
         let res = login_via_headless_browser(browser_path, &account);
+        dbg!(res.unwrap());
+    }
+
+    #[test]
+    fn test_login_vpn_via_headless_browser() {
+        let account: Account = Account {
+            user_name: "user_name".to_string(),
+            password: "+password".to_string(),
+            check_code: None,
+        };
+        let browser_path = get_browser_path().unwrap();
+        let res = login_vpn_via_headless_browser(browser_path, &account);
         dbg!(res.unwrap());
     }
 
