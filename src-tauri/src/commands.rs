@@ -11,7 +11,10 @@ use crate::{
         get_user_login_log, unbind_macs,
     },
     setting::Setting,
-    utils::{get_browser_path, login_via_headless_browser, try_open_headless_browser},
+    utils::{
+        get_browser_path, login_via_headless_browser, login_vpn_via_headless_browser,
+        try_open_headless_browser,
+    },
 };
 
 #[tauri::command(async)]
@@ -86,6 +89,48 @@ pub async fn get_cookie(
         }
         Err(err) => return Err(format!("是否在校园网？或者其他问题：{}", err)),
     }
+    Ok(app_state
+        .jsessionid
+        .read()
+        .unwrap()
+        .clone()
+        .unwrap_or_default())
+}
+
+#[tauri::command(async)]
+pub async fn get_cookie_vpn(
+    app_state: tauri::State<'_, AppState>,
+    user_name: String,
+    password: String,
+) -> Result<String, String> {
+    let account = Account {
+        user_name,
+        password,
+        check_code: None,
+    };
+
+    let browser_path = match app_state.setting.read().unwrap().browser_path.clone() {
+        None => get_browser_path().unwrap(),
+        Some(path) => {
+            if path.is_empty() {
+                get_browser_path().unwrap()
+            } else {
+                PathBuf::from(path)
+            }
+        }
+    };
+    let cookies =
+        login_vpn_via_headless_browser(browser_path, &account).map_err(|err| err.to_string())?;
+
+    dbg!(&cookies[3]); // wengine_vpn_ticketelib_ustb_edu_cn
+    *app_state.jsessionid.write().unwrap() = cookies.get(3).map(|str| str.value.clone());
+    *app_state.login_via_vpn.write().unwrap() = true;
+    app_state
+        .setting
+        .write()
+        .unwrap()
+        .set_account(account.user_name, account.password);
+
     Ok(app_state
         .jsessionid
         .read()

@@ -101,7 +101,10 @@ pub fn login_via_headless_browser(browser_path: PathBuf, account: &Account) -> R
     loop {
         thread::sleep(Duration::from_millis(20));
         // 等待网址变更
-        if tab.get_url() == "http://202.204.60.7:8080/LoginAction.action" {
+        if tab
+            .get_url()
+            .eq("http://202.204.60.7:8080/LoginAction.action")
+        {
             tab.wait_until_navigated()?;
             break;
         }
@@ -149,13 +152,63 @@ pub fn login_vpn_via_headless_browser(
 
     let tab = browser.new_tab()?;
     tab.set_default_timeout(std::time::Duration::from_secs(2))
-        .navigate_to("https://elib.ustb.edu.cn/login")?
+        .navigate_to("https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/nav_login")?
         .wait_until_navigated()?;
 
+    // 如果没直接登陆的话（查找 nav_login 的元素为 err）
+    if tab
+        .find_element_by_xpath(r#"/html/body/div/div/div[3]/div/div/form/div[5]/input[1]"#)
+        .is_err()
+    {
+        let user_name_ele = tab.find_element_by_xpath(
+            r#"/html/body/div[2]/div[2]/div[2]/div/form/div[1]/div/input"#,
+        )?;
+        let password_ele = tab.find_element_by_xpath(
+            r#"/html/body/div[2]/div[2]/div[2]/div/form/div[3]/div/input"#,
+        )?;
+
+        user_name_ele.call_js_fn(
+            "function(str) { this.value = str }",
+            vec![serde_json::json!(account.user_name)],
+            false,
+        )?;
+        password_ele.call_js_fn(
+            "function(str) { this.value = str }",
+            vec![serde_json::json!(account.password)],
+            false,
+        )?;
+        let submit_button_ele =
+            tab.find_element_by_xpath(r#"/html/body/div[2]/div[2]/div[2]/div/form/button"#)?;
+        submit_button_ele.click()?;
+
+        loop {
+            thread::sleep(Duration::from_millis(20));
+            // 等待网址变更
+            if !tab.get_url().eq("https://elib.ustb.edu.cn/login") {
+                tab.wait_until_navigated()?;
+                break;
+            }
+        }
+    }
+    // 登陆了 vpn
+    let mut res = vec![];
+
+    for c in tab.get_cookies()? {
+        res.push(Cookie {
+            name: c.name,
+            value: c.value,
+            domain: c.domain,
+            path: c.path,
+        });
+    }
+
+    // 登陆登录页
     let user_name_ele =
-        tab.find_element_by_xpath(r#"/html/body/div[2]/div[2]/div[2]/div/form/div[1]/div/input"#)?;
+        tab.find_element_by_xpath(r#"/html/body/div/div/div[3]/div/div/form/div[3]/input"#)?;
     let password_ele =
-        tab.find_element_by_xpath(r#"/html/body/div[2]/div[2]/div[2]/div/form/div[3]/div/input"#)?;
+        tab.find_element_by_xpath(r#"/html/body/div/div/div[3]/div/div/form/div[4]/input"#)?;
+    let check_code_ele =
+        tab.find_element_by_xpath(r#"/html/body/div/div/div[3]/div/div/form/div[5]/input[1]"#)?;
 
     user_name_ele.call_js_fn(
         "function(str) { this.value = str }",
@@ -167,29 +220,29 @@ pub fn login_vpn_via_headless_browser(
         vec![serde_json::json!(account.password)],
         false,
     )?;
+
+    if account.check_code.is_some() {
+        check_code_ele.call_js_fn(
+            "function(str) { this.value = str }",
+            vec![serde_json::json!(account.check_code.clone().unwrap())],
+            false,
+        )?;
+    }
+
     let submit_button_ele =
-        tab.find_element_by_xpath(r#"/html/body/div[2]/div[2]/div[2]/div/form/button"#)?;
+        tab.find_element_by_xpath(r#"/html/body/div/div/div[3]/div/div/form/div[6]/input"#)?;
     submit_button_ele.click()?;
 
     loop {
         thread::sleep(Duration::from_millis(20));
         // 等待网址变更
-        if tab.get_url() == "https://elib.ustb.edu.cn/https/77726476706e69737468656265737421fcfe43d232237c52300d8db9d6562d/" {
-            // tab.wait_until_navigated()?;
-            thread::sleep(Duration::from_millis(50));
+        if tab
+            .get_url()
+            .eq("https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/LoginAction.action")
+        {
+            tab.wait_until_navigated()?;
             break;
         }
-    }
-
-    let mut res = vec![];
-
-    for c in tab.get_cookies()? {
-        res.push(Cookie {
-            name: c.name,
-            value: c.value,
-            domain: c.domain,
-            path: c.path,
-        });
     }
 
     Ok(res)

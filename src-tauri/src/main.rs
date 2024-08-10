@@ -21,6 +21,7 @@ fn main() {
         .manage(AppState {
             jsessionid: RwLock::new(None),
             setting: RwLock::new(Setting::default()),
+            login_via_vpn: RwLock::new(false),
         })
         .invoke_handler(tauri::generate_handler![
             load_user_flow,
@@ -41,6 +42,7 @@ fn main() {
             set_setting,
             load_setting,
             logout,
+            get_cookie_vpn,
         ])
         .setup(background_init)
         .run(tauri::generate_context!())

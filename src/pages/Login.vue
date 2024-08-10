@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, CSSProperties } from "vue";
 import { useMessage, useLoadingBar } from "naive-ui";
 
 const loadingBar = useLoadingBar();
@@ -11,6 +11,7 @@ const user_name = ref<string>("");
 const password = ref<string>("");
 const button_disabled = ref<boolean>(false);
 const login_state = ref<boolean>(false);
+const login_via_vpn = ref<boolean>(false);
 
 onMounted(() => {
   check_login_state();
@@ -18,9 +19,9 @@ onMounted(() => {
     .then(check_has_browser)
     .then(() => {
       // 有浏览器并且没登录时候
-      if (has_browser.value === true && login_state.value === false) {
-        get_cookies();
-      }
+      // if (has_browser.value === true && login_state.value === false) {
+      //   get_cookies();
+      // }
     });
 });
 
@@ -61,7 +62,12 @@ const get_cookies = async () => {
   loadingBar.start();
   button_disabled.value = true;
   let has_error = false;
-  sessionid.value = (await invoke("get_cookie", {
+  // 判断当前是否通过校园网 vpn 登陆
+  let get_cookie_func = "get_cookie";
+  if (login_via_vpn.value === true) {
+    get_cookie_func = "get_cookie_vpn";
+  }
+  sessionid.value = (await invoke(get_cookie_func, {
     userName: user_name.value,
     password: password.value,
   })
@@ -100,6 +106,28 @@ const logout = async () => {
 const set_setting = async () => {
   await invoke("set_setting").catch((err) => pop_message.error(err));
 };
+
+const railStyle = ({
+  focused,
+  checked,
+}: {
+  focused: boolean;
+  checked: boolean;
+}) => {
+  const style: CSSProperties = {};
+  if (checked) {
+    style.background = "#4b9e5f";
+    if (focused) {
+      style.boxShadow = "0 0 0 2px #dbecdfff";
+    }
+  } else {
+    style.background = "#2080f0";
+    if (focused) {
+      style.boxShadow = "0 0 0 2px #2080f040";
+    }
+  }
+  return style;
+};
 </script>
 
 <template>
@@ -136,6 +164,10 @@ const set_setting = async () => {
           placeholder="密码"
           round
         />
+        <n-switch v-model:value="login_via_vpn" :rail-style="railStyle">
+          <template #checked> 我不在校园网 </template>
+          <template #unchecked> 我在校园网 </template>
+        </n-switch>
         <n-button
           strong
           secondary
@@ -150,14 +182,19 @@ const set_setting = async () => {
       <div v-else>
         <h3>您已登录，如果其他页面不能获取到信息，请关闭软件重新打开。</h3>
       </div>
-      <h3>当前有效JSESSIONID：{{ sessionid }}</h3>
+      <!-- <h3>当前有效JSESSIONID：{{ sessionid }}</h3>
       <h4>
         ⬆️这个东西是当前打开应用期间的访问你的校园网数据的一个凭证，如果你发给其他人，那么一段时间内别人也可以看你的数据，这很危险，孩子。
-      </h4>
+      </h4> -->
       <n-button strong secondary type="info" @click="logout"> 登出 </n-button>
       <h4>如果想自己更改配置文件：</h4>
-       <p>Windows: C:\Users\用户名\AppData\Roaming\ustb-wifi-tools\config.json</p>
-       <p>macOS: /Users/用户名/Library/Application Support/ustb-wifi-tools/config.json</p>
+      <p>
+        Windows: C:\Users\用户名\AppData\Roaming\ustb-wifi-tools\config.json
+      </p>
+      <p>
+        macOS: /Users/用户名/Library/Application
+        Support/ustb-wifi-tools/config.json
+      </p>
     </n-space>
   </div>
 </template>
