@@ -10,21 +10,12 @@ use ustb_wifi_tools::setting::Setting;
 
 fn main() {
     tauri::Builder::default()
-        .setup(|app| {
-            let _window =
-                tauri::WindowBuilder::new(app, "main", tauri::WindowUrl::App("index.html".into()))
-                    .transparent(true)
-                    .build()
-                    .unwrap();
-            Ok(())
-        })
         .manage(AppState {
             jsessionid: RwLock::new(None),
             setting: RwLock::new(Setting::default()),
             login_via_vpn: RwLock::new(false),
         })
         .invoke_handler(tauri::generate_handler![
-            load_user_flow,
             get_cookie,
             load_refresh_account,
             open_nav_login,
@@ -51,6 +42,7 @@ fn main() {
 
 fn background_init(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let win = app.get_window("main").unwrap();
+    win.set_decorations(true).unwrap();
 
     #[cfg(target_os = "macos")]
     window_vibrancy::apply_vibrancy(
@@ -63,7 +55,6 @@ fn background_init(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error
 
     #[cfg(target_os = "windows")]
     {
-        win.set_decorations(true).unwrap();
         use ustb_wifi_tools::utils::get_windows_build_number;
         if get_windows_build_number()? >= 22000 {
             window_vibrancy::apply_mica(&win, None).map_err(|err| format!("启动错误: {}", err))?;

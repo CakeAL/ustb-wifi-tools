@@ -44,10 +44,9 @@ pub fn open_nav_login(app_handle: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
-// 该函数可能用不到
-#[tauri::command(async)]
-pub async fn load_user_flow(account: String) -> Result<String, String> {
-    get_load_user_flow(&account)
+// 没地方放它了
+pub async fn load_user_flow(account: String, session_id: &str, via_vpn: bool) -> Result<String, String> {
+    get_load_user_flow(&account, session_id, via_vpn)
         .await
         .map_err(|e| format!("Error while loading user flow: {}", e))
         .map(|res| res.to_string())
@@ -165,8 +164,8 @@ pub async fn load_refresh_account(app_state: tauri::State<'_, AppState>) -> Resu
         Some(s) => s,
         None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
     };
-
-    match get_refresh_account(&session_id).await {
+    let via_vpn = *app_state.login_via_vpn.read().unwrap();
+    match get_refresh_account(&session_id, via_vpn).await {
         Ok(Some(str)) => Ok(str),
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
@@ -178,8 +177,14 @@ pub async fn load_user_flow_by_state(
     app_state: tauri::State<'_, AppState>,
 ) -> Result<String, String> {
     let account = app_state.setting.read().unwrap().username.clone();
+    let via_vpn = *app_state.login_via_vpn.read().unwrap();
+    let session_id = match app_state.jsessionid.read().unwrap().clone() {
+        Some(s) => s,
+        None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
+    };
+
     match account {
-        Some(account) => Ok(get_load_user_flow(&account)
+        Some(account) => Ok(get_load_user_flow(&account, &session_id, via_vpn)
             .await
             .map_err(|e| format!("Error while loading user flow: {}", e))
             .map(|res| res.to_string())?),

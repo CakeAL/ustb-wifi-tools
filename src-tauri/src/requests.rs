@@ -10,12 +10,20 @@ use serde_json::Value;
 use crate::entities::{EveryLoginData, MacAddress, MonthPayInfo, MonthlyData, UserLoginLog};
 
 // Ciallo～(∠・ω< )⌒☆
-pub async fn get_load_user_flow(account: &str) -> Result<Value> {
-    let url = format!(
-        "http://202.204.48.66:801/eportal/portal/visitor/loadUserFlow?account={}",
-        account
-    );
-    let response = Client::new().get(url).send().await?.text().await?;
+pub async fn get_load_user_flow(account: &str, session_id: &str, via_vpn: bool) -> Result<Value> {
+    let url = if !via_vpn {
+        format!("http://202.204.48.66:801/eportal/portal/visitor/loadUserFlow?account={account}")
+    } else {
+        format!("https://elib.ustb.edu.cn/http-801/77726476706e69737468656265737421a2a713d275603c1e2a50c7face/eportal/portal/visitor/loadUserFlow?account={account}")
+    };
+    let mut req = Client::new().get(url);
+    if via_vpn {
+        req = req.header(
+            "Cookie",
+            format!("wengine_vpn_ticketelib_ustb_edu_cn={}", session_id),
+        );
+    }
+    let response = req.send().await?.text().await?;
     let re = Regex::new(r"jsonpReturn\((.*)\);")?;
     let json_str = re
         .captures(&response)
@@ -64,15 +72,23 @@ pub async fn get_jsessionid(account: &str, password: &str) -> Result<String> {
     }
 }
 
-pub async fn get_refresh_account(session_id: &str) -> Result<Option<String>> {
-    let url = "http://202.204.60.7:8080/refreshaccount";
-    let response = Client::new()
-        .get(url)
-        .header("Cookie", format!("JSESSIONID={}", session_id))
-        .send()
-        .await?
-        .text()
-        .await?;
+pub async fn get_refresh_account(session_id: &str, via_vpn: bool) -> Result<Option<String>> {
+    let url = if !via_vpn {
+        "http://202.204.60.7:8080/refreshaccount"
+    } else {
+        "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/refreshaccount"
+    };
+    let mut req = Client::new().get(url);
+    if !via_vpn {
+        req = req.header("Cookie", format!("JSESSIONID={}", session_id));
+    } else {
+        req = req.header(
+            "Cookie",
+            format!("wengine_vpn_ticketelib_ustb_edu_cn={}", session_id),
+        );
+    }
+
+    let response = req.send().await?.text().await?;
     // println!("{response}");
     if response.contains("nav_login") {
         return Ok(None); // Cookie无效，没有获取到account信息
@@ -353,7 +369,10 @@ mod tests {
     #[tokio::test]
     async fn test_get_load_user_flow() {
         let account = "U202141234".to_string();
-        let res = get_load_user_flow(&account).await.unwrap();
+        let session_id = "session_id";
+        let res = get_load_user_flow(&account, &session_id, false)
+            .await
+            .unwrap();
         println!("{:?}", res);
         // if let Ok(user_flow) = serde_json::from_value::<UserFlow>(res.clone()) {
         //     println!("{:?}", user_flow);
@@ -375,7 +394,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_refresh_account() {
         let session_id = "session_id";
-        let res = get_refresh_account(session_id).await;
+        let res = get_refresh_account(session_id, false).await;
         println!("{:?}", res);
     }
 
