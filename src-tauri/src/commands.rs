@@ -45,7 +45,11 @@ pub fn open_nav_login(app_handle: tauri::AppHandle) -> Result<(), String> {
 }
 
 // 没地方放它了
-pub async fn load_user_flow(account: String, session_id: &str, via_vpn: bool) -> Result<String, String> {
+pub async fn load_user_flow(
+    account: String,
+    session_id: &str,
+    via_vpn: bool,
+) -> Result<String, String> {
     get_load_user_flow(&account, session_id, via_vpn)
         .await
         .map_err(|e| format!("Error while loading user flow: {}", e))
@@ -201,8 +205,9 @@ pub async fn load_month_pay(
         Some(s) => s,
         None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
     };
+    let via_vpn = *app_state.login_via_vpn.read().unwrap();
 
-    match get_month_pay(&session_id, year).await {
+    match get_month_pay(&session_id, year, via_vpn).await {
         Ok(Some(value)) => Ok(value.to_string()),
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
@@ -230,7 +235,9 @@ pub async fn load_user_login_log(
         .unwrap()
         .format("%Y-%m-%d")
         .to_string();
-    match get_user_login_log(&session_id, &start_date, &end_date).await {
+    let via_vpn = *app_state.login_via_vpn.read().unwrap();
+
+    match get_user_login_log(&session_id, &start_date, &end_date, via_vpn).await {
         Ok(Some(value)) => Ok(value.to_string()),
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
@@ -243,8 +250,9 @@ pub async fn load_mac_address(app_state: tauri::State<'_, AppState>) -> Result<S
         Some(s) => s,
         None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
     };
+    let via_vpn = *app_state.login_via_vpn.read().unwrap();
 
-    match get_mac_address(&session_id).await {
+    match get_mac_address(&session_id, via_vpn).await {
         Ok(Some(value)) => Ok(value.to_string()),
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
@@ -274,8 +282,9 @@ pub async fn do_unbind_macs(
         Some(s) => s,
         None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
     };
+    let via_vpn = *app_state.login_via_vpn.read().unwrap();
 
-    match unbind_macs(&session_id, &macs).await {
+    match unbind_macs(&session_id, &macs, via_vpn).await {
         Ok(Some(())) => Ok(()),
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),

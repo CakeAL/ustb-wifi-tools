@@ -96,11 +96,22 @@ pub async fn get_refresh_account(session_id: &str, via_vpn: bool) -> Result<Opti
     Ok(Some(response))
 }
 
-pub async fn get_month_pay(session_id: &str, year: u16) -> Result<Option<Value>> {
-    let url = "http://202.204.60.7:8080/MonthPayAction.action";
-    let response = Client::new()
-        .post(url)
-        .header("Cookie", format!("JSESSIONID={}", session_id))
+pub async fn get_month_pay(session_id: &str, year: u16, via_vpn: bool) -> Result<Option<Value>> {
+    let url = if !via_vpn {
+        "http://202.204.60.7:8080/MonthPayAction.action"
+    } else {
+        "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/MonthPayAction.action"
+    };
+    let mut req = Client::new().post(url);
+    if !via_vpn {
+        req = req.header("Cookie", format!("JSESSIONID={}", session_id));
+    } else {
+        req = req.header(
+            "Cookie",
+            format!("wengine_vpn_ticketelib_ustb_edu_cn={}", session_id),
+        );
+    }
+    let response = req
         .form(&[("type", 1), ("year", year)])
         .send()
         .await?
@@ -164,11 +175,24 @@ pub async fn get_user_login_log(
     session_id: &str,
     start_date: &str,
     end_date: &str,
+    via_vpn: bool,
 ) -> Result<Option<Value>> {
-    let url = "http://202.204.60.7:8080/UserLoginLogAction.action";
+    let url = if !via_vpn {
+        "http://202.204.60.7:8080/UserLoginLogAction.action"
+    } else {
+        "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/UserLoginLogAction.action"
+    };
     // let month = format!("CHECKER.TBLUSERLOGIN{}", year_month); // 按月份已经废了，现在只能按照开始结束日期查
-    let response = Client::new()
-        .post(url)
+    let mut req = Client::new().post(url);
+    if !via_vpn {
+        req = req.header("Cookie", format!("JSESSIONID={}", session_id));
+    } else {
+        req = req.header(
+            "Cookie",
+            format!("wengine_vpn_ticketelib_ustb_edu_cn={}", session_id),
+        );
+    }
+    let response = req
         .header("Cookie", format!("JSESSIONID={}", session_id))
         .form(&[
             ("type", "4"),
@@ -284,10 +308,22 @@ pub async fn get_user_login_log(
     })))
 }
 
-pub async fn get_mac_address(session_id: &str) -> Result<Option<Value>> {
-    let url = "http://202.204.60.7:8080/nav_unBandMacJsp";
-    let response = Client::new()
-        .get(url)
+pub async fn get_mac_address(session_id: &str, via_vpn: bool) -> Result<Option<Value>> {
+    let url = if !via_vpn {
+        "http://202.204.60.7:8080/nav_unBandMacJsp"
+    } else {
+        "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/nav_unBandMacJsp"
+    };
+    let mut req = Client::new().get(url);
+    if !via_vpn {
+        req = req.header("Cookie", format!("JSESSIONID={}", session_id));
+    } else {
+        req = req.header(
+            "Cookie",
+            format!("wengine_vpn_ticketelib_ustb_edu_cn={}", session_id),
+        );
+    }
+    let response = req
         .header("Cookie", format!("JSESSIONID={}", session_id))
         .send()
         .await?
@@ -326,16 +362,32 @@ pub async fn get_mac_address(session_id: &str) -> Result<Option<Value>> {
 }
 
 // 这里传进来的是 **不需要** 解绑的macs
-pub async fn unbind_macs(session_id: &str, macs: &Vec<String>) -> Result<Option<()>> {
-    let url = "http://202.204.60.7:8080/nav_unbindMACAction.action";
+pub async fn unbind_macs(
+    session_id: &str,
+    macs: &Vec<String>,
+    via_vpn: bool,
+) -> Result<Option<()>> {
+    let url = if !via_vpn {
+        "http://202.204.60.7:8080/nav_unbindMACAction.action"
+    } else {
+        "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/nav_unbindMACAction.action"
+    };
     let mut mac_str = String::new();
     for mac in macs {
         mac_str = format!("{};{}", mac, mac_str);
     }
     let _ = mac_str.pop(); // 删末尾分号
     dbg!(&mac_str);
-    let response = Client::new()
-        .post(url)
+    let mut req = Client::new().post(url);
+    if !via_vpn {
+        req = req.header("Cookie", format!("JSESSIONID={}", session_id));
+    } else {
+        req = req.header(
+            "Cookie",
+            format!("wengine_vpn_ticketelib_ustb_edu_cn={}", session_id),
+        );
+    }
+    let response = req
         .header("Cookie", format!("JSESSIONID={}", session_id))
         .form(&[("macStr", mac_str), ("Submit", "解绑".to_string())])
         .send()
@@ -402,7 +454,7 @@ mod tests {
     async fn test_get_month_pay() {
         let session_id = "session_id";
         let year = 2024u16;
-        let res = get_month_pay(session_id, year).await;
+        let res = get_month_pay(session_id, year, false).await;
         dbg!(res.unwrap());
     }
 
@@ -412,14 +464,14 @@ mod tests {
         // let year_month = "202405";
         let start_date = "2024-05-01";
         let end_date = "2024-05-31";
-        let res = get_user_login_log(session_id, start_date, end_date).await;
+        let res = get_user_login_log(session_id, start_date, end_date, false).await;
         dbg!(res.unwrap());
     }
 
     #[tokio::test]
     async fn test_get_mac_address() {
         let session_id = "session_id";
-        let res = get_mac_address(session_id).await;
+        let res = get_mac_address(session_id, false).await;
         dbg!(res.unwrap());
     }
 
@@ -428,7 +480,7 @@ mod tests {
         let session_id = "session_id";
         let macs = vec![]; // such as "ABCD12345678".to_string()
                            // macs 为空执行此 test 会导致退出全部你的校园网账号
-        let res = unbind_macs(&session_id, &macs).await;
+        let res = unbind_macs(&session_id, &macs, false).await;
         dbg!(res.unwrap());
     }
 
