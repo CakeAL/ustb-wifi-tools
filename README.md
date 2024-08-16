@@ -20,19 +20,13 @@
 
 ## TODO
 
+- [x] 通过校园网 VPN 转换校园网内网相关链接，在校外也可以使用这个 APP
 - [ ] 前端页面美化
 - [ ] 前端加入图表展示，更加直观
-- [ ] 通过校园网 VPN 转换校园网内网相关链接，在校外也可以使用这个 APP
 - [ ] 密码输入错误超过 3 次之后显示验证码（困难）
 - [ ] 给应用签名
 - [ ] 设计应用图标，现在的图标是 Tauri 默认的
 - [ ] 迁移框架版本至 Tauri 2
-
-## 截图
-
-![](pics/image1.png)
-![](pics/image2.png)
-![](pics/image3.png)
 
 ## 下载链接
 
@@ -41,7 +35,13 @@
 3. macOS 系统请下载后缀为`.dmg`，M 系列芯片（2020 年及以后）请选择 `aarch64` 版本，Intel 芯片请选择 `x64` 版本。
 4. macOS 由于还没搞应用签名，需要使用 `xattr -cr /Applications/ustb-wifi-tools.app` 来跳过签名认证。
 
-[Release](https://github.com/CakeAL/ustb-wifi-tools/releases/)
+[点我跳转到 Release](https://github.com/CakeAL/ustb-wifi-tools/releases/)
+
+## 截图
+
+![](pics/image1.png)
+![](pics/image2.png)
+![](pics/image3.png)
 
 ## 开发
 
