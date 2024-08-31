@@ -35,6 +35,9 @@
 3. macOS 系统请下载后缀为`.dmg`，M 系列芯片（2020 年及以后）请选择 `aarch64` 版本，Intel 芯片请选择 `x64` 版本。
 4. macOS 由于还没搞应用签名，需要使用 `xattr -cr /Applications/ustb-wifi-tools.app` 来跳过签名认证。
 
+> [!NOTE]  
+> 这里有一个使用教程：[如何使用 USTB Wifi Tools](https://github.com/CakeAL/ustb-wifi-tools/blob/main/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8%20USTB%20Wifi%20Tools%EF%BC%88%E5%90%AB%E5%A6%82%E4%BD%95%E6%96%B9%E4%BE%BF%E6%B3%A8%E9%94%80%E8%B4%A6%E5%8F%B7%EF%BC%89.pdf)
+
 [点我跳转到 Release](https://github.com/CakeAL/ustb-wifi-tools/releases/)
 
 ## 截图
