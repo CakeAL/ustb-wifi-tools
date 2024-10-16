@@ -20,14 +20,14 @@ use crate::{
 #[tauri::command(async)]
 pub fn open_nav_login(app_handle: tauri::AppHandle) -> Result<(), String> {
     // 判断该窗口是否已存在
-    if let Some(window) = app_handle.get_window("nav_login") {
+    if let Some(window) = app_handle.get_webview_window("nav_login") {
         window.close().map_err(|e| e.to_string())?;
     }
 
-    tauri::WindowBuilder::new(
+    tauri::WebviewWindowBuilder::new(
         &app_handle,
         "nav_login",
-        tauri::WindowUrl::App("http://202.204.60.7:8080/nav_login".into()),
+        tauri::WebviewUrl::App("http://202.204.60.7:8080/nav_login".into()),
     )
     .build()
     .map_err(|e| {
@@ -144,8 +144,9 @@ pub async fn get_cookie_vpn(
 
 #[tauri::command(async)]
 pub fn logout(
+    app: tauri::AppHandle,
     app_state: tauri::State<'_, AppState>,
-    window: tauri::Window,
+    window: tauri::Webview,
 ) -> Result<String, String> {
     if app_state.jsessionid.read().unwrap().is_none() {
         return Err("没登录之前不许登出😠".into());
@@ -154,7 +155,7 @@ pub fn logout(
     Setting::write_setting(&Setting {
         browser_path: app_state.setting.read().unwrap().browser_path.to_owned(),
         ..Default::default()
-    })
+    }, &app)
     .map_err(|err| format!("写入配置错误: {}", err))?;
     window
         .eval("window.location.reload();")
@@ -294,7 +295,7 @@ pub async fn do_unbind_macs(
 #[tauri::command(async)]
 pub fn open_speed_test(app_handle: tauri::AppHandle, site_num: i32) -> Result<(), String> {
     // 判断该窗口是否已存在
-    if app_handle.get_window("speed_test").is_some() {
+    if app_handle.get_webview_window("speed_test").is_some() {
         return Err("已经打开一个测速窗口了".to_string());
     }
     let url = match site_num {
@@ -307,16 +308,17 @@ pub fn open_speed_test(app_handle: tauri::AppHandle, site_num: i32) -> Result<()
         _ => return Err("未知测速网站".to_string()),
     };
 
-    tauri::WindowBuilder::from_config(
+    tauri::WebviewWindowBuilder::from_config(
         &app_handle,
-        WindowConfig {
+        &WindowConfig {
             title: "测速".to_string(),
             label: "speed_test".to_string(),
-            url: tauri::WindowUrl::External(url.parse().unwrap()),
+            url: tauri::WebviewUrl::External(url.parse().unwrap()),
             // transparent: true,
             ..Default::default()
         },
     )
+    .map_err(|e| format!("Error when building the speed_test window: {}", e))?
     .build()
     .map_err(|e| format!("Error when building the speed_test window: {}", e))
     .map(|_| ())
@@ -337,8 +339,9 @@ pub fn check_has_browser(app_state: tauri::State<'_, AppState>) -> Result<bool, 
 
 #[tauri::command(async)]
 pub fn set_browser_path(
+    app: tauri::AppHandle,
     app_state: tauri::State<'_, AppState>,
-    window: tauri::Window,
+    window: tauri::Webview,
 ) -> Result<(), String> {
     let mut browser_path: PathBuf;
     match FileDialog::new().pick_file() {
@@ -365,7 +368,7 @@ pub fn set_browser_path(
                 .setting
                 .write()
                 .unwrap()
-                .write_setting()
+                .write_setting(&app)
                 .map_err(|err| format!("写入配置错误: {}", err))?;
             window
                 .eval("window.location.reload();")
@@ -395,18 +398,18 @@ pub fn get_jsessionid(app_state: tauri::State<'_, AppState>) -> Result<String, S
 }
 
 #[tauri::command(async)]
-pub fn set_setting(app_state: tauri::State<'_, AppState>) -> Result<(), String> {
+pub fn set_setting(app: tauri::AppHandle, app_state: tauri::State<'_, AppState>) -> Result<(), String> {
     app_state
         .setting
         .read()
         .unwrap()
-        .write_setting()
+        .write_setting(&app)
         .map_err(|err| format!("{}", err))
 }
 
 #[tauri::command(async)]
-pub fn load_setting(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
-    match Setting::load_setting() {
+pub fn load_setting(app: tauri::AppHandle, app_state: tauri::State<'_, AppState>) -> Result<String, String> {
+    match Setting::load_setting(&app) {
         Ok(setting) => {
             *app_state.setting.write().unwrap() = setting.clone();
             Ok(serde_json::to_string(&setting).unwrap())

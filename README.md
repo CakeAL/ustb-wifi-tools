@@ -21,12 +21,12 @@
 ## TODO
 
 - [x] 通过校园网 VPN 转换校园网内网相关链接，在校外也可以使用这个 APP
+- [x] 迁移框架版本至 Tauri 2
 - [ ] 前端页面美化
 - [ ] 前端加入图表展示，更加直观
 - [ ] 密码输入错误超过 3 次之后显示验证码（困难）
 - [ ] 给应用签名
 - [ ] 设计应用图标，现在的图标是 Tauri 默认的
-- [ ] 迁移框架版本至 Tauri 2
 
 ## 下载链接
 
@@ -55,6 +55,7 @@
 # 安装 create-tauri-app
 cargo install create-tauri-app --locked
 # 安装tauri 命令行 https://tauri.app/zh-cn/blog/2022/09/15/tauri-1-1/#cargo-binstall-support-for-tauri-cli
+cargo install tauri-cli --version "^2.0.0" --locked
 # 运行
 # 如果安装了 just
 just d

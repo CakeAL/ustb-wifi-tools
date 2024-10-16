@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { invoke } from "@tauri-apps/api";
+import { invoke } from "@tauri-apps/api/core";
 import { ref, onMounted, CSSProperties } from "vue";
 import { useMessage, useLoadingBar } from "naive-ui";
 

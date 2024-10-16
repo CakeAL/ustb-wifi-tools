@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { CSSProperties, ref } from "vue";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import { useMessage } from "naive-ui";
 import dayjs from "dayjs";
 
