@@ -176,7 +176,7 @@ pub async fn get_user_login_log(
     start_date: &str,
     end_date: &str,
     via_vpn: bool,
-) -> Result<Option<Value>> {
+) -> Result<Option<UserLoginLog>> {
     let url = if !via_vpn {
         "http://202.204.60.7:8080/UserLoginLogAction.action"
     } else {
@@ -295,7 +295,7 @@ pub async fn get_user_login_log(
         data_index += 1;
     }
     // dbg!(every_login_datas);
-    Ok(Some(serde_json::json!(UserLoginLog {
+    Ok(Some(UserLoginLog {
         #[allow(clippy::get_first)]
         ipv4_up: redtexts.get(0).unwrap().trim().parse()?,
         ipv4_down: redtexts.get(1).unwrap().trim().parse()?,
@@ -305,7 +305,7 @@ pub async fn get_user_login_log(
         cost: redtexts.get(5).unwrap().trim().parse()?,
         used_duration: redtexts.get(6).unwrap().trim().parse()?,
         every_login_data: every_login_datas,
-    })))
+    }))
 }
 
 pub async fn get_mac_address(session_id: &str, via_vpn: bool) -> Result<Option<Value>> {

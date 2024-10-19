@@ -17,7 +17,8 @@ import {
   BookOutline,
   BrowsersOutline,
   SpeedometerOutline,
-} from "@vicons/ionicons5";
+  CalendarOutline,
+  } from "@vicons/ionicons5";
 
 function renderIcon(icon: Component) {
   return () => h(NIcon, null, { default: () => h(icon) });
@@ -71,6 +72,18 @@ const menuOptions: MenuOption[] = [
       ),
     key: "userloginlog",
     icon: renderIcon(BookOutline),
+  },
+  {
+    label: () =>
+      h(
+        "a",
+        {
+          href: "#/monthly_user_log",
+        },
+        "月度使用概览"
+      ),
+    key: "monthly_user_log",
+    icon: renderIcon(CalendarOutline),
   },
   {
     label: () =>

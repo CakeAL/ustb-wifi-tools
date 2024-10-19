@@ -15,7 +15,7 @@ interface UserLoginLog {
   every_login_data: EveryLoginData[];
 }
 
-interface EveryLoginData {
+export interface EveryLoginData {
   online_time: number; // 时间戳，UTC
   offline_time: number;
   used_duration: number;

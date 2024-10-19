@@ -57,7 +57,7 @@ pub struct UserLoginLog {
     pub every_login_data: Vec<EveryLoginData>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct EveryLoginData {
     pub online_time: i64, // 时间戳，UTC
     pub offline_time: i64,

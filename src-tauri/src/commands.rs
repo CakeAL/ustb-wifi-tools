@@ -5,7 +5,7 @@ use rfd::FileDialog;
 use tauri::{utils::config::WindowConfig, Manager};
 
 use crate::{
-    entities::{Account, AppState},
+    entities::{Account, AppState, EveryLoginData},
     requests::{
         get_address, get_load_user_flow, get_mac_address, get_month_pay, get_refresh_account,
         get_user_login_log, unbind_macs,
@@ -152,10 +152,13 @@ pub fn logout(
         return Err("没登录之前不许登出😠".into());
     }
     *app_state.jsessionid.write().unwrap() = None;
-    Setting::write_setting(&Setting {
-        browser_path: app_state.setting.read().unwrap().browser_path.to_owned(),
-        ..Default::default()
-    }, &app)
+    Setting::write_setting(
+        &Setting {
+            browser_path: app_state.setting.read().unwrap().browser_path.to_owned(),
+            ..Default::default()
+        },
+        &app,
+    )
     .map_err(|err| format!("写入配置错误: {}", err))?;
     window
         .eval("window.location.reload();")
@@ -239,7 +242,61 @@ pub async fn load_user_login_log(
     let via_vpn = *app_state.login_via_vpn.read().unwrap();
 
     match get_user_login_log(&session_id, &start_date, &end_date, via_vpn).await {
-        Ok(Some(value)) => Ok(value.to_string()),
+        Ok(Some(value)) => Ok(serde_json::json!(value).to_string()),
+        Ok(None) => Err("请确认是否已经登录".to_string()),
+        Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
+    }
+}
+
+#[tauri::command(async)]
+pub async fn load_monthly_login_log(
+    app_state: tauri::State<'_, AppState>,
+    start_date: i64,
+    days: i64,
+) -> Result<String, String> {
+    let session_id = match app_state.jsessionid.read().unwrap().clone() {
+        Some(s) => s,
+        None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
+    };
+    let end_date = start_date + 3600 * 24 * days;
+    let start_date_string = DateTime::from_timestamp(start_date, 0)
+        .unwrap()
+        .format("%Y-%m-%d")
+        .to_string();
+    let end_date_string = DateTime::from_timestamp(end_date, 0)
+        .unwrap()
+        .format("%Y-%m-%d")
+        .to_string();
+    let via_vpn = *app_state.login_via_vpn.read().unwrap();
+
+    match get_user_login_log(&session_id, &start_date_string, &end_date_string, via_vpn).await {
+        Ok(Some(value)) => {
+            let mut flow_every_day: Vec<EveryLoginData> = vec![];
+            for i in 0..days {
+                let mut sum = EveryLoginData::default();
+                value
+                    .every_login_data
+                    .iter()
+                    .filter(|a_data| {
+                        // a_data.online_time > start_date + i * 24 * 3600
+                        //     && a_data.online_time < start_date + (i + 1) * 24 * 3600
+                        // 过滤，只要今天到今晚, 学校的网站上是按照下线时间算的
+                        a_data.offline_time >= start_date + i * 24 * 3600
+                            && a_data.offline_time < start_date + (i + 1) * 24 * 3600
+                    })
+                    .for_each(|data| {
+                        sum.cost += data.cost;
+                        sum.ipv4_down += data.ipv4_down;
+                        sum.ipv4_up += data.ipv4_up;
+                        sum.ipv6_down += data.ipv6_down;
+                        sum.ipv6_up += data.ipv6_up;
+                        sum.used_duration += data.used_duration;
+                        sum.used_flow += data.used_flow;
+                    });
+                flow_every_day.push(sum);
+            }
+            Ok(serde_json::json!(flow_every_day).to_string())
+        }
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
     }
@@ -398,7 +455,10 @@ pub fn get_jsessionid(app_state: tauri::State<'_, AppState>) -> Result<String, S
 }
 
 #[tauri::command(async)]
-pub fn set_setting(app: tauri::AppHandle, app_state: tauri::State<'_, AppState>) -> Result<(), String> {
+pub fn set_setting(
+    app: tauri::AppHandle,
+    app_state: tauri::State<'_, AppState>,
+) -> Result<(), String> {
     app_state
         .setting
         .read()
@@ -408,7 +468,10 @@ pub fn set_setting(app: tauri::AppHandle, app_state: tauri::State<'_, AppState>)
 }
 
 #[tauri::command(async)]
-pub fn load_setting(app: tauri::AppHandle, app_state: tauri::State<'_, AppState>) -> Result<String, String> {
+pub fn load_setting(
+    app: tauri::AppHandle,
+    app_state: tauri::State<'_, AppState>,
+) -> Result<String, String> {
     match Setting::load_setting(&app) {
         Ok(setting) => {
             *app_state.setting.write().unwrap() = setting.clone();

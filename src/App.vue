@@ -11,6 +11,7 @@ import MonthPay from "./pages/MonthPay.vue";
 import UserLoginLog from "./pages/UserLoginLog.vue";
 import UnbindMacs from "./pages/UnbindMacs.vue";
 import SpeedTest from "./pages/SpeedTest.vue";
+import MonthlyUserLog from "./pages/MonthlyUserLog.vue";
 type RouteComponent = DefineComponent<{}, {}, any>;
 
 interface Routes {
@@ -25,6 +26,7 @@ const routes: Routes = {
   "/userloginlog": UserLoginLog,
   "/unbindmacs": UnbindMacs,
   "/speedtest": SpeedTest,
+  "/monthly_user_log": MonthlyUserLog,
 };
 
 // Ref for current path

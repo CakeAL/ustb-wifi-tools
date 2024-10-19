@@ -38,6 +38,7 @@ pub fn run() {
             load_setting,
             logout,
             get_cookie_vpn,
+            load_monthly_login_log,
         ])
         .setup(background_init)
         .run(tauri::generate_context!())
