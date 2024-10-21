@@ -7,20 +7,20 @@ on:
 
 jobs:
   publish-tauri:
-    permissions: 
+    permissions:
       contents: write
     strategy:
       fail-fast: false
       matrix:
         include:
-          - platform: 'macos-latest' # for Arm based macs (M1 and above).
-            args: '--target aarch64-apple-darwin'
-          - platform: 'macos-latest' # for Intel based macs.
-            args: '--target x86_64-apple-darwin'
-          - platform: 'windows-latest'
-            args: '--target aarch64-pc-windows-msvc --bundles nsis'
-          - platform: 'windows-latest'
-            args: '--target x86_64-pc-windows-msvc --bundles nsis'
+          - platform: "macos-latest" # for Arm based macs (M1 and above).
+            args: "--target aarch64-apple-darwin"
+          - platform: "macos-latest" # for Intel based macs.
+            args: "--target x86_64-apple-darwin"
+          - platform: "windows-latest"
+            args: "--target aarch64-pc-windows-msvc --bundles nsis"
+          - platform: "windows-latest"
+            args: "--target x86_64-pc-windows-msvc --bundles nsis"
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -30,27 +30,30 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
-      
+
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
           target: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || matrix.platform == 'windows-latest' && 'aarch64-pc-windows-msvc,x86_64-pc-windows-msvc' }}
-      
+
       - name: install pnpm
         uses: pnpm/action-setup@v4
-        with: 
+        with:
           version: 9
 
       - name: install frontend dependencies
         run: pnpm install
-      
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
           tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
-          releaseName: 'USTB WiFi Tools v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
+          releaseName: "USTB WiFi Tools v__VERSION__"
+          releaseBody: "See the assets to download this version and install."
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+          includeUpdaterJson: true

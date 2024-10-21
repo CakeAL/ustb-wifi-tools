@@ -144,7 +144,7 @@ pub fn login_vpn_via_headless_browser(
     account: &Account,
 ) -> Result<Vec<Cookie>> {
     let browser = Browser::new(LaunchOptions {
-        headless: false,
+        headless: true,
         // window_size: Some((1600, 900)),
         path: Some(browser_path),
         ..Default::default()
