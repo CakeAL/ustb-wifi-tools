@@ -18,3 +18,6 @@ build-all:
 
 clippy: 
     cd src-tauri && cargo clippy
+
+change_version:
+    python3 change_version.py

@@ -33,6 +33,7 @@ const show1 = ref(false);
         </n-collapse-transition>
         <h4>关于作者：一个来自USTB计院物联网工程的老东西。</h4>
         <p>这是我的Github：https://github.com/CakeAL/ </p>
+        <p>这是我的bilibili: https://space.bilibili.com/13161874</p>
         <h4>下面是学校给你的TIPS</h4>
         <p>校园网老是要重新登陆：</p>
         <n-switch v-model:value="show1">
@@ -53,6 +54,8 @@ const show1 = ref(false);
         <p>2. 关掉代理，再重新进行上述操作。</p>
         <p>3. 重启电脑。</p>
         <p>注销页和登录页网址：http://202.204.48.66/ 或者 http://login.ustb.edu.cn/ (你知道么，学号是可以点击的)</p>
+        <br/>
+        <p>当前 version = "0.7.0"</p>
     </n-space>
     </n-card>
   </div>
