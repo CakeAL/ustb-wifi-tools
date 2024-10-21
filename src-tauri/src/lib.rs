@@ -6,10 +6,10 @@ pub mod utils;
 
 use std::sync::RwLock;
 
-use tauri::Manager;
 use crate::commands::*;
 use crate::entities::AppState;
 use crate::setting::Setting;
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -60,7 +60,7 @@ fn background_init(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error
 
     #[cfg(target_os = "windows")]
     {
-        use ustb_wifi_tools::utils::get_windows_build_number;
+        use crate::utils::get_windows_build_number;
         if get_windows_build_number()? >= 22000 {
             window_vibrancy::apply_mica(&win, None).map_err(|err| format!("启动错误: {}", err))?;
         } else {
