@@ -11,6 +11,37 @@ const monthly_user_log = ref<Array<EveryLoginData>>([]);
 const start_date = ref<number>(Date.now());
 const the_week_of_first_day = ref<Array<number>>([]);
 const refresh = ref(true);
+const select_show_value = ref<string | null>("ipv4_down");
+const select_show_options = [
+  {
+    label: "ipv4 下行",
+    value: "ipv4_down",
+  },
+  {
+    label: "ipv4 上行",
+    value: "ipv4_up",
+  },
+  {
+    label: "ipv6 下行",
+    value: "ipv6_down",
+  },
+  {
+    label: "ipv6 上行",
+    value: "ipv6_up",
+  },
+  {
+    label: "当天总共的流量（包含ipv4和ipv6上下行）",
+    value: "all",
+  },
+  {
+    label: "使用时长",
+    value: "used_duration",
+  },
+  {
+    label: "花费",
+    value: "cost",
+  },
+];
 // let flow_max = 0;
 
 const get_monthly_user_log = async () => {
@@ -36,33 +67,62 @@ const get_monthly_user_log = async () => {
   refresh.value = !refresh.value;
 };
 
-const getBackgroundColor = (ipv4_down: number) => {
+const getBackgroundColor = (data: number) => {
   // const max = flow_max;
   // const min = 0;
-  // const value = ipv4_down / max * (max - min) + min;
+  // const value = data / max * (max - min) + min;
   // const green = Math.round(255 * (1 - value / max));
   // const red = Math.round(255 * (value / max));
   // return `rgba(${red}, ${green}, 100, 0.2)`;
-  if (ipv4_down < 1000) {
+  if (data < 1000) {
     return "rgba(55, 80, 147, 0.5)";
-  } else if (ipv4_down < 2000) {
+  } else if (data < 2000) {
     return "rgba(78, 112, 175, 0.5)";
-  } else if (ipv4_down < 3000) {
+  } else if (data < 3000) {
     return "rgba(112, 145, 199, 0.5)";
-  } else if (ipv4_down < 4000) {
+  } else if (data < 4000) {
     return "rgba(158, 188, 219, 0.5)";
-  } else if (ipv4_down < 5000) {
+  } else if (data < 5000) {
     return "rgba(200, 214, 231, 0.5)";
-  } else if (ipv4_down < 7000) {
+  } else if (data < 7000) {
     return "rgba(236, 208, 180, 0.5)";
-  } else if (ipv4_down < 8500) {
+  } else if (data < 8500) {
     return "rgba(219, 162, 125, 0.5)";
-  } else if (ipv4_down < 10000) {
+  } else if (data < 10000) {
     return "rgba(193, 109, 88, 0.5)";
-  } else if (ipv4_down < 15000) {
+  } else if (data < 15000) {
     return "rgba(161, 61, 59, 0.5)";
   } else {
     return "rgba(131, 26, 33, 0.5)";
+  }
+};
+
+const select_to_data = (item: EveryLoginData): number => {
+  if (select_show_value.value == "ipv4_down") {
+    return item.ipv4_down;
+  } else if (select_show_value.value == "ipv4_up") {
+    return item.ipv4_up;
+  } else if (select_show_value.value == "ipv6_down") {
+    return item.ipv6_down;
+  } else if (select_show_value.value == "ipv6_up") {
+    return item.ipv6_up;
+  } else if (select_show_value.value == "all") {
+    return item.ipv4_down + item.ipv4_up + item.ipv6_down + item.ipv6_up;
+  } else if (select_show_value.value == "cost") {
+    return item.cost;
+  } else if (select_show_value.value == "used_duration") {
+    return item.used_duration;
+  }
+  return 0;
+};
+
+const data_type = (): string => {
+  if (select_show_value.value == "cost") {
+    return "元";
+  } else if (select_show_value.value == "used_duration") {
+    return "分";
+  } else {
+    return "MB";
   }
 };
 </script>
@@ -76,13 +136,13 @@ const getBackgroundColor = (ipv4_down: number) => {
       @update:value="get_monthly_user_log"
     />
     <n-grid :x-gap="12" :y-gap="8" :cols="7" :key="refresh">
-      <n-grid-item>日</n-grid-item>
-      <n-grid-item>一</n-grid-item>
-      <n-grid-item>二</n-grid-item>
-      <n-grid-item>三</n-grid-item>
-      <n-grid-item>四</n-grid-item>
-      <n-grid-item>五</n-grid-item>
-      <n-grid-item>六</n-grid-item>
+      <n-grid-item class="gray"><p>日</p></n-grid-item>
+      <n-grid-item class="gray"><p>一</p></n-grid-item>
+      <n-grid-item class="gray"><p>二</p></n-grid-item>
+      <n-grid-item class="gray"><p>三</p></n-grid-item>
+      <n-grid-item class="gray"><p>四</p></n-grid-item>
+      <n-grid-item class="gray"><p>五</p></n-grid-item>
+      <n-grid-item class="gray"><p>六</p></n-grid-item>
       <n-grid-item
         v-for="(, index) in the_week_of_first_day"
         :key="index"
@@ -93,12 +153,19 @@ const getBackgroundColor = (ipv4_down: number) => {
         v-for="(item, index) in monthly_user_log"
         :key="index"
         class="day"
-        :style="{ backgroundColor: getBackgroundColor(item.ipv4_down) }"
+        :style="{ backgroundColor: getBackgroundColor(select_to_data(item)) }"
       >
-        {{ index + 1 }}<br />
-        {{ item.ipv4_down.toFixed(0) }} MB
+        <p style="margin: 3px; line-height: 1.5em">
+          <b>{{ index + 1 }}日</b><br />
+          {{ select_to_data(item).toFixed(0) }} {{ data_type() }}
+        </p>
       </n-grid-item>
     </n-grid>
+    <p>在使用概览上的东西选择：</p>
+    <n-select
+      v-model:value="select_show_value"
+      :options="select_show_options"
+    />
     <p>关于统计信息：</p>
     <p>这里统计的每日情况与校园网后台一致，以下线时间为准。</p>
     <p>
@@ -117,6 +184,7 @@ const getBackgroundColor = (ipv4_down: number) => {
 }
 .gray {
   height: 50px;
+  text-align: center;
   background-color: rgb(80, 80, 80, 0.2);
 }
 .day {

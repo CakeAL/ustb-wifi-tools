@@ -1,5 +1,4 @@
 {
-  "$schema": "https://schema.tauri.app/config/2",
   "productName": "ustb-wifi-tools",
   "mainBinaryName": "ustb-wifi-tools",
   "version": "0.7.1",
