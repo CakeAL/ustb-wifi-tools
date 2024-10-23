@@ -11,7 +11,7 @@ const monthly_user_log = ref<Array<EveryLoginData>>([]);
 const start_date = ref<number>(Date.now());
 const the_week_of_first_day = ref<Array<number>>([]);
 const refresh = ref(true);
-const select_show_value = ref<string | null>("ipv4_down");
+const select_show_value = ref<string>("ipv4_down");
 const select_show_options = [
   {
     label: "ipv4 下行",
@@ -98,22 +98,16 @@ const getBackgroundColor = (data: number) => {
 };
 
 const select_to_data = (item: EveryLoginData): number => {
-  if (select_show_value.value == "ipv4_down") {
-    return item.ipv4_down;
-  } else if (select_show_value.value == "ipv4_up") {
-    return item.ipv4_up;
-  } else if (select_show_value.value == "ipv6_down") {
-    return item.ipv6_down;
-  } else if (select_show_value.value == "ipv6_up") {
-    return item.ipv6_up;
-  } else if (select_show_value.value == "all") {
-    return item.ipv4_down + item.ipv4_up + item.ipv6_down + item.ipv6_up;
-  } else if (select_show_value.value == "cost") {
-    return item.cost;
-  } else if (select_show_value.value == "used_duration") {
-    return item.used_duration;
-  }
-  return 0;
+  const fieldMap: { [key: string]: number } = {
+    ipv4_down: item.ipv4_down,
+    ipv4_up: item.ipv4_up,
+    ipv6_down: item.ipv6_down,
+    ipv6_up: item.ipv6_up,
+    all: item.ipv4_down + item.ipv4_up + item.ipv6_down + item.ipv6_up,
+    cost: item.cost,
+    used_duration: item.used_duration,
+  };
+  return fieldMap[select_show_value.value] || 0;
 };
 
 const data_type = (): string => {
@@ -185,9 +179,11 @@ const data_type = (): string => {
 .gray {
   height: 50px;
   text-align: center;
+  border-radius: 5px;
   background-color: rgb(80, 80, 80, 0.2);
 }
 .day {
   height: 50px;
+  border-radius: 5px;
 }
 </style>
