@@ -129,6 +129,7 @@ const data_type = (): string => {
       clearable
       @update:value="get_monthly_user_log"
     />
+    <br/>
     <n-grid :x-gap="12" :y-gap="8" :cols="7" :key="refresh">
       <n-grid-item class="gray"><p>日</p></n-grid-item>
       <n-grid-item class="gray"><p>一</p></n-grid-item>

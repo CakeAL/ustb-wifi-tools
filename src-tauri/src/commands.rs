@@ -5,16 +5,13 @@ use rfd::FileDialog;
 use tauri::{utils::config::WindowConfig, Manager};
 
 use crate::{
-    entities::{Account, AppState, EveryLoginData},
-    requests::{
+    entities::{Account, AppState, EveryLoginData}, requests::{
         get_address, get_load_user_flow, get_mac_address, get_month_pay, get_refresh_account,
         get_user_login_log, unbind_macs,
-    },
-    setting::Setting,
-    utils::{
+    }, setting::Setting, utils::{
         get_browser_path, login_via_headless_browser, login_vpn_via_headless_browser,
         try_open_headless_browser,
-    },
+    }
 };
 
 #[tauri::command(async)]
@@ -479,4 +476,10 @@ pub fn load_setting(
         }
         Err(err) => Err(format!("{err}")),
     }
+}
+
+#[tauri::command(async)]
+pub async fn manually_check_update(app: tauri::AppHandle) -> Result<(), String>{
+    crate::update(app, true).await.map_err(|err| err.to_string())?;
+    Ok(())
 }

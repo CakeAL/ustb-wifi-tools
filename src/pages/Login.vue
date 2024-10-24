@@ -128,6 +128,10 @@ const railStyle = ({
   }
   return style;
 };
+
+const manually_check_update = () => {
+  invoke("manually_check_update").catch((err) => pop_message.error(err));
+};
 </script>
 
 <template>
@@ -195,6 +199,10 @@ const railStyle = ({
         macOS: /Users/用户名/Library/Application
         Support/ustb-wifi-tools/config.json
       </p>
+      <p>用来手动检查更新的按钮：</p>
+      <n-button tertiary type="info" @click="manually_check_update">
+        我是用来手动检查更新的按钮
+      </n-button>
     </n-space>
   </div>
 </template>

@@ -55,7 +55,7 @@ const show1 = ref(false);
         <p>3. 重启电脑。</p>
         <p>注销页和登录页网址：http://202.204.48.66/ 或者 http://login.ustb.edu.cn/ (你知道么，学号是可以点击的)</p>
         <br/>
-        <p>当前 version = "0.7.2"</p>
+        <p>当前 version = "0.7.3"</p>
     </n-space>
     </n-card>
   </div>

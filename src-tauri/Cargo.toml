@@ -1,6 +1,6 @@
 [package]
 name = "ustb-wifi-tools"
-version = "0.7.2"
+version = "0.7.3"
 description = "A Tauri App that can be used to get information of the USTB Wifi"
 authors = ["CakeAL"]
 edition = "2021"
@@ -28,10 +28,14 @@ mac_address = "1.1.7"
 headless_chrome = "1.0.15"
 rfd = "0.15.0"
 window-vibrancy = "0.5.2"
+tauri-plugin-dialog = "2"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-updater = "2"
 
 # [target.x86_64-pc-windows-gnu]
 # linker = "x86_64-w64-mingw32-gcc"

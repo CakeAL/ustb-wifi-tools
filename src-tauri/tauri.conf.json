@@ -1,7 +1,7 @@
 {
   "productName": "ustb-wifi-tools",
   "mainBinaryName": "ustb-wifi-tools",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "identifier": "ustb.wifi.tools",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -45,8 +45,6 @@
   },
   "plugins": {
     "updater": {
-      "active": true,
-      "dialog": true,
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEI1QkE0RjRCN0U1RTI0MApSV1JBNHVXMzlLUmJDNmpObVVoNHRyTjZSbC9rbHpVMW4xekN5cDVJTFZpL1ZvUlVCc1pmV2xqQgo=",
       "endpoints": [
         "https://github.com/CakeAL/ustb-wifi-tools/releases/latest/download/latest.json"
