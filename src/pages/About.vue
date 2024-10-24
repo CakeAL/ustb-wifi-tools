@@ -7,7 +7,12 @@ const show1 = ref(false);
 
 <template>
   <div class="container">
-    <n-card title="本软件动机：" hoverable class="my-card">
+    <n-h2 prefix="bar" type="success" style="margin-top: 15px;">
+      <n-text type="success">
+        关于作者以及 Tips
+      </n-text>
+    </n-h2>
+    <n-card hoverable class="my-card">
       <n-space vertical>
         <p>更方便的获取 USTB 校园网每日使用情况，查询流量，解绑 MAC 地址等。</p>
         <p>
@@ -48,14 +53,20 @@ const show1 = ref(false);
         </n-collapse-transition>
         <p>USTB-V6接入说明：http://cipp.ustb.edu.cn/app.IAManage/index.jsp?m=iamanage&c=Notice&a=noticeInfo&id=22</p>
         <p>一个原来能看校园网出口出入流量的网站，现在已经打不开了：http://traffic.ustb.edu.cn/</p>
-        <p>校园网 Radius 超时可能解决方法：</p>
+        <h4>校园网 Radius 超时可能解决方法：</h4>
         <p>0. 尝试手动打开http://login.ustb.edu.cn/登录</p>
         <p>1. 不要使用注销页直接登陆，首先忽略此网络（忘记），然后重开Wi-Fi，再进行登陆，会跳出登录页（虽然ip和注销页是一样的）</p>
         <p>2. 关掉代理，再重新进行上述操作。</p>
         <p>3. 重启电脑。</p>
         <p>注销页和登录页网址：http://202.204.48.66/ 或者 http://login.ustb.edu.cn/ (你知道么，学号是可以点击的)</p>
+        <h4>给校园网省流方法（偏向使用 ipv6 的方法）：</h4>
+        <p>1. 设置 ipv6 DNS服务器，保证 ipv6-test 能全部通过。一般浏览器都是默认优先 ipv6 的</p>
+        <p>2. Steam：使用 Dogfight360 提供的工具，对 Steam 进行 ipv6 代理。</p>
+        <p>3. 软件镜像源，使用带 ipv6 的镜像源，比如清华源（一般会自动选择 ipv6） mirros6 </p>
+        <p>4. 通过 pt 站下载大型软件（比如 Photoshop 等）</p>
+        <p>5. 自建/使用 ipv6 代理服务器</p>
         <br/>
-        <p>当前 version = "0.7.3"</p>
+        <p>当前 version = "0.7.4"</p>
     </n-space>
     </n-card>
   </div>
@@ -65,6 +76,7 @@ const show1 = ref(false);
 .container {
   height: 100vh;
   overflow: auto;
+  margin: 5px;
 }
 
 .my-card {

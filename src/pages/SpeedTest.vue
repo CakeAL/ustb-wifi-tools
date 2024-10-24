@@ -27,27 +27,30 @@ const open_speed_test = async () => {
 };
 
 const load_ip_address = async () => {
-  let res = await invoke("load_ip_address").catch((err) =>
+  let res = (await invoke("load_ip_address").catch((err) =>
     pop_message.error(err)
-  ) as string;
+  )) as string;
   let resp: [string, string] = JSON.parse(res);
   if (resp[0] === "") {
-    ipv4_address.value = "当前无公网 ipv4 地址，但貌似仍可使用北科内网测速。"
+    ipv4_address.value = "当前无公网 ipv4 地址，但貌似仍可使用北科内网测速。";
   } else {
     ipv4_address.value = resp[0];
   }
   if (resp[1] === "") {
-    ipv6_address.value = "当前无公网 ipv6 地址，但貌似仍可使用北科内网测速，无法使用其他 ipv6 测速站点。"
+    ipv6_address.value =
+      "当前无公网 ipv6 地址，但貌似仍可使用北科内网测速，无法使用其他 ipv6 测速站点。";
   } else {
     ipv6_address.value = resp[1];
   }
-}
+};
 </script>
 
 <template>
   <div class="container">
     <n-space vertical>
-      <h2>测个速，不费校园网流量的</h2>
+      <n-h2 prefix="bar" type="success" style="margin-top: 15px">
+        <n-text type="success"> 测个速，不费校园网流量的 </n-text>
+      </n-h2>
       <n-select v-model:value="site_num" :options="options" />
       <n-button strong secondary type="primary" @click="open_speed_test">
         点我
@@ -59,4 +62,10 @@ const load_ip_address = async () => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.container {
+  height: 100vh;
+  overflow: auto;
+  margin: 5px;
+}
+</style>

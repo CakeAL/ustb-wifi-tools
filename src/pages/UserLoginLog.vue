@@ -57,6 +57,11 @@ const unix_format = (unix: number) => {
   return dayjs.unix(unix - 8 * 3600).format("YYYY-MM-DD HH:mm:ss");
 };
 
+const mb2gb = (mb: number | undefined) => {
+  if (mb === undefined) return 0;
+  else return parseFloat((mb / 1024).toFixed(2));
+};
+
 const railStyle = ({
   focused,
   checked,
@@ -82,12 +87,19 @@ const railStyle = ({
 
 <template>
   <div class="container">
-    <h2>每日使用详情</h2>
-    <n-switch v-model:value="the_switch" :rail-style="railStyle">
+    <n-h2 prefix="bar" type="success" style="margin-top: 15px;">
+      <n-text type="success">
+        每日使用详情
+      </n-text>
+    </n-h2>
+    <n-switch
+      v-model:value="the_switch"
+      :rail-style="railStyle"
+      style="margin-bottom: 10px"
+    >
       <template #checked> 选很多天 </template>
       <template #unchecked> 选一天 </template>
     </n-switch>
-
     <n-date-picker
       v-model:value="date_range"
       type="daterange"
@@ -116,7 +128,10 @@ const railStyle = ({
         }}
         MB。
       </p>
-      <p>消耗校园网流量：{{ user_login_log?.used_flow }} MB。</p>
+      <p>
+        消耗校园网流量：{{ user_login_log?.used_flow }} MB，约合
+        {{ mb2gb(user_login_log?.used_flow) }} GB。
+      </p>
       <p>花费金额：{{ user_login_log?.cost }} 元。</p>
       <p>使用时长: {{ user_login_log?.used_duration }} 分钟。</p>
 
@@ -163,5 +178,6 @@ const railStyle = ({
 .container {
   height: 100vh;
   overflow: auto;
+  margin: 5px;
 }
 </style>

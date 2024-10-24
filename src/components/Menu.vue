@@ -92,7 +92,7 @@ const menuOptions: MenuOption[] = [
         {
           href: "#/unbindmacs",
         },
-        "解绑MAC地址"
+        "解绑 MAC 地址"
       ),
     key: "unbindmacs",
     icon: renderIcon(BrowsersOutline),
@@ -116,7 +116,7 @@ const menuOptions: MenuOption[] = [
         {
           href: "#/about",
         },
-        "关于作者以及Tips"
+        "关于作者以及 Tips"
       ),
     key: "about",
     icon: renderIcon(InformationCircleOutline),

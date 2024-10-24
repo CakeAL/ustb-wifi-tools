@@ -167,8 +167,10 @@ const manually_check_update = () => {
           show-password-on="mousedown"
           placeholder="密码"
           round
+          style="margin-top: 5px;"
         />
-        <n-switch v-model:value="login_via_vpn" :rail-style="railStyle">
+        <n-space>
+        <n-switch v-model:value="login_via_vpn" :rail-style="railStyle" class="my-switch">
           <template #checked> 我不在校园网 </template>
           <template #unchecked> 我在校园网 </template>
         </n-switch>
@@ -178,9 +180,11 @@ const manually_check_update = () => {
           type="primary"
           @click="get_cookies"
           :disabled="button_disabled"
+          class="my-button"
         >
           点我登陆获取 cookie⭐️
         </n-button>
+        </n-space>
         <h3 v-if="button_disabled === true">登录中...</h3>
       </div>
       <div v-else>
@@ -193,10 +197,10 @@ const manually_check_update = () => {
       <n-button strong secondary type="info" @click="logout"> 登出 </n-button>
       <h4>如果想自己更改配置文件：</h4>
       <p>
-        Windows: C:\Users\用户名\AppData\Roaming\ustb-wifi-tools\config.json
+        Windows: C:\Users\⁠%UserName%\AppData\Roaming\ustb-wifi-tools\config.json
       </p>
       <p>
-        macOS: /Users/用户名/Library/Application
+        macOS: ~/Library/Application
         Support/ustb-wifi-tools/config.json
       </p>
       <p>用来手动检查更新的按钮：</p>
@@ -207,4 +211,16 @@ const manually_check_update = () => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.container {
+  height: 100vh;
+  overflow: auto;
+  margin: 5px;
+}
+.my-switch {
+  margin-top: 10px;
+}
+.my-button {
+  margin-top: 5px;
+}
+</style>

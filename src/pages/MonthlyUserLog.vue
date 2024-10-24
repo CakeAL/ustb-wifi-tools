@@ -14,7 +14,7 @@ const refresh = ref(true);
 const select_show_value = ref<string>("ipv4_down");
 const select_show_options = [
   {
-    label: "ipv4 下行",
+    label: "ipv4 下行（校园网只计费这个）",
     value: "ipv4_down",
   },
   {
@@ -28,6 +28,14 @@ const select_show_options = [
   {
     label: "ipv6 上行",
     value: "ipv6_up",
+  },
+  {
+    label: "ipv4 上下行",
+    value: "ipv4",
+  },
+  {
+    label: "ipv6 上下行",
+    value: "ipv6",
   },
   {
     label: "当天总共的流量（包含ipv4和ipv6上下行）",
@@ -103,6 +111,8 @@ const select_to_data = (item: EveryLoginData): number => {
     ipv4_up: item.ipv4_up,
     ipv6_down: item.ipv6_down,
     ipv6_up: item.ipv6_up,
+    ipv4: item.ipv4_down + item.ipv4_up,
+    ipv6: item.ipv6_down + item.ipv6_up,
     all: item.ipv4_down + item.ipv4_up + item.ipv6_down + item.ipv6_up,
     cost: item.cost,
     used_duration: item.used_duration,
@@ -123,13 +133,16 @@ const data_type = (): string => {
 
 <template>
   <div class="container">
+    <n-h2 prefix="bar" type="success" style="margin-top: 15px">
+      <n-text type="success"> 月度使用概览 </n-text>
+    </n-h2>
     <n-date-picker
       v-model:value="start_date"
       type="month"
       clearable
       @update:value="get_monthly_user_log"
     />
-    <br/>
+    <br />
     <n-grid :x-gap="12" :y-gap="8" :cols="7" :key="refresh">
       <n-grid-item class="gray"><p>日</p></n-grid-item>
       <n-grid-item class="gray"><p>一</p></n-grid-item>
@@ -150,7 +163,7 @@ const data_type = (): string => {
         class="day"
         :style="{ backgroundColor: getBackgroundColor(select_to_data(item)) }"
       >
-        <p style="margin: 3px; line-height: 1.5em">
+        <p style="margin: 3px; line-height: 1.5em; white-space: nowrap">
           <b>{{ index + 1 }}日</b><br />
           {{ select_to_data(item).toFixed(0) }} {{ data_type() }}
         </p>
@@ -176,6 +189,7 @@ const data_type = (): string => {
 .container {
   height: 100vh;
   overflow: auto;
+  margin: 5px;
 }
 .gray {
   height: 50px;

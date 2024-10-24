@@ -102,13 +102,18 @@ const remain_percentage = computed(() => {
 
 <template>
   <div class="container" v-if="account_info !== null">
-    <h2>当前账号使用详情</h2>
+    <n-h2 prefix="bar" type="success" style="margin-top: 15px;">
+      <n-text type="success">
+        当前账号使用详情
+      </n-text>
+    </n-h2>
     <p>用户类别：{{ account_info.note.service }}</p>
     <p>当前余额：{{ account_info.note.leftmoeny }}</p>
     <p>是否在线：{{ if_online }}</p>
     <p>用户状态：{{ account_info.note.status }}</p>
     <p>更新日期：{{ account_info.serverDate }}</p>
-    <br />
+    <hr />
+    <n-progress type="circle" :percentage="remain_percentage" class="my-progress"/>
     <p>当前流量使用情况：</p>
     <p>
       ipv4 下行：{{ account_flow?.data.v4 }} MB，约合
@@ -122,11 +127,21 @@ const remain_percentage = computed(() => {
       当前剩余 ipv4 下行流量：{{ remain_flow }} GB，大概是
       {{ remain_percentage }} %
     </p>
-    <br />
+    <hr />
     <p>Tips:</p>
     <p>ipv6 上下行，ipv4 上行都是不计费的~</p>
     <p>ipv4 下行超出 120 GB 的部分大约 0.6 RMB/GB</p>
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.container {
+  height: 100vh;
+  overflow: auto;
+  margin: 5px;
+}
+.my-progress {
+  float: right;
+  margin-right: 5px;
+}
+</style>

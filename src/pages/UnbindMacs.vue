@@ -54,7 +54,11 @@ const unbind = async () => {
 
 <template>
   <div class="container">
-    <h2>解绑MAC地址</h2>
+    <n-h2 prefix="bar" type="success" style="margin-top: 15px;">
+      <n-text type="success">
+        解绑 MAC 地址
+      </n-text>
+    </n-h2>
     <p>MAC Address是什么？简单来说校园网靠这个来识别是否是你的设备。</p>
     <p>
       所以随机MAC地址开启的话，就会导致你之前的设备被顶掉，详情可看B站视频：BV1JC4y1S7WS
@@ -82,6 +86,7 @@ const unbind = async () => {
           </tr>
         </tbody>
       </n-table>
+      <br/>
       <n-button strong secondary type="info" @click="unbind">
         确定解绑
       </n-button>
@@ -93,5 +98,6 @@ const unbind = async () => {
 .container {
   height: 100vh;
   overflow: auto;
+  margin: 5px;
 }
 </style>

@@ -76,6 +76,10 @@ const min2hour = (min: number | undefined) => {
   return parseFloat(((min as number) / 60).toFixed(2));
 };
 
+const min2day = (min: number | undefined) => {
+  return parseFloat(((min as number) / 60 / 24).toFixed(2));
+};
+
 const mb2gb = (mb: number | undefined) => {
   return parseFloat(((mb as number) / 1024).toFixed(2));
 };
@@ -83,7 +87,9 @@ const mb2gb = (mb: number | undefined) => {
 
 <template>
   <div class="container">
-    <h2>年度扣费账单</h2>
+    <n-h2 prefix="bar" type="success" style="margin-top: 15px">
+      <n-text type="success"> 年度扣费账单 </n-text>
+    </n-h2>
     <p>选择一个年份：</p>
     <n-select
       v-model:value="year"
@@ -94,7 +100,10 @@ const mb2gb = (mb: number | undefined) => {
       <p>这一年一共花费 {{ month_pay?.year_cost }} 元。</p>
       <p>
         总共使用时长 {{ month_pay?.year_used_duration }} 分钟，约合
-        {{ min2hour(month_pay?.year_used_duration) }} 小时。
+        {{ min2hour(month_pay?.year_used_duration) }} 小时，{{
+          min2day(month_pay?.year_used_duration)
+        }}
+        天（不同设备使用时长会叠加）。
       </p>
       <p>
         总共使用流量 {{ month_pay?.year_used_flow }} MB，约合
@@ -112,5 +121,6 @@ const mb2gb = (mb: number | undefined) => {
 .container {
   height: 100vh;
   overflow: auto;
+  margin: 5px;
 }
 </style>
