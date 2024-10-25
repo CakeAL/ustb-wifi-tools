@@ -72,7 +72,7 @@ pub fn login_via_headless_browser(browser_path: PathBuf, account: &Account) -> R
         tab.find_element_by_xpath(r#"/html/body/div/div/div[3]/div/div/form/div[3]/input"#)?;
     let password_ele =
         tab.find_element_by_xpath(r#"/html/body/div/div/div[3]/div/div/form/div[4]/input"#)?;
-    let check_code_ele =
+    let code_ele =
         tab.find_element_by_xpath(r#"/html/body/div/div/div[3]/div/div/form/div[5]/input[1]"#)?;
 
     user_name_ele.call_js_fn(
@@ -86,10 +86,10 @@ pub fn login_via_headless_browser(browser_path: PathBuf, account: &Account) -> R
         false,
     )?;
 
-    if account.check_code.is_some() {
-        check_code_ele.call_js_fn(
+    if account.code.is_some() {
+        code_ele.call_js_fn(
             "function(str) { this.value = str }",
-            vec![serde_json::json!(account.check_code.clone().unwrap())],
+            vec![serde_json::json!(account.code.clone().unwrap())],
             false,
         )?;
     }
@@ -207,7 +207,7 @@ pub fn login_vpn_via_headless_browser(
         tab.find_element_by_xpath(r#"/html/body/div/div/div[3]/div/div/form/div[3]/input"#)?;
     let password_ele =
         tab.find_element_by_xpath(r#"/html/body/div/div/div[3]/div/div/form/div[4]/input"#)?;
-    let check_code_ele =
+    let code_ele =
         tab.find_element_by_xpath(r#"/html/body/div/div/div[3]/div/div/form/div[5]/input[1]"#)?;
 
     user_name_ele.call_js_fn(
@@ -221,10 +221,10 @@ pub fn login_vpn_via_headless_browser(
         false,
     )?;
 
-    if account.check_code.is_some() {
-        check_code_ele.call_js_fn(
+    if account.code.is_some() {
+        code_ele.call_js_fn(
             "function(str) { this.value = str }",
-            vec![serde_json::json!(account.check_code.clone().unwrap())],
+            vec![serde_json::json!(account.code.clone().unwrap())],
             false,
         )?;
     }
@@ -282,7 +282,7 @@ mod test {
         let account: Account = Account {
             user_name: "user_name".to_string(),
             password: "password".to_string(),
-            check_code: None,
+            code: None,
         };
         let browser_path = get_browser_path().unwrap();
         let res = login_via_headless_browser(browser_path, &account);
@@ -294,7 +294,7 @@ mod test {
         let account: Account = Account {
             user_name: "user_name".to_string(),
             password: "+password".to_string(),
-            check_code: None,
+            code: None,
         };
         let browser_path = get_browser_path().unwrap();
         let res = login_vpn_via_headless_browser(browser_path, &account);

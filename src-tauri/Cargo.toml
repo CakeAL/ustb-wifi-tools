@@ -29,6 +29,8 @@ headless_chrome = "1.0.15"
 rfd = "0.15.0"
 window-vibrancy = "0.5.2"
 tauri-plugin-dialog = "2"
+rand = "0.8.5"
+md5 = "0.7.0"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

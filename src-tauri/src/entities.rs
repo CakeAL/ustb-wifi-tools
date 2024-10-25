@@ -26,7 +26,7 @@ use crate::setting::Setting;
 pub struct Account {
     pub user_name: String,
     pub password: String,
-    pub check_code: Option<String>,
+    pub code: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

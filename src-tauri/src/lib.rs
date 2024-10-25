@@ -26,7 +26,6 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_cookie,
             load_refresh_account,
-            open_nav_login,
             load_user_flow_by_state,
             load_month_pay,
             load_user_login_log,

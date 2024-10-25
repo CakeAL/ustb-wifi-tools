@@ -5,41 +5,17 @@ use rfd::FileDialog;
 use tauri::{utils::config::WindowConfig, Manager};
 
 use crate::{
-    entities::{Account, AppState, EveryLoginData}, requests::{
-        get_address, get_load_user_flow, get_mac_address, get_month_pay, get_refresh_account,
-        get_user_login_log, unbind_macs,
-    }, setting::Setting, utils::{
-        get_browser_path, login_via_headless_browser, login_vpn_via_headless_browser,
+    entities::{Account, AppState, EveryLoginData},
+    requests::{
+        get_address, simulate_login, get_load_user_flow, get_mac_address, get_month_pay,
+        get_refresh_account, get_user_login_log, unbind_macs,
+    },
+    setting::Setting,
+    utils::{
+        get_browser_path, login_vpn_via_headless_browser,
         try_open_headless_browser,
-    }
+    },
 };
-
-#[tauri::command(async)]
-pub fn open_nav_login(app_handle: tauri::AppHandle) -> Result<(), String> {
-    // 判断该窗口是否已存在
-    if let Some(window) = app_handle.get_webview_window("nav_login") {
-        window.close().map_err(|e| e.to_string())?;
-    }
-
-    tauri::WebviewWindowBuilder::new(
-        &app_handle,
-        "nav_login",
-        tauri::WebviewUrl::App("http://202.204.60.7:8080/nav_login".into()),
-    )
-    .build()
-    .map_err(|e| {
-        format!(
-            "Error when building the nav_login window, 可能需要再点一下: {}",
-            e
-        )
-    })?;
-    // // 什么Golang😡
-    // if nav_login_window.is_ok() != true {
-    //     return Err("Error when building the nav_login window".into());
-    // };
-
-    Ok(())
-}
 
 // 没地方放它了
 pub async fn load_user_flow(
@@ -60,34 +36,20 @@ pub async fn get_cookie(
     user_name: String,
     password: String,
 ) -> Result<String, String> {
-    let account = Account {
-        user_name,
-        password,
-        check_code: None,
-    };
-
-    let browser_path = match app_state.setting.read().unwrap().browser_path.clone() {
-        None => get_browser_path().unwrap(),
-        Some(path) => {
-            if path.is_empty() {
-                get_browser_path().unwrap()
-            } else {
-                PathBuf::from(path)
-            }
-        }
-    };
-    let res = login_via_headless_browser(browser_path, &account);
+    let res = simulate_login(&user_name, &format!("{:x}", md5::compute(&password)))
+        .await
+        .map_err(|err| err.to_string())?;
     match res {
-        Ok(cookies) => {
-            dbg!(&cookies[0]);
-            *app_state.jsessionid.write().unwrap() = cookies.first().map(|str| str.value.clone());
+        Some(cookie) => {
+            dbg!(&cookie);
+            *app_state.jsessionid.write().unwrap() = Some(cookie.clone());
             app_state
                 .setting
                 .write()
                 .unwrap()
-                .set_account(account.user_name, account.password);
+                .set_account(user_name, password);
         }
-        Err(err) => return Err(format!("是否在校园网？或者其他问题：{}", err)),
+        None => return Err("用户名或密码错误！".into()),
     }
     Ok(app_state
         .jsessionid
@@ -106,7 +68,7 @@ pub async fn get_cookie_vpn(
     let account = Account {
         user_name,
         password,
-        check_code: None,
+        code: None,
     };
 
     let browser_path = match app_state.setting.read().unwrap().browser_path.clone() {
@@ -479,7 +441,9 @@ pub fn load_setting(
 }
 
 #[tauri::command(async)]
-pub async fn manually_check_update(app: tauri::AppHandle) -> Result<(), String>{
-    crate::update(app, true).await.map_err(|err| err.to_string())?;
+pub async fn manually_check_update(app: tauri::AppHandle) -> Result<(), String> {
+    crate::update(app, true)
+        .await
+        .map_err(|err| err.to_string())?;
     Ok(())
 }

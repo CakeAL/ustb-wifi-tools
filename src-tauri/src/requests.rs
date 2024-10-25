@@ -1,7 +1,8 @@
-use std::f64;
+use std::{f64, time::Duration};
 
 use anyhow::{anyhow, Result};
 use chrono::NaiveDateTime;
+use rand::Rng;
 use regex::Regex;
 use reqwest::{header::SET_COOKIE, Client};
 use scraper::{Html, Selector};
@@ -31,45 +32,65 @@ pub async fn get_load_user_flow(account: &str, session_id: &str, via_vpn: bool) 
     Ok(serde_json::from_str(json_str.unwrap())?)
 }
 
-// 该函数可能用不到了
-#[allow(dead_code)]
-pub async fn get_jsessionid(account: &str, password: &str) -> Result<String> {
+// 该函数复活了
+pub async fn simulate_login(account: &str, password: &str) -> Result<Option<String>> {
     let client = Client::new();
-    let check_url = "http://202.204.60.7:8080/nav_login";
-    let res_check = client.get(check_url).send().await?.text().await?;
-    let re = Regex::new(r#"var checkcode="([^"]*)";"#)?;
-    let check_code = re
-        .captures(&res_check)
+    // 访问登录页
+    let res = client.get("http://202.204.60.7:8080/nav_login").send().await?;
+    // 获取登录页中的 header 里面的 cookie
+    let res_header = res.headers().clone();
+    let res_cookie = res_header.get_all(SET_COOKIE).iter().next();
+    let jsessionid = if let Some(jsessionid) = res_cookie {
+        Regex::new(r#"JSESSIONID=([^;]*)"#)?
+        .captures(jsessionid.to_str()?)
+        .and_then(|cap| cap.get(1))
+        .unwrap()
+        .as_str()
+    } else {
+        return Err(anyhow!("There is no jsessionid cookie in nav_login ?!"));
+    };
+    // 获取登录页中的 check_code 用来提交 post 请求使用
+    let res_text = res.text().await?;
+    let check_code = Regex::new(r#"var checkcode="([^"]*)";"#)?
+        .captures(&res_text)
         .and_then(|cap| cap.get(1))
         .unwrap()
         .as_str();
-    println!("{check_code}");
-    let client = Client::new();
-    let url = "http://202.204.60.7:8080/LoginAction.action";
-    let params = [
-        ("account", account),
-        ("password", password),
-        ("code", ""),
-        ("check_code", check_code),
-        ("Submit", "登 陆"),
-    ];
-    let response = client.post(url)
-        .header("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36")
-        .header("Referer", "http://202.204.60.7:8080/nav_login")
-        .form(&params).send().await?;
-    // println!("{}", response.headers().get_all(SET_COOKIE).iter().next().unwrap().to_str()?);
-    let jessionid = response.headers().get_all(SET_COOKIE).iter().next();
-    if let Some(jessionid) = jessionid {
-        let re = Regex::new(r#"JSESSIONID=([^;]*)"#)?;
-        let res = re
-            .captures(jessionid.to_str()?)
-            .and_then(|cap| cap.get(1))
-            .unwrap()
-            .as_str();
-        Ok(res.to_string())
-    } else {
-        Err(anyhow!("No session_id found!"))
+    // dbg!(check_code);
+    tokio::time::sleep(Duration::from_millis(10)).await;
+    // 获取用户名/密码错误3次以上的随机验证码（密码输错3次以内是隐藏的），需要带 cookie，这是必要的
+    client
+        .get(format!(
+            "http://202.204.60.7:8080/RandomCodeAction.action?randomNum={}",
+            rand::thread_rng().gen_range(0.0..1.0)
+        ))
+        .header(
+            "accept",
+            "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+        )
+        .header("cookie", format!("JSESSIONID={}", jsessionid))
+        .send()
+        .await?;
+    tokio::time::sleep(Duration::from_millis(10)).await;
+    // 发送登录请求，携带 Cookie 和必要的 header，这样可以激活这个 cookie
+    let response = client
+        .post("http://202.204.60.7:8080/LoginAction.action")
+        .header("content-type", "application/x-www-form-urlencoded")
+        .header("upgrade-insecure-requests", "1")
+        .header("Cookie", format!("JSESSIONID={}", jsessionid))
+        .header("Referer", "http://202.204.60.7:8080/LoginAction.action")
+        .header("Referrer-Policy", "strict-origin-when-cross-origin")
+        .body(format!(
+            "account={}&password={}&code=&checkcode={}&Submit=%E7%99%BB+%E5%BD%95",
+            account, password, check_code
+        ))
+        .send()
+        .await?.text().await?;
+    // dbg!(&response);
+    if response.contains("账号或密码出现错误！") {
+        return Ok(None); // 账号或密码出现错误！
     }
+    Ok(Some(jsessionid.to_string()))
 }
 
 pub async fn get_refresh_account(session_id: &str, via_vpn: bool) -> Result<Option<String>> {
@@ -436,10 +457,10 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_get_jsessionid() {
+    async fn test_simulate_login() {
         let account = "stu_id";
         let password = "md5_password";
-        let res = get_jsessionid(account, password).await;
+        let res = simulate_login(account, password).await;
         println!("{:?}", res);
     }
 
