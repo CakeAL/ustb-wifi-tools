@@ -5,16 +5,13 @@ use rfd::FileDialog;
 use tauri::{utils::config::WindowConfig, Manager};
 
 use crate::{
-    entities::{Account, AppState, EveryLoginData},
+    entities::{AppState, EveryLoginData},
     requests::{
-        get_address, simulate_login, get_load_user_flow, get_mac_address, get_month_pay,
-        get_refresh_account, get_user_login_log, unbind_macs,
+        get_address, get_load_user_flow, get_mac_address, get_month_pay, get_refresh_account,
+        get_user_login_log, simulate_login, simulate_login_via_vpn, unbind_macs,
     },
     setting::Setting,
-    utils::{
-        get_browser_path, login_vpn_via_headless_browser,
-        try_open_headless_browser,
-    },
+    utils::{get_browser_path, try_open_headless_browser},
 };
 
 // 没地方放它了
@@ -36,7 +33,7 @@ pub async fn get_cookie(
     user_name: String,
     password: String,
 ) -> Result<String, String> {
-    let res = simulate_login(&user_name, &format!("{:x}", md5::compute(&password)))
+    let res = simulate_login(&user_name, &password)
         .await
         .map_err(|err| err.to_string())?;
     match res {
@@ -65,33 +62,23 @@ pub async fn get_cookie_vpn(
     user_name: String,
     password: String,
 ) -> Result<String, String> {
-    let account = Account {
-        user_name,
-        password,
-        code: None,
-    };
+    let res = simulate_login_via_vpn(&user_name, &password)
+        .await
+        .map_err(|err| err.to_string())?;
 
-    let browser_path = match app_state.setting.read().unwrap().browser_path.clone() {
-        None => get_browser_path().unwrap(),
-        Some(path) => {
-            if path.is_empty() {
-                get_browser_path().unwrap()
-            } else {
-                PathBuf::from(path)
-            }
+    match res {
+        Some(cookie) => {
+            dbg!(&cookie);
+            *app_state.jsessionid.write().unwrap() = Some(cookie.clone());
+            *app_state.login_via_vpn.write().unwrap() = true;
+            app_state
+                .setting
+                .write()
+                .unwrap()
+                .set_account(user_name, password);
         }
-    };
-    let cookies =
-        login_vpn_via_headless_browser(browser_path, &account).map_err(|err| err.to_string())?;
-
-    dbg!(&cookies[3]); // wengine_vpn_ticketelib_ustb_edu_cn
-    *app_state.jsessionid.write().unwrap() = cookies.get(3).map(|str| str.value.clone());
-    *app_state.login_via_vpn.write().unwrap() = true;
-    app_state
-        .setting
-        .write()
-        .unwrap()
-        .set_account(account.user_name, account.password);
+        None => return Err("用户名或密码错误！".into()),
+    }
 
     Ok(app_state
         .jsessionid

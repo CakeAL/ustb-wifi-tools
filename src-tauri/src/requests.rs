@@ -36,16 +36,19 @@ pub async fn get_load_user_flow(account: &str, session_id: &str, via_vpn: bool) 
 pub async fn simulate_login(account: &str, password: &str) -> Result<Option<String>> {
     let client = Client::new();
     // 访问登录页
-    let res = client.get("http://202.204.60.7:8080/nav_login").send().await?;
+    let res = client
+        .get("http://202.204.60.7:8080/nav_login")
+        .send()
+        .await?;
     // 获取登录页中的 header 里面的 cookie
     let res_header = res.headers().clone();
     let res_cookie = res_header.get_all(SET_COOKIE).iter().next();
     let jsessionid = if let Some(jsessionid) = res_cookie {
         Regex::new(r#"JSESSIONID=([^;]*)"#)?
-        .captures(jsessionid.to_str()?)
-        .and_then(|cap| cap.get(1))
-        .unwrap()
-        .as_str()
+            .captures(jsessionid.to_str()?)
+            .and_then(|cap| cap.get(1))
+            .unwrap()
+            .as_str()
     } else {
         return Err(anyhow!("There is no jsessionid cookie in nav_login ?!"));
     };
@@ -81,16 +84,127 @@ pub async fn simulate_login(account: &str, password: &str) -> Result<Option<Stri
         .header("Referer", "http://202.204.60.7:8080/LoginAction.action")
         .header("Referrer-Policy", "strict-origin-when-cross-origin")
         .body(format!(
-            "account={}&password={}&code=&checkcode={}&Submit=%E7%99%BB+%E5%BD%95",
-            account, password, check_code
+            "account={}&password={:x}&code=&checkcode={}&Submit=%E7%99%BB+%E5%BD%95",
+            account,
+            md5::compute(&password),
+            check_code
         ))
         .send()
-        .await?.text().await?;
+        .await?
+        .text()
+        .await?;
     // dbg!(&response);
     if response.contains("账号或密码出现错误！") {
         return Ok(None); // 账号或密码出现错误！
     }
     Ok(Some(jsessionid.to_string()))
+}
+
+pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Option<String>> {
+    let client = Client::new();
+    // 访问 lib webvpn
+    let res = client.get("https://elib.ustb.edu.cn/login").send().await?;
+    let res_header = res.headers().clone();
+    let res_cookie = res_header.get_all(SET_COOKIE).iter().next();
+    let wengine_vpn_ticketelib_ustb_edu_cn = if let Some(header_value) = res_cookie {
+        Regex::new(r#"wengine_vpn_ticketelib_ustb_edu_cn=([^;]*)"#)?
+            .captures(header_value.to_str()?)
+            .and_then(|cap| cap.get(1))
+            .unwrap()
+            .as_str()
+    } else {
+        return Err(anyhow!("There is no cookie in elib login ?!"));
+    };
+    // dbg!(wengine_vpn_ticketelib_ustb_edu_cn);
+    // 获取 lib webvpn 登录页的 captcha_id
+    let res_text = res.text().await?;
+    let captcha_id = Regex::new(r#"name="captcha_id" value="([^"]*)""#)?
+        .captures(&res_text)
+        .and_then(|cap| cap.get(1))
+        .unwrap()
+        .as_str();
+    dbg!(captcha_id);
+    // 发送登录请求
+    let _res = client
+        .post("https://elib.ustb.edu.cn/do-login")
+        .header(
+            "Cookie",
+            format!(
+                "show_vpn=0; show_faq=0; wengine_vpn_ticketelib_ustb_edu_cn={}",
+                wengine_vpn_ticketelib_ustb_edu_cn
+            ),
+        )
+        .header("Referer", "https://elib.ustb.edu.cn/login")
+        .header("Referrer-Policy", "strict-origin-when-cross-origin")
+        .form(&[
+            ("auth_type", "local"),
+            ("username", account),
+            ("sms_code", ""),
+            ("password", password),
+            ("captcha", ""),
+            ("needCaptcha", "false"),
+            ("captcha_id", captcha_id),
+        ])
+        .send()
+        .await?;
+    // 访问校园网后台登录页
+    let res = client.get("https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/nav_login")
+    .header("Cookie", format!("wengine_vpn_ticketelib_ustb_edu_cn={}", wengine_vpn_ticketelib_ustb_edu_cn))
+    .send().await?;
+    // 获取登录页中的 check_code 用来提交 post 请求使用
+    let res_text = res.text().await?;
+    let check_code = Regex::new(r#"var checkcode="([^"]*)";"#)?
+        .captures(&res_text)
+        .and_then(|cap| cap.get(1))
+        .ok_or(anyhow!("用户名或密码错误！"))?
+        .as_str();
+    // dbg!(check_code);
+    tokio::time::sleep(Duration::from_millis(10)).await;
+    // 获取用户名/密码错误3次以上的随机验证码（密码输错3次以内是隐藏的），需要带 cookie，这是必要的
+    // 这里需要使用 webvpn 的 cookie
+    client
+        .get(format!(
+            "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/RandomCodeAction.action?vpn-1&randomNum={}",
+            rand::thread_rng().gen_range(0.0..1.0)
+        ))
+        .header(
+            "accept",
+            "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+        )
+        .header(
+            "cookie",
+            format!(
+                "wengine_vpn_ticketelib_ustb_edu_cn={}",
+                wengine_vpn_ticketelib_ustb_edu_cn
+            ),
+        )
+        .send()
+        .await?;
+    //
+    tokio::time::sleep(Duration::from_millis(10)).await;
+    // 发送登录请求，携带 Cookie 和必要的 header，这样可以激活这个 cookie
+    let response = client
+        .post("https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/LoginAction.action")
+        .header("content-type", "application/x-www-form-urlencoded")
+        .header("upgrade-insecure-requests", "1")
+        .header("Cookie", format!("wengine_vpn_ticketelib_ustb_edu_cn={}", wengine_vpn_ticketelib_ustb_edu_cn))
+        .header("Referer", "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/LoginAction.action")
+        .header("Referrer-Policy", "strict-origin-when-cross-origin")
+        .body(format!(
+            "account={}&password={:x}&code=&checkcode={}&Submit=%E7%99%BB+%E5%BD%95",
+            account,
+            md5::compute(&password),
+            check_code
+        ))
+        .send()
+        .await?
+        .text()
+        .await?;
+    // dbg!(&response);
+    if response.contains("账号或密码出现错误！") {
+        return Ok(None); // 账号或密码出现错误！
+    }
+    Ok(Some(wengine_vpn_ticketelib_ustb_edu_cn.into()))
 }
 
 pub async fn get_refresh_account(session_id: &str, via_vpn: bool) -> Result<Option<String>> {
@@ -459,8 +573,16 @@ mod tests {
     #[tokio::test]
     async fn test_simulate_login() {
         let account = "stu_id";
-        let password = "md5_password";
+        let password = "password";
         let res = simulate_login(account, password).await;
+        println!("{:?}", res);
+    }
+
+    #[tokio::test]
+    async fn test_simulate_login_via_vpn() {
+        let account: &str = "stu_id";
+        let password = "password";
+        let res = simulate_login_via_vpn(account, password).await;
         println!("{:?}", res);
     }
 
