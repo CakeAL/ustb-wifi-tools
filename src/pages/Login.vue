@@ -5,7 +5,6 @@ import { useMessage, useLoadingBar } from "naive-ui";
 
 const loadingBar = useLoadingBar();
 const pop_message = useMessage();
-const has_browser = ref<boolean>(false);
 const sessionid = ref<string>("");
 const user_name = ref<string>("");
 const password = ref<string>("");
@@ -15,14 +14,7 @@ const login_via_vpn = ref<boolean>(false);
 
 onMounted(() => {
   check_login_state();
-  load_setting()
-    .then(check_has_browser)
-    .then(() => {
-      // 有浏览器并且没登录时候
-      // if (has_browser.value === true && login_state.value === false) {
-      //   get_cookies();
-      // }
-    });
+  load_setting();
 });
 
 const load_setting = async () => {
@@ -42,16 +34,6 @@ const check_login_state = async () => {
     sessionid.value = res;
     login_state.value = true;
   }
-};
-
-const check_has_browser = async () => {
-  has_browser.value = (await invoke("check_has_browser").catch((err) =>
-    pop_message.error(err)
-  )) as boolean;
-};
-
-const set_browser_path = async () => {
-  await invoke("set_browser_path").catch((err) => pop_message.error(err));
 };
 
 const get_cookies = async () => {
@@ -136,21 +118,7 @@ const manually_check_update = () => {
 
 <template>
   <div class="container">
-    <div v-if="!has_browser">
-      <h3>
-        非常不幸，您的电脑上貌似没有
-        <b>Edge/Chrome</b> 浏览器，或许它们只是被安装到其他地方了？
-      </h3>
-      <h3>或许您可以手动选择浏览器可执行文件位置？</h3>
-      <h4>
-        Windows 上：请选择后缀名为 <b>.exe</b> 的可执行文件（不是快捷方式！）。
-      </h4>
-      <h4>macOS 上：请选择“应用程序”文件夹中的 APP</h4>
-      <n-button strong secondary type="primary" @click="set_browser_path">
-        点我来选择浏览器可执行文件
-      </n-button>
-    </div>
-    <n-space vertical v-else>
+    <n-space vertical>
       <div v-if="!login_state">
         <h3>
           在下方输入学号和密码（如果没改过，是身份证后8位，数据均在本地存储）：

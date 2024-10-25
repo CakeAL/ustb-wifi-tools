@@ -33,8 +33,6 @@ pub fn run() {
             get_current_device_mac,
             do_unbind_macs,
             open_speed_test,
-            set_browser_path,
-            check_has_browser,
             load_ip_address,
             get_jsessionid,
             set_setting,

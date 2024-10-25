@@ -66,7 +66,7 @@ fn get_config_path(app: &tauri::AppHandle) -> Result<PathBuf> {
         }
         None => return Err(anyhow!("There is no such app data dir!")),
     };
-    dbg!(&path);
+    // dbg!(&path);
     Ok(path)
 }
 

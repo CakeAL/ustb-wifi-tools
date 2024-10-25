@@ -86,7 +86,7 @@ pub async fn simulate_login(account: &str, password: &str) -> Result<Option<Stri
         .body(format!(
             "account={}&password={:x}&code=&checkcode={}&Submit=%E7%99%BB+%E5%BD%95",
             account,
-            md5::compute(&password),
+            md5::compute(password),
             check_code
         ))
         .send()
@@ -193,7 +193,7 @@ pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Opt
         .body(format!(
             "account={}&password={:x}&code=&checkcode={}&Submit=%E7%99%BB+%E5%BD%95",
             account,
-            md5::compute(&password),
+            md5::compute(password),
             check_code
         ))
         .send()

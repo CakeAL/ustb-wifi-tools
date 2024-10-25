@@ -1,7 +1,4 @@
-use std::path::PathBuf;
-
 use chrono::DateTime;
-use rfd::FileDialog;
 use tauri::{utils::config::WindowConfig, Manager};
 
 use crate::{
@@ -11,7 +8,6 @@ use crate::{
         get_user_login_log, simulate_login, simulate_login_via_vpn, unbind_macs,
     },
     setting::Setting,
-    utils::{get_browser_path, try_open_headless_browser},
 };
 
 // 没地方放它了
@@ -98,6 +94,7 @@ pub fn logout(
         return Err("没登录之前不许登出😠".into());
     }
     *app_state.jsessionid.write().unwrap() = None;
+    *app_state.login_via_vpn.write().unwrap() = false; // 这之前有个bug一直没人发现，说明没人用我的 app 😭
     Setting::write_setting(
         &Setting {
             browser_path: app_state.setting.read().unwrap().browser_path.to_owned(),
@@ -325,61 +322,6 @@ pub fn open_speed_test(app_handle: tauri::AppHandle, site_num: i32) -> Result<()
     .build()
     .map_err(|e| format!("Error when building the speed_test window: {}", e))
     .map(|_| ())
-}
-
-#[tauri::command(async)]
-pub fn check_has_browser(app_state: tauri::State<'_, AppState>) -> Result<bool, String> {
-    let path = app_state.setting.read().unwrap().browser_path.clone();
-    // 存在路径，并且路径不是空的
-    if path.is_some() && !path.unwrap_or_default().is_empty() {
-        return Ok(true);
-    }
-    match get_browser_path() {
-        Some(_) => Ok(true),
-        None => Ok(false),
-    }
-}
-
-#[tauri::command(async)]
-pub fn set_browser_path(
-    app: tauri::AppHandle,
-    app_state: tauri::State<'_, AppState>,
-    window: tauri::Webview,
-) -> Result<(), String> {
-    let mut browser_path: PathBuf;
-    match FileDialog::new().pick_file() {
-        Some(path) => browser_path = path.to_owned(),
-        None => return Err("没有选择任何文件".to_string()),
-    }
-    if std::env::consts::OS == "macos" {
-        let app_name = browser_path.file_name().unwrap().to_str().unwrap();
-        browser_path.push(format!(
-            "Contents/MacOS/{}",
-            &app_name[..app_name.len() - 4]
-        ));
-    }
-
-    let res = try_open_headless_browser(browser_path.clone());
-    match res {
-        Ok(()) => {
-            app_state
-                .setting
-                .write()
-                .unwrap()
-                .set_browser_path(browser_path.to_str().map(|str: &str| str.to_owned()));
-            app_state
-                .setting
-                .write()
-                .unwrap()
-                .write_setting(&app)
-                .map_err(|err| format!("写入配置错误: {}", err))?;
-            window
-                .eval("window.location.reload();")
-                .map_err(|err| format!("刷新网页错误：{}", err))?;
-            Ok(())
-        }
-        Err(e) => Err(format!("在该路径找不到浏览器可执行文件：{}", e)),
-    }
 }
 
 #[tauri::command(async)]
