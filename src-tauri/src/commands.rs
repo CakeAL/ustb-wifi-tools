@@ -371,8 +371,14 @@ pub fn load_setting(
 
 #[tauri::command(async)]
 pub async fn manually_check_update(app: tauri::AppHandle) -> Result<(), String> {
+    #[cfg(not(target_os = "android"))]
     crate::update(app, true)
         .await
         .map_err(|err| err.to_string())?;
-    Ok(())
+    
+    if cfg!(target_os = "android") {
+        Err("安卓暂时不支持更新，请到 GitHub 查看是否有更新。".into())
+    } else {
+        Ok(())
+    }
 }

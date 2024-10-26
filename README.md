@@ -35,6 +35,7 @@
 2. 由于没有应用签名，会报毒，忽略即可，如果不信任我可以自己看源代码。然后给我打钱。
 3. macOS 系统请下载后缀为`.dmg`，M 系列芯片（2020 年及以后）请选择 `aarch64` 版本，Intel 芯片请选择 `x64` 版本。
 4. macOS 由于还没搞应用签名，需要使用 `xattr -cr /Applications/ustb-wifi-tools.app` 来跳过签名认证。
+5. Linux 用户请自行编译，并按照 Tauri 的要求安装 webkitgtk
 
 > [!NOTE]  
 > 这里有一个使用教程：[如何使用 USTB Wifi Tools](https://github.com/CakeAL/ustb-wifi-tools/blob/main/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8%20USTB%20Wifi%20Tools%EF%BC%88%E5%90%AB%E5%A6%82%E4%BD%95%E6%96%B9%E4%BE%BF%E6%B3%A8%E9%94%80%E8%B4%A6%E5%8F%B7%EF%BC%89.pdf)
@@ -50,7 +51,10 @@
 
 ## 开发
 
-目前支持 Windows 7 以上 x86 64 设备或 macOS，需要电脑安装 WebView2（Windows 10 和 11 默认安装），以及 Edge 或者 Chrome 浏览器，提供浏览器路径选择。 \
+目前支持 Windows 7 以上 x86 64 设备或 macOS，需要电脑安装 WebView2（Windows 10 和 11 默认安装）。 \
+Linux 可以自行编译，详见[官方文档](https://tauri.app/start/prerequisites/#linux)。\
+Android 可以自行编译，或者管我要个包装着玩，不保证功能全都能用。build 详见[准备](https://tauri.app/start/prerequisites/#android)，[签名](https://tauri.app/distribute/sign/android/)，[指令](https://tauri.app/distribute/google-play/#architecture-selection)。\
+iOS 可以自行编译，详见官方文档，需要自行签名（苹果收你 99 美元/年）。\
 首先确保你已经安装了[`Node.js`](https://nodejs.cn/download/)，[`pnpm`](https://www.pnpm.cn/)以及[`Rust环境`](https://www.rust-lang.org/zh-CN/tools/install)
 
 ```bash

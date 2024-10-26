@@ -11,13 +11,17 @@ use crate::entities::AppState;
 use crate::setting::Setting;
 use tauri::Manager;
 use tauri_plugin_dialog::DialogExt;
+#[cfg(not(target_os = "android"))]
 use tauri_plugin_updater::UpdaterExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
-        .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_updater::Builder::new().build())
+    let mut builder = tauri::Builder::default().plugin(tauri_plugin_dialog::init());
+    #[cfg(not(target_os = "android"))]
+    {
+        builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+    }
+    builder
         .manage(AppState {
             jsessionid: RwLock::new(None),
             setting: RwLock::new(Setting::default()),
@@ -43,17 +47,21 @@ pub fn run() {
             manually_check_update
         ])
         .setup(|app| {
-            background_init(app)?;
-            let handle = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                let _ = update(handle, false).await;
-            });
+            #[cfg(not(target_os = "android"))]
+            {
+                background_init(app)?;
+                let handle = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    let _ = update(handle, false).await;
+                });
+            }
             Ok(())
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
 
+#[cfg(not(target_os = "android"))]
 fn background_init(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let win = app.get_webview_window("main").unwrap();
 
@@ -80,6 +88,7 @@ fn background_init(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error
     Ok(())
 }
 
+#[cfg(not(target_os = "android"))]
 async fn update(app: tauri::AppHandle, manually: bool) -> anyhow::Result<()> {
     if let Some(update) = app.updater()?.check().await? {
         // 对话框

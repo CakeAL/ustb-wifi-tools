@@ -16,6 +16,9 @@ build-all:
     cargo tauri build --target x86_64-apple-darwin
     # cargo tauri build --target x86_64-pc-windows-gnu
 
+build-android:
+    cargo tauri android build --apk --target aarch64
+
 clippy: 
     cd src-tauri && cargo clippy
 
