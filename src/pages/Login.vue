@@ -165,7 +165,7 @@ const manually_check_update = () => {
       <n-button strong secondary type="info" @click="logout"> 登出 </n-button>
       <h4>如果想自己更改配置文件：</h4>
       <p>
-        Windows: C:\Users\⁠%UserName%\AppData\Roaming\ustb-wifi-tools\config.json
+        Windows: C:\Users\%UserName%\AppData\Roaming\ustb-wifi-tools\config.json
       </p>
       <p>
         macOS: ~/Library/Application

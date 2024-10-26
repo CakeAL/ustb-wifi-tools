@@ -56,7 +56,6 @@ pub fn run() {
 
 fn background_init(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let win = app.get_webview_window("main").unwrap();
-    win.set_decorations(true).unwrap();
 
     #[cfg(target_os = "macos")]
     window_vibrancy::apply_vibrancy(
@@ -70,7 +69,7 @@ fn background_init(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error
     #[cfg(target_os = "windows")]
     {
         use crate::utils::get_windows_build_number;
-        if get_windows_build_number()? >= 22000 {
+        if get_windows_build_number() >= 22000 {
             window_vibrancy::apply_mica(&win, None).map_err(|err| format!("启动错误: {}", err))?;
         } else {
             window_vibrancy::apply_blur(&win, Some((18, 18, 18, 125)))
