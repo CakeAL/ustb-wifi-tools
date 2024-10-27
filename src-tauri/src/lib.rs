@@ -44,7 +44,9 @@ pub fn run() {
             logout,
             get_cookie_vpn,
             load_monthly_login_log,
-            manually_check_update
+            manually_check_update,
+            load_ammeter,
+            load_user_flow
         ])
         .setup(|app| {
             #[cfg(not(target_os = "android"))]

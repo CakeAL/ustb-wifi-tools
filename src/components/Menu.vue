@@ -1,8 +1,12 @@
 <template>
-  <n-menu :options="menuOptions" />
+  <n-menu :options="menuOptions" class="my-menu"/>
 </template>
 
-<style scoped></style>
+<style scoped>
+.my-menu {
+  overflow: auto;
+}
+</style>
 
 <script setup lang="ts">
 
@@ -18,6 +22,7 @@ import {
   BrowsersOutline,
   SpeedometerOutline,
   CalendarOutline,
+  BuildOutline
   } from "@vicons/ionicons5";
 
 function renderIcon(icon: Component) {
@@ -108,6 +113,18 @@ const menuOptions: MenuOption[] = [
       ),
     key: "speedtest",
     icon: renderIcon(SpeedometerOutline),
+  },
+  {
+    label: () =>
+      h(
+        "a",
+        {
+          href: "#/other_tools",
+        },
+        "其他小工具"
+      ),
+    key: "other_tools",
+    icon: renderIcon(BuildOutline),
   },
   {
     label: () =>

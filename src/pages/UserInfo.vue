@@ -26,7 +26,7 @@ interface Data {
   v6: number;
 }
 
-interface Flow {
+export interface Flow {
   result: number;
   data: Data;
 }

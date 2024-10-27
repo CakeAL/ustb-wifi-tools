@@ -8,7 +8,7 @@ use reqwest::{header::SET_COOKIE, Client};
 use scraper::{Html, Selector};
 use serde_json::Value;
 
-use crate::entities::{EveryLoginData, MacAddress, MonthPayInfo, MonthlyData, UserLoginLog};
+use crate::entities::{AmmeterData, EveryLoginData, MacAddress, MonthPayInfo, MonthlyData, UserLoginLog};
 
 // Ciallo～(∠・ω< )⌒☆
 pub async fn get_load_user_flow(account: &str, session_id: &str, via_vpn: bool) -> Result<Value> {
@@ -546,6 +546,23 @@ pub async fn get_address() -> Result<Vec<String>> {
         Err(_) => "".into(),
     };
     Ok(vec![v4_resp, v6_resp])
+}
+
+pub async fn get_ammeter(num: u32) -> Result<Option<i32>, Box<dyn std::error::Error>> {
+    let response = Client::new()
+        .post("http://fspapp.ustb.edu.cn/app.GouDian/index.jsp?m=alipay&c=AliPay&a=getDbYe")
+        .header("Content-Type", "application/x-www-form-urlencoded")
+        .body(format!("DBNum={}", num))
+        .send()
+        .await?;
+    let res_text = response.text().await?;
+    let ammeter_data: AmmeterData = serde_json::from_str(&res_text)?;
+    let kwh = ammeter_data.service_key.parse::<i32>();
+    if ammeter_data.status_code != "200".to_string() || kwh.is_err() {
+        Ok(None)
+    } else {
+        Ok(Some(kwh.unwrap()))
+    }
 }
 
 #[cfg(test)]

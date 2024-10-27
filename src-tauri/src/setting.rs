@@ -12,7 +12,7 @@ use tauri::Manager;
 pub struct Setting {
     pub username: Option<String>,
     pub password: Option<String>,
-    pub browser_path: Option<String>,
+    pub ammeter_number: Option<u32>,
 }
 
 impl Setting {
@@ -48,8 +48,8 @@ impl Setting {
         self.password = Some(password);
     }
 
-    pub fn set_browser_path(&mut self, path: Option<String>) {
-        self.browser_path = path;
+    pub fn set_ammeter_number(&mut self, ammeter_number: u32) {
+        self.ammeter_number = Some(ammeter_number);
     }
 }
 
@@ -66,32 +66,6 @@ fn get_config_path(app: &tauri::AppHandle) -> Result<PathBuf> {
         }
         None => return Err(anyhow!("There is no such app data dir!")),
     };
-    // dbg!(&path);
+    dbg!(&path);
     Ok(path)
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-
-//     #[test]
-//     fn test_write_setting() {
-//         let mut setting = Setting::default();
-//         setting.username = Some("user_name".to_string());
-//         setting.password = Some("password".to_string());
-//         setting.browser_path = Some("/path/to/browser".to_string());
-//         setting.write_setting().unwrap();
-//     }
-
-//     #[test]
-//     fn test_load_setting() {
-//         let setting = Setting::load_setting().unwrap();
-//         println!("{:?}", setting);
-//     }
-
-//     #[test]
-//     fn test_get_config_path() {
-//         let path = get_config_path().unwrap();
-//         println!("{:?}", path.to_str());
-//     }
-// }

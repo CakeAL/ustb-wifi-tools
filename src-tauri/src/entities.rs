@@ -83,3 +83,13 @@ pub struct AppState {
     pub setting: RwLock<Setting>,
     pub login_via_vpn: RwLock<bool>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AmmeterData {
+    #[serde(rename = "ServiceKey")]
+    pub service_key: String,
+    #[serde(rename = "message")]
+    pub message: String,
+    #[serde(rename = "statusCode")]
+    pub status_code: String,
+}

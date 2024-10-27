@@ -3,26 +3,29 @@ use tauri::{utils::config::WindowConfig, Manager};
 
 use crate::{
     entities::{AppState, EveryLoginData},
-    requests::{
-        get_address, get_load_user_flow, get_mac_address, get_month_pay, get_refresh_account,
-        get_user_login_log, simulate_login, simulate_login_via_vpn, unbind_macs,
-    },
+    requests::*,
     setting::Setting,
 };
 
-// 没地方放它了
+#[tauri::command(async)]
 pub async fn load_user_flow(
     account: String,
-    session_id: &str,
-    via_vpn: bool,
+    app_state: tauri::State<'_, AppState>,
 ) -> Result<String, String> {
-    get_load_user_flow(&account, session_id, via_vpn)
+    let via_vpn = *app_state.login_via_vpn.read().unwrap();
+    let mut session_id = String::new();
+    if via_vpn {
+        session_id = match app_state.jsessionid.read().unwrap().clone() {
+            Some(s) => s,
+            None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
+        };
+    }
+    get_load_user_flow(&account, &session_id, via_vpn)
         .await
         .map_err(|e| format!("Error while loading user flow: {}", e))
         .map(|res| res.to_string())
 }
 
-// 对 headless browser 进行操作，获取登陆后的 Cookie
 #[tauri::command(async)]
 pub async fn get_cookie(
     app_state: tauri::State<'_, AppState>,
@@ -86,7 +89,6 @@ pub async fn get_cookie_vpn(
 
 #[tauri::command(async)]
 pub fn logout(
-    app: tauri::AppHandle,
     app_state: tauri::State<'_, AppState>,
     window: tauri::Webview,
 ) -> Result<String, String> {
@@ -95,14 +97,6 @@ pub fn logout(
     }
     *app_state.jsessionid.write().unwrap() = None;
     *app_state.login_via_vpn.write().unwrap() = false; // 这之前有个bug一直没人发现，说明没人用我的 app 😭
-    Setting::write_setting(
-        &Setting {
-            browser_path: app_state.setting.read().unwrap().browser_path.to_owned(),
-            ..Default::default()
-        },
-        &app,
-    )
-    .map_err(|err| format!("写入配置错误: {}", err))?;
     window
         .eval("window.location.reload();")
         .map_err(|err| format!("刷新网页错误：{}", err))?;
@@ -375,10 +369,38 @@ pub async fn manually_check_update(app: tauri::AppHandle) -> Result<(), String> 
     crate::update(app, true)
         .await
         .map_err(|err| err.to_string())?;
-    
+
     if cfg!(target_os = "android") {
         Err("安卓暂时不支持更新，请到 GitHub 查看是否有更新。".into())
     } else {
         Ok(())
+    }
+}
+
+#[tauri::command(async)]
+pub async fn load_ammeter(
+    app: tauri::AppHandle,
+    app_state: tauri::State<'_, AppState>,
+    ammeter_number: u32,
+) -> Result<String, String> {
+    let kwh = get_ammeter(ammeter_number)
+        .await
+        .map_err(|err| err.to_string())?;
+    match kwh {
+        Some(kwh) => {
+            app_state
+                .setting
+                .write()
+                .unwrap()
+                .set_ammeter_number(ammeter_number);
+            app_state
+                .setting
+                .read()
+                .unwrap()
+                .write_setting(&app)
+                .map_err(|err| err.to_string())?;
+            Ok(format!("{}", kwh))
+        }
+        None => Err("获取用电量失败，可能是电表号错误".to_string()),
     }
 }
