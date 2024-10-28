@@ -94,7 +94,7 @@ pub async fn simulate_login(account: &str, password: &str) -> Result<Option<Stri
         .text()
         .await?;
     // dbg!(&response);
-    if response.contains("账号或密码出现错误！") {
+    if response.contains("账号或密码出现错误！") || response.contains("登录密码不正确") {
         return Ok(None); // 账号或密码出现错误！
     }
     Ok(Some(jsessionid.to_string()))
@@ -125,7 +125,7 @@ pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Opt
         .as_str();
     dbg!(captcha_id);
     // 发送登录请求
-    let _res = client
+    let res = client
         .post("https://elib.ustb.edu.cn/do-login")
         .header(
             "Cookie",
@@ -147,6 +147,10 @@ pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Opt
         ])
         .send()
         .await?;
+    // dbg!(res.text().await?);
+    if res.text().await?.contains("用户名或密码错误") {
+        return Ok(None); // 账号或密码出现错误！
+    }
     // 访问校园网后台登录页
     let res = client.get("https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/nav_login")
     .header("Cookie", format!("wengine_vpn_ticketelib_ustb_edu_cn={}", wengine_vpn_ticketelib_ustb_edu_cn))
@@ -431,6 +435,7 @@ pub async fn get_user_login_log(
     }
     // dbg!(every_login_datas);
     Ok(Some(UserLoginLog {
+        // 获取数据如果没有数据会在 unwrap 崩掉该 task，但是 WHO CARES? 
         #[allow(clippy::get_first)]
         ipv4_up: redtexts.get(0).unwrap().trim().parse()?,
         ipv4_down: redtexts.get(1).unwrap().trim().parse()?,

@@ -87,33 +87,33 @@ const mb2gb = (mb: number | undefined) => {
 
 <template>
   <div class="container">
-    <n-h2 prefix="bar" type="success" style="margin-top: 15px">
-      <n-text type="success"> 年度扣费账单 </n-text>
-    </n-h2>
-    <p>选择一个年份：</p>
-    <n-select
-      v-model:value="year"
-      :options="year_options"
-      @update:value="load_month_pay"
-    />
-    <div v-if="month_pay !== undefined" class="show-data">
-      <p>这一年一共花费 {{ month_pay?.year_cost }} 元。</p>
-      <p>
-        总共使用时长 {{ month_pay?.year_used_duration }} 分钟，约合
-        {{ min2hour(month_pay?.year_used_duration) }} 小时，{{
-          min2day(month_pay?.year_used_duration)
-        }}
-        天（不同设备使用时长会叠加）。
-      </p>
-      <p>
-        总共使用流量 {{ month_pay?.year_used_flow }} MB，约合
-        {{ mb2gb(month_pay?.year_used_flow) }} GB。
-      </p>
-      <n-data-table
-        :columns="monthly_columns"
-        :data="month_pay?.monthly_data"
-      />
-    </div>
+    <n-scrollbar style="max-height: 100vh">
+      <n-h2 prefix="bar" type="success" style="margin-top: 15px">
+        <n-text type="success"> 年度扣费账单 </n-text>
+      </n-h2>
+      <p>选择一个年份：</p>
+      <n-select
+        v-model:value="year"
+        :options="year_options"
+        @update:value="load_month_pay" />
+      <div v-if="month_pay !== undefined" class="show-data">
+        <p>这一年一共花费 {{ month_pay?.year_cost }} 元。</p>
+        <p>
+          总共使用时长 {{ month_pay?.year_used_duration }} 分钟，约合
+          {{ min2hour(month_pay?.year_used_duration) }} 小时，{{
+            min2day(month_pay?.year_used_duration)
+          }}
+          天（不同设备使用时长会叠加）。
+        </p>
+        <p>
+          总共使用流量 {{ month_pay?.year_used_flow }} MB，约合
+          {{ mb2gb(month_pay?.year_used_flow) }} GB。
+        </p>
+        <n-data-table
+          :columns="monthly_columns"
+          :data="month_pay?.monthly_data"
+        /></div
+    ></n-scrollbar>
   </div>
 </template>
 

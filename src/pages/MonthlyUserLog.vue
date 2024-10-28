@@ -75,13 +75,14 @@ const get_monthly_user_log = async () => {
   refresh.value = !refresh.value;
 };
 
-const getBackgroundColor = (data: number) => {
+const getBackgroundColor = (data_string: string) => {
   // const max = flow_max;
   // const min = 0;
   // const value = data / max * (max - min) + min;
   // const green = Math.round(255 * (1 - value / max));
   // const red = Math.round(255 * (value / max));
   // return `rgba(${red}, ${green}, 100, 0.2)`;
+  let data = parseFloat(data_string);
   if (data < 1000) {
     return "rgba(55, 80, 147, 0.5)";
   } else if (data < 2000) {
@@ -105,7 +106,7 @@ const getBackgroundColor = (data: number) => {
   }
 };
 
-const select_to_data = (item: EveryLoginData): number => {
+const select_to_data = (item: EveryLoginData): string => {
   const fieldMap: { [key: string]: number } = {
     ipv4_down: item.ipv4_down,
     ipv4_up: item.ipv4_up,
@@ -117,7 +118,11 @@ const select_to_data = (item: EveryLoginData): number => {
     cost: item.cost,
     used_duration: item.used_duration,
   };
-  return fieldMap[select_show_value.value] || 0;
+  return (
+    fieldMap[select_show_value.value].toFixed(
+      select_show_value.value == "cost" ? 2 : 0
+    ) || "0"
+  );
 };
 
 const data_type = (): string => {
@@ -133,55 +138,57 @@ const data_type = (): string => {
 
 <template>
   <div class="container">
-    <n-h2 prefix="bar" type="success" style="margin-top: 15px">
-      <n-text type="success"> 月度使用概览 </n-text>
-    </n-h2>
-    <n-date-picker
-      v-model:value="start_date"
-      type="month"
-      clearable
-      @update:value="get_monthly_user_log"
-    />
-    <br />
-    <n-grid :x-gap="12" :y-gap="8" :cols="7" :key="refresh">
-      <n-grid-item class="gray"><p>日</p></n-grid-item>
-      <n-grid-item class="gray"><p>一</p></n-grid-item>
-      <n-grid-item class="gray"><p>二</p></n-grid-item>
-      <n-grid-item class="gray"><p>三</p></n-grid-item>
-      <n-grid-item class="gray"><p>四</p></n-grid-item>
-      <n-grid-item class="gray"><p>五</p></n-grid-item>
-      <n-grid-item class="gray"><p>六</p></n-grid-item>
-      <n-grid-item
-        v-for="(, index) in the_week_of_first_day"
-        :key="index"
-        class="gray"
-      >
-      </n-grid-item>
-      <n-grid-item
-        v-for="(item, index) in monthly_user_log"
-        :key="index"
-        class="day"
-        :style="{ backgroundColor: getBackgroundColor(select_to_data(item)) }"
-      >
-        <p style="margin: 3px; line-height: 1.5em; white-space: nowrap">
-          <b>{{ index + 1 }}日</b><br />
-          {{ select_to_data(item).toFixed(0) }} {{ data_type() }}
-        </p>
-      </n-grid-item>
-    </n-grid>
-    <p>在使用概览上的东西选择：</p>
-    <n-select
-      v-model:value="select_show_value"
-      :options="select_show_options"
-    />
-    <p>关于统计信息：</p>
-    <p>这里统计的每日情况与校园网后台一致，以下线时间为准。</p>
-    <p>
-      例如：你的手机连接了Wi-Fi，没断过，从第一天晚上8点用到了第二天凌晨4点，一共用了流量2GB，才断网，那么校园网后台才会统计一次信息，此时这2GB流量是算在第二天的。
-    </p>
-    <p>
-      所以，这里的使用情况仅供参考，如果你每天都能在24点前断网，那么它也可能是准确的。
-    </p>
+    <n-scrollbar style="max-height: 100vh">
+      <n-h2 prefix="bar" type="success" style="margin-top: 15px">
+        <n-text type="success"> 月度使用概览 </n-text>
+      </n-h2>
+      <n-date-picker
+        v-model:value="start_date"
+        type="month"
+        clearable
+        @update:value="get_monthly_user_log"
+      />
+      <br />
+      <n-grid :x-gap="12" :y-gap="8" :cols="7" :key="refresh">
+        <n-grid-item class="gray"><p>日</p></n-grid-item>
+        <n-grid-item class="gray"><p>一</p></n-grid-item>
+        <n-grid-item class="gray"><p>二</p></n-grid-item>
+        <n-grid-item class="gray"><p>三</p></n-grid-item>
+        <n-grid-item class="gray"><p>四</p></n-grid-item>
+        <n-grid-item class="gray"><p>五</p></n-grid-item>
+        <n-grid-item class="gray"><p>六</p></n-grid-item>
+        <n-grid-item
+          v-for="(, index) in the_week_of_first_day"
+          :key="index"
+          class="gray"
+        >
+        </n-grid-item>
+        <n-grid-item
+          v-for="(item, index) in monthly_user_log"
+          :key="index"
+          class="day"
+          :style="{ backgroundColor: getBackgroundColor(select_to_data(item)) }"
+        >
+          <p style="margin: 3px; line-height: 1.5em; white-space: nowrap">
+            <b>{{ index + 1 }}日</b><br />
+            {{ select_to_data(item) }} {{ data_type() }}
+          </p>
+        </n-grid-item>
+      </n-grid>
+      <p>在使用概览上的东西选择：</p>
+      <n-select
+        v-model:value="select_show_value"
+        :options="select_show_options"
+      />
+      <p>关于统计信息：</p>
+      <p>这里统计的每日情况与校园网后台一致，以下线时间为准。</p>
+      <p>
+        例如：你的手机连接了Wi-Fi，没断过，从第一天晚上8点用到了第二天凌晨4点，一共用了流量2GB，才断网，那么校园网后台才会统计一次信息，此时这2GB流量是算在第二天的。
+      </p>
+      <p>
+        所以，这里的使用情况仅供参考，如果你每天都能在24点前断网，那么它也可能是准确的。
+      </p>
+    </n-scrollbar>
   </div>
 </template>
 

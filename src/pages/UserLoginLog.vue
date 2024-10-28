@@ -87,90 +87,90 @@ const railStyle = ({
 
 <template>
   <div class="container">
-    <n-h2 prefix="bar" type="success" style="margin-top: 15px;">
-      <n-text type="success">
-        每日使用详情
-      </n-text>
-    </n-h2>
-    <n-switch
-      v-model:value="the_switch"
-      :rail-style="railStyle"
-      style="margin-bottom: 10px"
-    >
-      <template #checked> 选很多天 </template>
-      <template #unchecked> 选一天 </template>
-    </n-switch>
-    <n-date-picker
-      v-model:value="date_range"
-      type="daterange"
-      clearable
-      @update:value="get_user_login_log"
-      v-if="the_switch === true"
-    />
-    <n-date-picker
-      v-model:value="a_date"
-      type="date"
-      clearable
-      @update:value="get_user_login_log"
-      v-else
-    />
-    <div v-if="user_login_log !== null" class="show-data">
-      <p>该段时间：</p>
-      <p>
-        ipv4 上行：{{ user_login_log?.ipv4_up }} MB；下行：{{
-          user_login_log?.ipv4_down
-        }}
-        MB。
-      </p>
-      <p>
-        ipv6 上行：{{ user_login_log?.ipv6_up }} MB；下行：{{
-          user_login_log?.ipv6_down
-        }}
-        MB。
-      </p>
-      <p>
-        消耗校园网流量：{{ user_login_log?.used_flow }} MB，约合
-        {{ mb2gb(user_login_log?.used_flow) }} GB。
-      </p>
-      <p>花费金额：{{ user_login_log?.cost }} 元。</p>
-      <p>使用时长: {{ user_login_log?.used_duration }} 分钟。</p>
+    <n-scrollbar x-scrollable style="max-height: 100vh">
+      <n-h2 prefix="bar" type="success" style="margin-top: 15px">
+        <n-text type="success"> 每日使用详情 </n-text>
+      </n-h2>
+      <n-switch
+        v-model:value="the_switch"
+        :rail-style="railStyle"
+        style="margin-bottom: 10px"
+      >
+        <template #checked> 选很多天 </template>
+        <template #unchecked> 选一天 </template>
+      </n-switch>
+      <n-date-picker
+        v-model:value="date_range"
+        type="daterange"
+        clearable
+        @update:value="get_user_login_log"
+        v-if="the_switch === true"
+      />
+      <n-date-picker
+        v-model:value="a_date"
+        type="date"
+        clearable
+        @update:value="get_user_login_log"
+        v-else
+      />
+      <div v-if="user_login_log !== null" class="show-data">
+        <p>该段时间：</p>
+        <p>
+          ipv4 上行：{{ user_login_log?.ipv4_up }} MB；下行：{{
+            user_login_log?.ipv4_down
+          }}
+          MB。
+        </p>
+        <p>
+          ipv6 上行：{{ user_login_log?.ipv6_up }} MB；下行：{{
+            user_login_log?.ipv6_down
+          }}
+          MB。
+        </p>
+        <p>
+          消耗校园网流量：{{ user_login_log?.used_flow }} MB，约合
+          {{ mb2gb(user_login_log?.used_flow) }} GB。
+        </p>
+        <p>花费金额：{{ user_login_log?.cost }} 元。</p>
+        <p>使用时长: {{ user_login_log?.used_duration }} 分钟。</p>
 
-      <n-table :bordered="false" :single-line="false">
-        <thead>
-          <tr>
-            <th>上线时间</th>
-            <th>下线时间</th>
-            <th>在线时长(分钟)</th>
-            <th>消耗流量(MB)</th>
-            <th>花费(元)</th>
-            <th>ipv4 上行(MB)</th>
-            <th>ipv4 下行(MB)</th>
-            <th>ipv6 上行(MB)</th>
-            <th>ipv6 下行(MB)</th>
-            <th>ipv4 地址</th>
-            <th>ipv6 地址</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(log_info, index) in user_login_log?.every_login_data"
-            :key="index"
-          >
-            <th>{{ unix_format(log_info.online_time) }}</th>
-            <th>{{ unix_format(log_info.offline_time) }}</th>
-            <th>{{ log_info.used_duration }}</th>
-            <th>{{ log_info.used_flow }}</th>
-            <th>{{ log_info.cost }}</th>
-            <th>{{ log_info.ipv4_up }}</th>
-            <th>{{ log_info.ipv4_down }}</th>
-            <th>{{ log_info.ipv6_up }}</th>
-            <th>{{ log_info.ipv6_down }}</th>
-            <th>{{ log_info.ipv4_addr }}</th>
-            <th>{{ log_info.ipv6_addr }}</th>
-          </tr>
-        </tbody>
-      </n-table>
-    </div>
+        <n-table :bordered="false" :single-line="false">
+          <thead>
+            <tr>
+              <th>上线时间</th>
+              <th>下线时间</th>
+              <th>在线时长(分钟)</th>
+              <th>消耗流量(MB)</th>
+              <th>花费(元)</th>
+              <th>ipv4 上行(MB)</th>
+              <th>ipv4 下行(MB)</th>
+              <th>ipv6 上行(MB)</th>
+              <th>ipv6 下行(MB)</th>
+              <th>ipv4 地址</th>
+              <th>ipv6 地址</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(log_info, index) in user_login_log?.every_login_data"
+              :key="index"
+            >
+              <th>{{ unix_format(log_info.online_time) }}</th>
+              <th>{{ unix_format(log_info.offline_time) }}</th>
+              <th>{{ log_info.used_duration }}</th>
+              <th>{{ log_info.used_flow }}</th>
+              <th>{{ log_info.cost }}</th>
+              <th>{{ log_info.ipv4_up }}</th>
+              <th>{{ log_info.ipv4_down }}</th>
+              <th>{{ log_info.ipv6_up }}</th>
+              <th>{{ log_info.ipv6_down }}</th>
+              <th>{{ log_info.ipv4_addr }}</th>
+              <th>{{ log_info.ipv6_addr }}</th>
+            </tr>
+          </tbody>
+        </n-table>
+      </div>
+    </n-scrollbar>
   </div>
 </template>
 
