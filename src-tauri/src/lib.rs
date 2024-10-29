@@ -46,7 +46,8 @@ pub fn run() {
             load_monthly_login_log,
             manually_check_update,
             load_ammeter,
-            load_user_flow
+            load_user_flow,
+            submit_login_ustb_wifi
         ])
         .setup(|app| {
             #[cfg(not(target_os = "android"))]
@@ -65,7 +66,26 @@ pub fn run() {
 
 #[cfg(not(target_os = "android"))]
 fn background_init(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+
     let win = app.get_webview_window("main").unwrap();
+
+    #[cfg(target_os = "linux")]
+    win.eval(r#"
+                document.body.style.backgroundColor = '#f0f0f0';
+                const themeMedia = window.matchMedia("(prefers-color-scheme: dark)");
+                if (themeMedia.matches) {
+                    document.body.style.backgroundColor = '#222';
+                } else {
+                    document.body.style.backgroundColor = '#f0f0f0';
+                }
+                themeMedia.addEventListener("change", (event) => {
+                    if (event.matches) {
+                        document.body.style.backgroundColor = '#222';
+                    } else {
+                        document.body.style.backgroundColor = '#f0f0f0';
+                    }
+                });
+                "#)?;
 
     #[cfg(target_os = "macos")]
     window_vibrancy::apply_vibrancy(

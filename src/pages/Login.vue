@@ -114,6 +114,15 @@ const railStyle = ({
 const manually_check_update = () => {
   invoke("manually_check_update").catch((err) => pop_message.error(err));
 };
+
+const submit_login_ustb_wifi = () => {
+  invoke("submit_login_ustb_wifi", {
+    userName: user_name.value,
+    password: password.value,
+  })
+    .then((res) => pop_message.success(res as string))
+    .catch((err) => pop_message.error(err));
+};
 </script>
 
 <template>
@@ -135,23 +144,27 @@ const manually_check_update = () => {
           show-password-on="mousedown"
           placeholder="密码"
           round
-          style="margin-top: 5px;"
+          style="margin-top: 5px"
         />
         <n-space>
-        <n-switch v-model:value="login_via_vpn" :rail-style="railStyle" class="my-switch">
-          <template #checked> 我不在校园网 </template>
-          <template #unchecked> 我在校园网 </template>
-        </n-switch>
-        <n-button
-          strong
-          secondary
-          type="primary"
-          @click="get_cookies"
-          :disabled="button_disabled"
-          class="my-button"
-        >
-          点我登陆获取 cookie⭐️
-        </n-button>
+          <n-switch
+            v-model:value="login_via_vpn"
+            :rail-style="railStyle"
+            class="my-switch"
+          >
+            <template #checked> 我不在校园网 </template>
+            <template #unchecked> 我在校园网 </template>
+          </n-switch>
+          <n-button
+            strong
+            secondary
+            type="primary"
+            @click="get_cookies"
+            :disabled="button_disabled"
+            class="my-button"
+          >
+            点我登陆校园网后台获取 cookie⭐️
+          </n-button>
         </n-space>
         <h3 v-if="button_disabled === true">登录中...</h3>
       </div>
@@ -167,10 +180,24 @@ const manually_check_update = () => {
       <p>
         Windows: C:\Users\%UserName%\AppData\Roaming\ustb-wifi-tools\config.json
       </p>
-      <p>
-        macOS: ~/Library/Application
-        Support/ustb-wifi-tools/config.json
-      </p>
+      <p>macOS: ~/Library/Application Support/ustb-wifi-tools/config.json</p>
+      <n-popover trigger="hover">
+        <template #trigger>
+          <n-button
+            strong
+            secondary
+            type="primary"
+            @click="submit_login_ustb_wifi"
+            :disabled="button_disabled"
+            class="my-button"
+          >
+            点我登陆校园网
+          </n-button>
+        </template>
+        <span
+          >当你被校园网登录“Radius认证超时！”搞烦了可以用，当然也可以直接用！</span
+        >
+      </n-popover>
       <p>用来手动检查更新的按钮：</p>
       <n-button tertiary type="info" @click="manually_check_update">
         我是用来手动检查更新的按钮

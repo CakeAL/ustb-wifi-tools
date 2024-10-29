@@ -49,6 +49,7 @@ const unbind = async () => {
   await invoke("do_unbind_macs", {
     macs: macs,
   }).catch((err) => pop_message.error(err));
+  setTimeout(load_mac_address, 100);
 };
 </script>
 

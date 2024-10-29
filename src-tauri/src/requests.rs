@@ -8,7 +8,9 @@ use reqwest::{header::SET_COOKIE, Client};
 use scraper::{Html, Selector};
 use serde_json::Value;
 
-use crate::entities::{AmmeterData, EveryLoginData, MacAddress, MonthPayInfo, MonthlyData, UserLoginLog};
+use crate::entities::{
+    AmmeterData, EveryLoginData, MacAddress, MonthPayInfo, MonthlyData, UserLoginLog,
+};
 
 // Ciallo～(∠・ω< )⌒☆
 pub async fn get_load_user_flow(account: &str, session_id: &str, via_vpn: bool) -> Result<Value> {
@@ -94,7 +96,8 @@ pub async fn simulate_login(account: &str, password: &str) -> Result<Option<Stri
         .text()
         .await?;
     // dbg!(&response);
-    if response.contains("账号或密码出现错误！") || response.contains("登录密码不正确") {
+    if response.contains("账号或密码出现错误！") || response.contains("登录密码不正确")
+    {
         return Ok(None); // 账号或密码出现错误！
     }
     Ok(Some(jsessionid.to_string()))
@@ -435,7 +438,7 @@ pub async fn get_user_login_log(
     }
     // dbg!(every_login_datas);
     Ok(Some(UserLoginLog {
-        // 获取数据如果没有数据会在 unwrap 崩掉该 task，但是 WHO CARES? 
+        // 获取数据如果没有数据会在 unwrap 崩掉该 task，但是 WHO CARES?
         #[allow(clippy::get_first)]
         ipv4_up: redtexts.get(0).unwrap().trim().parse()?,
         ipv4_down: redtexts.get(1).unwrap().trim().parse()?,
@@ -553,7 +556,7 @@ pub async fn get_address() -> Result<Vec<String>> {
     Ok(vec![v4_resp, v6_resp])
 }
 
-pub async fn get_ammeter(num: u32) -> Result<Option<i32>, Box<dyn std::error::Error>> {
+pub async fn get_ammeter(num: u32) -> Result<Option<i32>> {
     let response = Client::new()
         .post("http://fspapp.ustb.edu.cn/app.GouDian/index.jsp?m=alipay&c=AliPay&a=getDbYe")
         .header("Content-Type", "application/x-www-form-urlencoded")
@@ -562,11 +565,30 @@ pub async fn get_ammeter(num: u32) -> Result<Option<i32>, Box<dyn std::error::Er
         .await?;
     let res_text = response.text().await?;
     let ammeter_data: AmmeterData = serde_json::from_str(&res_text)?;
-    let kwh = ammeter_data.service_key.parse::<i32>();
-    if ammeter_data.status_code != "200".to_string() || kwh.is_err() {
-        Ok(None)
+    if let Ok(kwh) = ammeter_data.service_key.parse::<i32>() {
+        Ok(Some(kwh))
     } else {
-        Ok(Some(kwh.unwrap()))
+        Ok(None)
+    }
+}
+
+pub async fn login_ustb_wifi(account: &str, password: &str) -> Result<()> {
+    let params = [
+        ("user_account", account),
+        ("user_password", password),
+        ("wlan_ac_ip", "10.0.124.68"),
+    ];
+    let response = Client::new()
+        .get("http://202.204.48.66:801/eportal/portal/login")
+        .query(&params)
+        .send()
+        .await?;
+    let text = response.text().await?;
+    dbg!(&text);
+    if text.contains("认证成功") {
+        Ok(())
+    } else {
+        Err(anyhow!("认证失败，可能是由于已经登陆，或者账密错误"))
     }
 }
 
@@ -653,5 +675,13 @@ mod tests {
     async fn test_get_address() {
         let res = get_address().await;
         dbg!(res.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_login_ustb_wifi() {
+        let account: &str = "1";
+        let password = "1";
+        let res = login_ustb_wifi(account, password).await;
+        println!("{:?}", res);
     }
 }

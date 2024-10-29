@@ -95,6 +95,6 @@ const load_ammeter = async () => {
 .my-card {
   margin: 10px 5px;
   width: calc(100vw - 300px);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.5);
 }
 </style>

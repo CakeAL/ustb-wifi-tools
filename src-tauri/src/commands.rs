@@ -404,3 +404,11 @@ pub async fn load_ammeter(
         None => Err("获取用电量失败，可能是电表号错误".to_string()),
     }
 }
+
+#[tauri::command]
+pub async fn submit_login_ustb_wifi(user_name: String, password: String) -> Result<String, String> {
+    match login_ustb_wifi(&user_name, &password).await {
+        Ok(()) => Ok("登录成功".to_string()),
+        Err(e) => Err(e.to_string()),
+    }
+}
