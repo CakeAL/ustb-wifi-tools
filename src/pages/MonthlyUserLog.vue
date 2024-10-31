@@ -8,7 +8,8 @@ import dayjs from "dayjs";
 
 const pop_message = useMessage();
 const monthly_user_log = ref<Array<EveryLoginData>>([]);
-const start_date = ref<number>(Date.now());
+// 把 start_date 设置为当前月第一天0点  
+const start_date = ref<number>(dayjs().startOf('month').startOf('day').valueOf());
 const the_week_of_first_day = ref<Array<number>>([]);
 const refresh = ref(true);
 const select_show_value = ref<string>("ipv4_down");

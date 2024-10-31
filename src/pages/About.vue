@@ -66,7 +66,7 @@ const show1 = ref(false);
         <p>4. 通过 pt 站下载大型软件（比如 Photoshop 等）</p>
         <p>5. 自建/使用 ipv6 代理服务器</p>
         <br/>
-        <p>当前 version = "0.8.2"</p>
+        <p>当前 version = "0.8.3"</p>
     </n-space>
     </n-card>
   </div>
@@ -80,6 +80,6 @@ const show1 = ref(false);
 }
 
 .my-card {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.1);
 }
 </style>
