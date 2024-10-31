@@ -79,9 +79,11 @@ const remain_flow = computed(() => {
     account_info.value?.note.leftFlow !== undefined &&
     account_flow.value?.data.v4 !== undefined
   ) {
-    let remain =
+    let remain = Math.max(
       parseFloat(account_info.value?.note.leftFlow) -
-      account_flow.value?.data.v4;
+        account_flow.value?.data.v4,
+      0
+    );
     return parseFloat((remain / 1024).toFixed(2));
   }
 });
@@ -91,21 +93,34 @@ const remain_percentage = computed(() => {
     account_info.value?.note.leftFlow !== undefined &&
     account_flow.value?.data.v4 !== undefined
   ) {
-    let per =
+    let per = Math.max(
       (parseFloat(account_info.value?.note.leftFlow) -
         account_flow.value?.data.v4) /
-      parseFloat(account_info.value?.note.leftFlow);
+        parseFloat(account_info.value?.note.leftFlow),
+      0
+    );
     return parseFloat((per * 100).toFixed(2));
+  }
+  return 0;
+});
+
+const progress_color = computed(() => {
+  if (remain_percentage.value > 75) {
+    return "#079e5b";
+  } else if (remain_percentage.value > 50) {
+    return "#0086ed";
+  } else if (remain_percentage.value > 25) {
+    return "#f49e31";
+  } else {
+    return "#d43251";
   }
 });
 </script>
 
 <template>
   <div class="container" v-if="account_info !== null">
-    <n-h2 prefix="bar" type="success" style="margin-top: 15px;">
-      <n-text type="success">
-        当前账号使用详情
-      </n-text>
+    <n-h2 prefix="bar" type="success" style="margin-top: 15px">
+      <n-text type="success"> 当前账号使用详情 </n-text>
     </n-h2>
     <p>用户类别：{{ account_info.note.service }}</p>
     <p>当前余额：{{ account_info.note.leftmoeny }}</p>
@@ -113,7 +128,14 @@ const remain_percentage = computed(() => {
     <p>用户状态：{{ account_info.note.status }}</p>
     <p>更新日期：{{ account_info.serverDate }}</p>
     <hr />
-    <n-progress type="circle" :percentage="remain_percentage" class="my-progress"/>
+    <n-progress
+      :color="progress_color"
+      :percentage="remain_percentage"
+      :indicator-text-color="progress_color"
+      type="dashboard"
+      gap-position="bottom"
+      class="my-progress"
+    />
     <p>当前流量使用情况：</p>
     <p>
       ipv4 下行：{{ account_flow?.data.v4 }} MB，约合
