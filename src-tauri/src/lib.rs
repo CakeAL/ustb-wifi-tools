@@ -16,7 +16,7 @@ use tauri_plugin_updater::UpdaterExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder = tauri::Builder::default().plugin(tauri_plugin_dialog::init());
+    let mut builder = tauri::Builder::new().plugin(tauri_plugin_dialog::init());
     #[cfg(not(target_os = "android"))]
     {
         builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
@@ -47,7 +47,8 @@ pub fn run() {
             manually_check_update,
             load_ammeter,
             load_user_flow,
-            submit_login_ustb_wifi
+            submit_login_ustb_wifi,
+            return_os_type
         ])
         .setup(|app| {
             #[cfg(not(target_os = "android"))]
@@ -66,26 +67,7 @@ pub fn run() {
 
 #[cfg(not(target_os = "android"))]
 fn background_init(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-
     let win = app.get_webview_window("main").unwrap();
-
-    #[cfg(target_os = "linux")]
-    win.eval(r#"
-                document.body.style.backgroundColor = '#f0f0f0';
-                const themeMedia = window.matchMedia("(prefers-color-scheme: dark)");
-                if (themeMedia.matches) {
-                    document.body.style.backgroundColor = '#222';
-                } else {
-                    document.body.style.backgroundColor = '#f0f0f0';
-                }
-                themeMedia.addEventListener("change", (event) => {
-                    if (event.matches) {
-                        document.body.style.backgroundColor = '#222';
-                    } else {
-                        document.body.style.backgroundColor = '#f0f0f0';
-                    }
-                });
-                "#)?;
 
     #[cfg(target_os = "macos")]
     window_vibrancy::apply_vibrancy(
@@ -101,9 +83,6 @@ fn background_init(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error
         use crate::utils::get_windows_build_number;
         if get_windows_build_number() >= 22000 {
             window_vibrancy::apply_mica(&win, None).map_err(|err| format!("启动错误: {}", err))?;
-        } else {
-            window_vibrancy::apply_blur(&win, Some((18, 18, 18, 125)))
-                .map_err(|err| format!("启动错误: {}", err))?;
         }
     }
 

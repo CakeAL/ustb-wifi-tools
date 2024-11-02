@@ -4,7 +4,7 @@ use tauri::{utils::config::WindowConfig, Manager};
 use crate::{
     entities::{AppState, EveryLoginData},
     requests::*,
-    setting::Setting,
+    setting::Setting, utils,
 };
 
 #[tauri::command(async)]
@@ -410,5 +410,20 @@ pub async fn submit_login_ustb_wifi(user_name: String, password: String) -> Resu
     match login_ustb_wifi(&user_name, &password).await {
         Ok(()) => Ok("登录成功".to_string()),
         Err(e) => Err(e.to_string()),
+    }
+}
+
+#[tauri::command]
+pub async fn return_os_type() -> i32 {
+    if cfg!(target_os = "windows") {
+        if utils::get_windows_build_number() >= 22000 {
+            1 // win11
+        } else {
+            2 // win10 及以下
+        }
+    } else if cfg!(target_os = "macos") {
+        3 // macOS
+    } else {
+        4 // linux or android
     }
 }
