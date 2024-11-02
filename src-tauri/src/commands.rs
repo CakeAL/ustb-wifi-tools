@@ -4,7 +4,8 @@ use tauri::{utils::config::WindowConfig, Manager};
 use crate::{
     entities::{AppState, EveryLoginData},
     requests::*,
-    setting::Setting, utils,
+    setting::Setting,
+    utils,
 };
 
 #[tauri::command(async)]
@@ -365,13 +366,13 @@ pub fn load_setting(
 
 #[tauri::command(async)]
 pub async fn manually_check_update(app: tauri::AppHandle) -> Result<(), String> {
-    #[cfg(not(target_os = "android"))]
+    #[cfg(not(any(target_os = "android", target_os = "linux")))]
     crate::update(app, true)
         .await
         .map_err(|err| err.to_string())?;
 
-    if cfg!(target_os = "android") {
-        Err("安卓暂时不支持更新，请到 GitHub 查看是否有更新。".into())
+    if cfg!(target_os = "android") || cfg!(target_os = "linux") {
+        Err("安卓/Linux 不支持更新，请到 GitHub 查看是否有更新。".into())
     } else {
         Ok(())
     }
@@ -415,15 +416,20 @@ pub async fn submit_login_ustb_wifi(user_name: String, password: String) -> Resu
 
 #[tauri::command]
 pub async fn return_os_type() -> i32 {
-    if cfg!(target_os = "windows") {
-        if utils::get_windows_build_number() >= 22000 {
-            1 // win11
-        } else {
-            2 // win10 及以下
-        }
-    } else if cfg!(target_os = "macos") {
-        3 // macOS
+    #[allow(unused_assignments)]
+    let mut res = 0; // others
+
+    #[cfg(target_os = "windows")]
+    if utils::get_windows_build_number() >= 22000 {
+        res = 1; // win11
     } else {
-        4 // linux or android
+        res = 2; // win10 及以下
     }
+
+    #[cfg(target_os = "macos")]
+    {
+        res = 3; // macos
+    }
+
+    res
 }
