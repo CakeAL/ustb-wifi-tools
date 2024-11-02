@@ -2,6 +2,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { ref, onMounted, CSSProperties } from "vue";
 import { useMessage, useLoadingBar } from "naive-ui";
+import { ColorPaletteOutline } from "@vicons/ionicons5";
 
 const loadingBar = useLoadingBar();
 const pop_message = useMessage();
@@ -11,6 +12,9 @@ const password = ref<string>("");
 const button_disabled = ref<boolean>(false);
 const login_state = ref<boolean>(false);
 const login_via_vpn = ref<boolean>(false);
+const showModal = ref<boolean>(false);
+const transparence = ref<number>(0);
+const blur = ref<number>(0);
 
 onMounted(() => {
   check_login_state();
@@ -25,6 +29,8 @@ const load_setting = async () => {
     let settings = JSON.parse(res);
     user_name.value = settings.username;
     password.value = settings.password;
+    transparence.value = settings.background_transparence;
+    blur.value = settings.background_blur;
   }
 };
 
@@ -111,17 +117,37 @@ const railStyle = ({
   return style;
 };
 
-const manually_check_update = () => {
-  invoke("manually_check_update").catch((err) => pop_message.error(err));
+const manually_check_update = async () => {
+  await invoke("manually_check_update").catch((err) => pop_message.error(err));
 };
 
-const submit_login_ustb_wifi = () => {
-  invoke("submit_login_ustb_wifi", {
+const submit_login_ustb_wifi = async () => {
+  await invoke("submit_login_ustb_wifi", {
     userName: user_name.value,
     password: password.value,
   })
     .then((res) => pop_message.success(res as string))
     .catch((err) => pop_message.error(err));
+};
+
+const set_background_image = async () => {
+  await invoke("set_background_image").catch((err) => pop_message.error(err));
+};
+
+const reset_background_image = async () => {
+  await invoke("reset_background_image").catch((err) => pop_message.error(err));
+};
+
+const set_background_transparence = async () => {
+  await invoke("set_background_transparence", {
+    transparence: transparence.value,
+  }).catch((err) => pop_message.error(err));
+};
+
+const set_background_blur = async () => {
+  await invoke("set_background_blur", {
+    blur: blur.value,
+  }).catch((err) => pop_message.error(err));
 };
 </script>
 
@@ -203,6 +229,49 @@ const submit_login_ustb_wifi = () => {
         我是用来手动检查更新的按钮
       </n-button>
     </n-space>
+    <n-float-button
+      :right="20"
+      :bottom="20"
+      type="primary"
+      @click="showModal = true"
+    >
+      <n-icon>
+        <ColorPaletteOutline />
+      </n-icon>
+    </n-float-button>
+    <n-modal v-model:show="showModal">
+      <n-card style="margin: auto 50px">
+        <n-button strong secondary type="primary" @click="set_background_image">
+          设置背景图片
+        </n-button>
+        <n-button
+          strong
+          secondary
+          type="primary"
+          style="margin-left: 50px"
+          @click="reset_background_image"
+        >
+          去掉背景图片
+        </n-button>
+        <p>
+          背景图片透明度: <br /><br /><n-slider
+            :on-dragend="set_background_transparence"
+            v-model:value="transparence"
+            :default-value="0"
+            :step="1"
+          />
+        </p>
+        <p>
+          背景图片模糊程度: <br /><br /><n-slider
+            :on-dragend="set_background_blur"
+            v-model:value="blur"
+            :default-value="0"
+            :step="1"
+          />
+        </p>
+        <p>~以上设置刷新页面生效~</p>
+      </n-card>
+    </n-modal>
   </div>
 </template>
 

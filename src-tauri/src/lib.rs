@@ -48,7 +48,11 @@ pub fn run() {
             load_ammeter,
             load_user_flow,
             submit_login_ustb_wifi,
-            return_os_type
+            return_os_type,
+            set_background_image,
+            reset_background_image,
+            set_background_transparence,
+            set_background_blur
         ])
         .setup(|app| {
             #[cfg(not(any(target_os = "android", target_os = "linux")))]

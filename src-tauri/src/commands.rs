@@ -5,7 +5,6 @@ use crate::{
     entities::{AppState, EveryLoginData},
     requests::*,
     setting::Setting,
-    utils,
 };
 
 #[tauri::command(async)]
@@ -365,6 +364,92 @@ pub fn load_setting(
 }
 
 #[tauri::command(async)]
+pub fn set_background_image(
+    app: tauri::AppHandle,
+    app_state: tauri::State<'_, AppState>,
+) -> Result<(), String> {
+    use tauri_plugin_dialog::DialogExt;
+    let path = app
+        .dialog()
+        .file()
+        .add_filter("", &["png", "jpg", "jpeg"])
+        .blocking_pick_file();
+    dbg!(&path);
+    if let Some(path) = path {
+        app_state
+            .setting
+            .write()
+            .unwrap()
+            .set_background_image_path(&app, &path.into_path().map_err(|err| err.to_string())?)
+            .map_err(|err| err.to_string())?;
+        app_state
+            .setting
+            .read()
+            .unwrap()
+            .write_setting(&app)
+            .map_err(|err| err.to_string())?;
+        Ok(())
+    } else {
+        Err("请选择一个图片".into())
+    }
+}
+
+#[tauri::command(async)]
+pub fn reset_background_image(
+    app: tauri::AppHandle,
+    app_state: tauri::State<'_, AppState>,
+) -> Result<(), String> {
+    app_state.setting.write().unwrap().reset_background_image();
+    app_state
+        .setting
+        .read()
+        .unwrap()
+        .write_setting(&app)
+        .map_err(|err| err.to_string())?;
+    Ok(())
+}
+
+#[tauri::command(async)]
+pub fn set_background_transparence(
+    app: tauri::AppHandle,
+    app_state: tauri::State<'_, AppState>,
+    transparence: u32,
+) -> Result<(), String> {
+    app_state
+        .setting
+        .write()
+        .unwrap()
+        .set_background_transparence(transparence);
+    app_state
+        .setting
+        .read()
+        .unwrap()
+        .write_setting(&app)
+        .map_err(|err| err.to_string())?;
+    Ok(())
+}
+
+#[tauri::command(async)]
+pub fn set_background_blur(
+    app: tauri::AppHandle,
+    app_state: tauri::State<'_, AppState>,
+    blur: u32,
+) -> Result<(), String> {
+    app_state
+        .setting
+        .write()
+        .unwrap()
+        .set_background_blur(blur);
+    app_state
+        .setting
+        .read()
+        .unwrap()
+        .write_setting(&app)
+        .map_err(|err| err.to_string())?;
+    Ok(())
+}
+
+#[tauri::command(async)]
 pub async fn manually_check_update(app: tauri::AppHandle) -> Result<(), String> {
     #[cfg(not(any(target_os = "android", target_os = "linux")))]
     crate::update(app, true)
@@ -420,7 +505,7 @@ pub async fn return_os_type() -> i32 {
     let mut res = 0; // others
 
     #[cfg(target_os = "windows")]
-    if utils::get_windows_build_number() >= 22000 {
+    if crate::utils::get_windows_build_number() >= 22000 {
         res = 1; // win11
     } else {
         res = 2; // win10 及以下

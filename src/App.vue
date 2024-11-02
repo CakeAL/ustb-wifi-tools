@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, Ref, DefineComponent, onMounted } from "vue";
 import { darkTheme } from "naive-ui";
+import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 
 // routers
 import Login from "./pages/Login.vue";
@@ -13,7 +14,6 @@ import UnbindMacs from "./pages/UnbindMacs.vue";
 import SpeedTest from "./pages/SpeedTest.vue";
 import MonthlyUserLog from "./pages/MonthlyUserLog.vue";
 import OtherTools from "./pages/OtherTools.vue";
-import { invoke } from "@tauri-apps/api/core";
 type RouteComponent = DefineComponent<{}, {}, any>;
 
 interface Routes {
@@ -49,9 +49,11 @@ const themeMedia = window.matchMedia("(prefers-color-scheme: dark)");
 const os_type = ref<number>(0);
 
 onMounted(() => {
-  get_os_type().then(() => {
-    applyTheme(themeMedia.matches);
-  });
+  get_os_type()
+    .then(() => {
+      applyTheme(themeMedia.matches);
+    })
+    .then(apply_background);
 
   themeMedia.addEventListener("change", (event) => {
     applyTheme(event.matches);
@@ -69,31 +71,69 @@ const get_os_type = async () => {
   let res = await invoke("return_os_type");
   os_type.value = res as number;
 };
+
+const apply_background = async () => {
+  let res = (await invoke("load_setting").catch((err) =>
+    console.log(err)
+  )) as string;
+  if (res.length > 0) {
+    let settings = JSON.parse(res);
+    // 如果存在 background 路径的情况下
+    if (settings.background_image_path !== null) {
+      let html = document.querySelector('body');
+      if (html) {
+        let style = document.createElement('style');
+        style.innerHTML = `
+          body { 
+            background-color: rgba(0, 0, 0, 0); 
+          } 
+          body::before { 
+            content: ''; 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            right: 0; 
+            bottom: 0; 
+            background-image: url("${convertFileSrc(settings.background_image_path)}"); 
+            background-size: cover; 
+            background-position: center; 
+            filter: blur(${settings.background_blur}px);
+            opacity: ${settings.background_transparence / 100}; 
+            z-index: -1; 
+          }
+        `
+        document.head.appendChild(style);
+      }
+    }
+  }
+};
 </script>
 
 <template>
-  <n-message-provider>
-    <n-loading-bar-provider>
-      <n-config-provider :theme="theme">
-        <div class="container">
-          <n-split
-            direction="horizontal"
-            style="height: 100vh"
-            max="300px"
-            min="200px"
-            default-size="200px"
-          >
-            <template #1>
-              <Menu />
-            </template>
-            <template #2>
-              <component :is="currentView" />
-            </template>
-          </n-split>
-        </div>
-      </n-config-provider>
-    </n-loading-bar-provider>
-  </n-message-provider>
+  <n-modal-provider>
+    <n-message-provider>
+      <n-loading-bar-provider>
+        <n-config-provider :theme="theme">
+          <div class="container">
+            <n-split
+              direction="horizontal"
+              style="height: 100vh"
+              max="300px"
+              min="200px"
+              default-size="200px"
+            >
+              <template #1>
+                <Menu />
+              </template>
+              <template #2>
+                <component :is="currentView" />
+              </template>
+            </n-split>
+          </div>
+        </n-config-provider>
+      </n-loading-bar-provider>
+    </n-message-provider>
+  </n-modal-provider>
 </template>
 
 <style scoped></style>
