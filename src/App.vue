@@ -47,21 +47,21 @@ const currentView = computed((): RouteComponent => {
 const theme = ref<any | undefined>(undefined);
 const themeMedia = window.matchMedia("(prefers-color-scheme: dark)");
 const os_type = ref<number>(0);
+theme.value = themeMedia.matches ? darkTheme : undefined;
 
 onMounted(() => {
   get_os_type()
     .then(() => {
-      applyTheme(themeMedia.matches);
+      applyBackgroundColor(themeMedia.matches);
     })
     .then(apply_background);
-
   themeMedia.addEventListener("change", (event) => {
-    applyTheme(event.matches);
+    theme.value = event.matches ? darkTheme : undefined;
+    applyBackgroundColor(event.matches);
   });
 });
 
-const applyTheme = (isDark: boolean) => {
-  theme.value = isDark ? darkTheme : undefined;
+const applyBackgroundColor = (isDark: boolean) => {
   if (os_type.value % 2 === 0) {
     document.body.style.backgroundColor = isDark ? "#1f1f1f" : "#e6e6e6";
   }
@@ -80,9 +80,9 @@ const apply_background = async () => {
     let settings = JSON.parse(res);
     // 如果存在 background 路径的情况下
     if (settings.background_image_path !== null) {
-      let html = document.querySelector('body');
+      let html = document.querySelector("body");
       if (html) {
-        let style = document.createElement('style');
+        let style = document.createElement("style");
         style.innerHTML = `
           body { 
             background-color: rgba(0, 0, 0, 0); 
@@ -94,14 +94,16 @@ const apply_background = async () => {
             left: 0; 
             right: 0; 
             bottom: 0; 
-            background-image: url("${convertFileSrc(settings.background_image_path)}"); 
+            background-image: url("${convertFileSrc(
+              settings.background_image_path
+            )}"); 
             background-size: cover; 
             background-position: center; 
             filter: blur(${settings.background_blur}px);
             opacity: ${settings.background_transparence / 100}; 
             z-index: -1; 
           }
-        `
+        `;
         document.head.appendChild(style);
       }
     }
