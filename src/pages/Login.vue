@@ -3,6 +3,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { ref, onMounted, CSSProperties } from "vue";
 import { useMessage, useLoadingBar } from "naive-ui";
 import { ColorPaletteOutline } from "@vicons/ionicons5";
+import { open } from "@tauri-apps/plugin-shell";
+import { dataDir } from "@tauri-apps/api/path";
 
 const loadingBar = useLoadingBar();
 const pop_message = useMessage();
@@ -149,6 +151,13 @@ const set_background_blur = async () => {
     blur: blur.value,
   }).catch((err) => pop_message.error(err));
 };
+
+const open_config = async () => {
+  let path = await dataDir() + "/ustb-wifi-tools" ;
+  console.log(path);
+  
+  await open(path);
+};
 </script>
 
 <template>
@@ -197,16 +206,17 @@ const set_background_blur = async () => {
       <div v-else>
         <h3>您已登录，如果其他页面不能获取到信息，请关闭软件重新打开。</h3>
       </div>
-      <!-- <h3>当前有效JSESSIONID：{{ sessionid }}</h3>
-      <h4>
-        ⬆️这个东西是当前打开应用期间的访问你的校园网数据的一个凭证，如果你发给其他人，那么一段时间内别人也可以看你的数据，这很危险，孩子。
-      </h4> -->
       <n-button strong secondary type="info" @click="logout"> 登出 </n-button>
-      <h4>如果想自己更改配置文件：</h4>
-      <p>
-        Windows: C:\Users\%UserName%\AppData\Roaming\ustb-wifi-tools\config.json
-      </p>
-      <p>macOS: ~/Library/Application Support/ustb-wifi-tools/config.json</p>
+      <h4>
+        如果想自己更改配置文件：<n-button
+          strong
+          secondary
+          type="info"
+          @click="open_config"
+        >
+          打开配置文件夹
+        </n-button>
+      </h4>
       <n-popover trigger="hover">
         <template #trigger>
           <n-button

@@ -2,6 +2,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { onMounted, ref } from "vue";
 import { useMessage } from "naive-ui";
+import { open } from "@tauri-apps/plugin-shell";
 
 interface MacAddress {
   device_name: string;
@@ -55,14 +56,17 @@ const unbind = async () => {
 
 <template>
   <div class="container">
-    <n-h2 prefix="bar" type="success" style="margin-top: 15px;">
-      <n-text type="success">
-        解绑 MAC 地址
-      </n-text>
+    <n-h2 prefix="bar" type="success" style="margin-top: 15px">
+      <n-text type="success"> 解绑 MAC 地址 </n-text>
     </n-h2>
     <p>MAC Address是什么？简单来说校园网靠这个来识别是否是你的设备。</p>
     <p>
-      所以随机MAC地址开启的话，就会导致你之前的设备被顶掉，详情可看B站视频：BV1JC4y1S7WS
+      所以随机MAC地址开启的话，就会导致你之前的设备被顶掉，详情可看B站视频：<a
+        @click="open('https://www.bilibili.com/video/av792486473/')"
+        style="text-underline-offset: 5px; text-decoration: underline; cursor: pointer;"
+        >BV1JC4y1S7WS</a
+      >
+      <!-- 点 bv 会打开 av 的网页🤔 -->
     </p>
     <p>当前机器的无线MAC地址是（仅供参考）：{{ this_mac }}</p>
     <p>如果把该地址解绑会导致立刻断网。</p>
@@ -87,7 +91,7 @@ const unbind = async () => {
           </tr>
         </tbody>
       </n-table>
-      <br/>
+      <br />
       <n-button strong secondary type="info" @click="unbind">
         确定解绑
       </n-button>

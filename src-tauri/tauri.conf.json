@@ -52,6 +52,9 @@
       "endpoints": [
         "https://github.com/CakeAL/ustb-wifi-tools/releases/latest/download/latest.json"
       ]
+    },
+    "shell": {
+      "open": false 
     }
   }
 }

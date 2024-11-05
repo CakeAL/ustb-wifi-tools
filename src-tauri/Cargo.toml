@@ -28,6 +28,7 @@ mac_address = "1.1.7"
 # tauri plugin
 window-vibrancy = "0.5.2"
 tauri-plugin-dialog = "2"
+tauri-plugin-shell = "2"
 # others
 anyhow = "1"
 rand = "0.8.5"

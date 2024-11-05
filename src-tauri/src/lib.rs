@@ -16,7 +16,9 @@ use tauri_plugin_updater::UpdaterExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder = tauri::Builder::new().plugin(tauri_plugin_dialog::init());
+    let mut builder = tauri::Builder::new()
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_shell::init());
     #[cfg(not(any(target_os = "android", target_os = "linux")))]
     {
         builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
