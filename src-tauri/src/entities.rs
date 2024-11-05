@@ -93,3 +93,17 @@ pub struct AmmeterData {
     #[serde(rename = "statusCode")]
     pub status_code: String,
 }
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase", tag = "event", content = "data")]
+pub enum DownloadEvent {
+    #[serde(rename_all = "camelCase")]
+    Started { new_version: bool },
+    #[serde(rename_all = "camelCase")]
+    Progress {
+        downloaded: usize,
+        content_length: u64,
+    },
+    #[serde(rename_all = "camelCase")]
+    Finished { finished: bool },
+}

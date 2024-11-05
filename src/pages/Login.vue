@@ -5,6 +5,7 @@ import { useMessage, useLoadingBar } from "naive-ui";
 import { ColorPaletteOutline } from "@vicons/ionicons5";
 import { open } from "@tauri-apps/plugin-shell";
 import { dataDir } from "@tauri-apps/api/path";
+import { check_update } from "../update";
 
 const loadingBar = useLoadingBar();
 const pop_message = useMessage();
@@ -120,7 +121,7 @@ const railStyle = ({
 };
 
 const manually_check_update = async () => {
-  await invoke("manually_check_update").catch((err) => pop_message.error(err));
+  await check_update(true);
 };
 
 const submit_login_ustb_wifi = async () => {
@@ -153,9 +154,9 @@ const set_background_blur = async () => {
 };
 
 const open_config = async () => {
-  let path = await dataDir() + "/ustb-wifi-tools" ;
-  console.log(path);
-  
+  // explorer 还是强的，能识别斜杠
+  let path = (await dataDir()) + "/ustb-wifi-tools";
+  // console.log(path);
   await open(path);
 };
 </script>

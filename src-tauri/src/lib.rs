@@ -10,9 +10,7 @@ use crate::commands::*;
 use crate::entities::AppState;
 use crate::setting::Setting;
 use tauri::Manager;
-use tauri_plugin_dialog::DialogExt;
-#[cfg(not(any(target_os = "android", target_os = "linux")))]
-use tauri_plugin_updater::UpdaterExt;
+
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -60,10 +58,6 @@ pub fn run() {
             #[cfg(not(any(target_os = "android", target_os = "linux")))]
             {
                 background_init(app)?;
-                let handle = app.handle().clone();
-                tauri::async_runtime::spawn(async move {
-                    let _ = update(handle, false).await;
-                });
             }
             Ok(())
         })
@@ -90,54 +84,6 @@ fn background_init(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error
         if get_windows_build_number() >= 22000 {
             window_vibrancy::apply_mica(&win, None).map_err(|err| format!("启动错误: {}", err))?;
         }
-    }
-
-    Ok(())
-}
-
-#[cfg(not(any(target_os = "android", target_os = "linux")))]
-async fn update(app: tauri::AppHandle, manually: bool) -> anyhow::Result<()> {
-    if let Some(update) = app.updater()?.check().await? {
-        // 对话框
-        let answer = app
-            .dialog()
-            .message(format!(
-                "有新版本！{}->{}\n是否更新？",
-                update.current_version, update.version
-            ))
-            .title("貌似有版本更新？")
-            .buttons(tauri_plugin_dialog::MessageDialogButtons::OkCancel)
-            .blocking_show();
-
-        if answer {
-            let mut downloaded = 0;
-            update
-                .download_and_install(
-                    |chunk_length, content_length| {
-                        downloaded += chunk_length;
-                        println!("downloaded {downloaded} from {content_length:?}");
-                    },
-                    || {
-                        println!("download finished");
-                    },
-                )
-                .await?;
-            app.dialog()
-                .message("下载完成，点击重启")
-                .kind(tauri_plugin_dialog::MessageDialogKind::Info)
-                .title("这是个提示框")
-                .buttons(tauri_plugin_dialog::MessageDialogButtons::Ok)
-                .blocking_show();
-            println!("update installed");
-            app.restart();
-        }
-    } else if manually {
-        app.dialog()
-            .message("没有更新😭")
-            .kind(tauri_plugin_dialog::MessageDialogKind::Info)
-            .title("这是个提示框")
-            .buttons(tauri_plugin_dialog::MessageDialogButtons::Ok)
-            .blocking_show();
     }
 
     Ok(())

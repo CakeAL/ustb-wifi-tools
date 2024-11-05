@@ -1,8 +1,8 @@
 use chrono::DateTime;
-use tauri::{utils::config::WindowConfig, Manager};
+use tauri::{ipc::Channel, utils::config::WindowConfig, Manager};
 
 use crate::{
-    entities::{AppState, EveryLoginData},
+    entities::{AppState, DownloadEvent, EveryLoginData},
     requests::*,
     setting::Setting,
 };
@@ -435,11 +435,7 @@ pub fn set_background_blur(
     app_state: tauri::State<'_, AppState>,
     blur: u32,
 ) -> Result<(), String> {
-    app_state
-        .setting
-        .write()
-        .unwrap()
-        .set_background_blur(blur);
+    app_state.setting.write().unwrap().set_background_blur(blur);
     app_state
         .setting
         .read()
@@ -450,12 +446,25 @@ pub fn set_background_blur(
 }
 
 #[tauri::command(async)]
-pub async fn manually_check_update(app: tauri::AppHandle) -> Result<(), String> {
-    #[cfg(not(any(target_os = "android", target_os = "linux")))]
-    crate::update(app, true)
-        .await
-        .map_err(|err| err.to_string())?;
+pub async fn manually_check_update(
+    app: tauri::AppHandle,
+    manually: bool,
+    on_event: Channel<DownloadEvent>,
+) -> Result<(), String> {
+    static mut AUTO_CHECK: bool = true; // 只能自动检查更新一次
 
+    #[cfg(not(any(target_os = "android", target_os = "linux")))]
+    if unsafe { AUTO_CHECK } || manually {
+        // 如果第一次自动或者手动更新
+        update(app, manually, on_event)
+            .await
+            .map_err(|err| err.to_string())?;
+    }
+    if !manually {
+        unsafe {
+            AUTO_CHECK = false;
+        }
+    }
     if cfg!(target_os = "android") || cfg!(target_os = "linux") {
         Err("安卓/Linux 不支持更新，请到 GitHub 查看是否有更新。".into())
     } else {
@@ -517,4 +526,80 @@ pub async fn return_os_type() -> i32 {
     }
 
     res
+}
+
+#[cfg(not(any(target_os = "android", target_os = "linux")))]
+async fn update(
+    app: tauri::AppHandle,
+    manually: bool,
+    on_event: Channel<DownloadEvent>,
+) -> Result<(), String> {
+    use tauri_plugin_dialog::DialogExt;
+    #[cfg(not(any(target_os = "android", target_os = "linux")))]
+    use tauri_plugin_updater::UpdaterExt;
+
+    if let Some(update) = app
+        .updater()
+        .map_err(|e| e.to_string())?
+        .check()
+        .await
+        .map_err(|e| e.to_string())?
+    {
+        // 对话框
+        let answer = app
+            .dialog()
+            .message(format!(
+                "有新版本！{}->{}\n是否更新？",
+                update.current_version, update.version
+            ))
+            .title("貌似有版本更新？")
+            .buttons(tauri_plugin_dialog::MessageDialogButtons::OkCancel)
+            .blocking_show();
+
+        if answer {
+            on_event
+                .send(DownloadEvent::Started { new_version: true })
+                .unwrap();
+
+            let mut downloaded = 0;
+            update
+                .download_and_install(
+                    |chunk_length, content_length| {
+                        downloaded += chunk_length;
+                        // println!("downloaded {downloaded} from {content_length:?}");
+                        on_event
+                            .send(DownloadEvent::Progress {
+                                downloaded,
+                                content_length: content_length.unwrap_or_default(),
+                            })
+                            .unwrap();
+                    },
+                    || {
+                        // println!("download finished");
+                        on_event
+                            .send(DownloadEvent::Finished { finished: true })
+                            .unwrap();
+                    },
+                )
+                .await
+                .map_err(|e| e.to_string())?;
+            app.dialog()
+                .message("下载完成，点击重启")
+                .kind(tauri_plugin_dialog::MessageDialogKind::Info)
+                .title("这是个提示框")
+                .buttons(tauri_plugin_dialog::MessageDialogButtons::Ok)
+                .blocking_show();
+            // println!("update installed");
+            app.restart();
+        }
+    } else if manually {
+        app.dialog()
+            .message("没有更新😭")
+            .kind(tauri_plugin_dialog::MessageDialogKind::Info)
+            .title("这是个提示框")
+            .buttons(tauri_plugin_dialog::MessageDialogButtons::Ok)
+            .blocking_show();
+    }
+
+    Ok(())
 }

@@ -2,6 +2,7 @@
 import { ref, computed, Ref, DefineComponent, onMounted } from "vue";
 import { darkTheme } from "naive-ui";
 import { invoke, convertFileSrc } from "@tauri-apps/api/core";
+import { check_update, is_download, download_percent } from "./update";
 
 // routers
 import Login from "./pages/Login.vue";
@@ -14,6 +15,7 @@ import UnbindMacs from "./pages/UnbindMacs.vue";
 import SpeedTest from "./pages/SpeedTest.vue";
 import MonthlyUserLog from "./pages/MonthlyUserLog.vue";
 import OtherTools from "./pages/OtherTools.vue";
+
 type RouteComponent = DefineComponent<{}, {}, any>;
 
 interface Routes {
@@ -109,6 +111,13 @@ const apply_background = async () => {
     }
   }
 };
+
+// download
+
+onMounted(() => {
+  check_update(false);
+});
+
 </script>
 
 <template>
@@ -136,6 +145,23 @@ const apply_background = async () => {
       </n-loading-bar-provider>
     </n-message-provider>
   </n-modal-provider>
+  <n-progress
+    type="line"
+    :percentage="download_percent"
+    status="success"
+    indicator-placement="inside"
+    processing
+    class="download-progress"
+    v-if="is_download"
+  />
 </template>
 
-<style scoped></style>
+<style scoped>
+.download-progress {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: calc(100vw - 20px);
+  padding: 10px;
+}
+</style>
