@@ -246,12 +246,33 @@ pub async fn load_mac_address(app_state: tauri::State<'_, AppState>) -> Result<S
         None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
     };
     let via_vpn = *app_state.login_via_vpn.read().unwrap();
+    let mac_custom_address = app_state.setting.read().unwrap().mac_custom_name.clone();
 
-    match get_mac_address(&session_id, via_vpn).await {
+    match get_mac_address(&session_id, via_vpn, &mac_custom_address).await {
         Ok(Some(value)) => Ok(value.to_string()),
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
     }
+}
+
+#[tauri::command(async)]
+pub async fn set_mac_custom_name(
+    app_state: tauri::State<'_, AppState>,
+    app_handle: tauri::AppHandle,
+    mac: &str,
+    name: &str,
+) -> Result<(), String> {
+    app_state
+        .setting
+        .write()
+        .unwrap()
+        .set_mac_custom_name(mac, name);
+    app_state
+        .setting
+        .write()
+        .unwrap()
+        .write_setting(&app_handle)
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]

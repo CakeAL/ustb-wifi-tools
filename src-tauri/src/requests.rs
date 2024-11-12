@@ -1,4 +1,4 @@
-use std::{f64, time::Duration};
+use std::{collections::HashMap, f64, time::Duration};
 
 use anyhow::{anyhow, Result};
 use chrono::NaiveDateTime;
@@ -451,7 +451,11 @@ pub async fn get_user_login_log(
     }))
 }
 
-pub async fn get_mac_address(session_id: &str, via_vpn: bool) -> Result<Option<Value>> {
+pub async fn get_mac_address(
+    session_id: &str,
+    via_vpn: bool,
+    mac_custom_name: &HashMap<String, String>,
+) -> Result<Option<Value>> {
     let url = if !via_vpn {
         "http://202.204.60.7:8080/nav_unBandMacJsp"
     } else {
@@ -495,12 +499,15 @@ pub async fn get_mac_address(session_id: &str, via_vpn: bool) -> Result<Option<V
     let mac_address = device_names_value
         .iter()
         .zip(mac_address_value.iter())
-        .map(|(device_name, mac_address)| MacAddress {
+        .map(|(&device_name, &mac_address)| MacAddress {
             device_name: device_name.to_string(),
             mac_address: mac_address.to_string(),
+            custom_name: mac_custom_name
+                .get(mac_address)
+                .cloned()
+                .unwrap_or_default(),
         })
         .collect::<Vec<_>>();
-
     Ok(Some(serde_json::json!(mac_address)))
 }
 
@@ -658,7 +665,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_mac_address() {
         let session_id = "session_id";
-        let res = get_mac_address(session_id, false).await;
+        let res = get_mac_address(session_id, false, &mut HashMap::new()).await;
         dbg!(res.unwrap());
     }
 

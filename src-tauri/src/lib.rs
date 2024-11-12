@@ -52,7 +52,8 @@ pub fn run() {
             set_background_image,
             reset_background_image,
             set_background_transparence,
-            set_background_blur
+            set_background_blur,
+            set_mac_custom_name
         ])
         .setup(|app| {
             #[cfg(not(any(target_os = "android", target_os = "linux")))]

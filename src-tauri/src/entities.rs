@@ -76,6 +76,7 @@ pub struct EveryLoginData {
 pub struct MacAddress {
     pub device_name: String,
     pub mac_address: String,
+    pub custom_name: String,
 }
 
 pub struct AppState {
