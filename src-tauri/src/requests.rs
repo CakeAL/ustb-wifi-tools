@@ -4,7 +4,10 @@ use anyhow::{anyhow, Result};
 use chrono::NaiveDateTime;
 use rand::Rng;
 use regex::Regex;
-use reqwest::{header::SET_COOKIE, Client};
+use reqwest::{
+    header::{LOCATION, SET_COOKIE},
+    redirect, Client,
+};
 use scraper::{Html, Selector};
 use serde_json::Value;
 
@@ -580,12 +583,60 @@ pub async fn get_ammeter(num: u32) -> Result<Option<i32>> {
 }
 
 pub async fn login_ustb_wifi(account: &str, password: &str) -> Result<()> {
+    let client = reqwest::Client::builder()
+        .redirect(redirect::Policy::none()) // 设置为不自动重定向
+        .build()?;
+    // 第一次请求 login.ustb.edu.cn
+    let response = client.get("http://login.ustb.edu.cn/").send().await?;
+    if response.status().as_u16() != 302 {
+        return Err(anyhow!("Request {}", response.status()));
+    }
+    let location = response
+        .headers()
+        .get(LOCATION)
+        .and_then(|value| value.to_str().ok())
+        .unwrap_or_default();
+    let wlan_user_ipv6 = location.split(['=', '&']).nth(1).unwrap_or_default();
+
+    // dbg!(wlan_user_ipv6);
+    // 第二次请求 1.htm
+    let response = client
+        .get("http://202.204.48.82/1.htm")
+        .query(&[("mv6", wlan_user_ipv6), ("url", "")])
+        .send()
+        .await?;
+    if response.status().as_u16() != 302 {
+        return Err(anyhow!("Request {}", response.status()));
+    }
+    let location = response
+        .headers()
+        .get(LOCATION)
+        .and_then(|value| value.to_str().ok())
+        .unwrap_or_default();
+    let ips = location.split(['=', '&']).collect::<Vec<&str>>();
+    let (wlan_user_ip, wlan_ac_name, wlan_ac_ip) = (
+        ips.get(1).copied().unwrap_or_default(),
+        ips.get(3).copied().unwrap_or_default(),
+        ips.get(5).copied().unwrap_or_default().replace("%2E", "."),
+    );
+    dbg!(wlan_user_ipv6, wlan_user_ip, wlan_ac_name, &wlan_ac_ip);
+
     let params = [
+        ("callback", "dr1004"),
+        ("login_method", "1"),
         ("user_account", account),
         ("user_password", password),
-        ("wlan_ac_ip", "10.0.124.68"),
+        ("wlan_user_ip", wlan_user_ip),
+        ("wlan_user_ipv6", wlan_user_ipv6),
+        ("wlan_user_mac", "000000000000"),
+        ("wlan_ac_ip", &wlan_ac_ip),
+        ("wlan_ac_name", wlan_ac_name),
+        ("jsVersion", "4.1"),
+        ("terminal_type", "1"),
+        ("lang", "zh-cn"),
+        ("v", "2213"),
     ];
-    let response = Client::new()
+    let response = client
         .get("http://202.204.48.66:801/eportal/portal/login")
         .query(&params)
         .send()

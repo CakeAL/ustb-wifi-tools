@@ -145,8 +145,11 @@ const set_mac_custom_name = async (mac: string, index: number) => {
               <n-image width="300" src="/QQ_1731405540124.png" />
             </div>
           </n-collapse-item>
-          <n-collapse-item title="Windows" name="3">
-            <div>d</div>
+          <n-collapse-item title="Windows 设备固定 MAC 地址方法" name="3">
+            <div>
+              <p>网络和 Internet -> WLAN -> 属性 -> 随机硬件地址 -> 关</p>
+              <n-image width="550" src="/QQ_1731406861238.png" />
+            </div>
           </n-collapse-item>
         </n-collapse>
       </n-card>
