@@ -2,7 +2,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { onMounted, ref } from "vue";
 import { useLoadingBar, useMessage } from "naive-ui";
-import { mb2gb } from "../helper";
+import { mb2gb, min2day, min2hour } from "../helper";
 
 interface MonthlyData {
   month: number;
@@ -78,15 +78,6 @@ const load_month_pay = async () => {
   // console.log(month_pay.value);
   loadingBar.finish();
 };
-
-const min2hour = (min: number | undefined) => {
-  return parseFloat(((min as number) / 60).toFixed(2));
-};
-
-const min2day = (min: number | undefined) => {
-  return parseFloat(((min as number) / 60 / 24).toFixed(2));
-};
-
 </script>
 
 <template>

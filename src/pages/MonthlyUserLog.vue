@@ -3,7 +3,7 @@ import { onMounted, ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { EveryLoginData } from "./UserLoginLog.vue";
 import { useLoadingBar, useMessage } from "naive-ui";
-import { railStyle, mb2gb } from "../helper";
+import { railStyle, mb2gb, min2hour } from "../helper";
 import dayjs from "dayjs";
 
 const pop_message = useMessage();
@@ -226,7 +226,7 @@ const select_mb_or_gb = (value: string) => {
                   <td>花费:</td>
                   <td>{{ item.cost.toFixed(2) }} 元</td>
                   <td>使用时长:</td>
-                  <td>{{ (item.used_duration / 60).toFixed(2) }} h</td>
+                  <td>{{ min2hour(item.used_duration) }} h</td>
                 </tr>
               </tbody>
             </n-table>

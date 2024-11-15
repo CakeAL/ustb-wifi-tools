@@ -25,3 +25,11 @@ export const railStyle = ({
 export const mb2gb = (mb: number | undefined) => {
   return parseFloat(((mb as number) / 1024).toFixed(2));
 };
+
+export const min2hour = (min: number | undefined) => {
+  return parseFloat(((min as number) / 60).toFixed(2));
+};
+
+export const min2day = (min: number | undefined) => {
+  return parseFloat(((min as number) / 60 / 24).toFixed(2));
+};
