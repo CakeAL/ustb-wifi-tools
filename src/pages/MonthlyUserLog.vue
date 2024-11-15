@@ -191,16 +191,46 @@ const select_mb_or_gb = (value: string) => {
           class="gray"
         >
         </n-grid-item>
+
         <n-grid-item
           v-for="(item, index) in monthly_user_log"
           :key="index"
           class="day"
-          :style="{ backgroundColor: getBackgroundColor(select_to_data(item)) }"
-        >
-          <p style="margin: 3px; line-height: 1.5em; white-space: nowrap">
-            <b>{{ index + 1 }}日</b><br />
-            {{ select_mb_or_gb(select_to_data(item)) }} {{ data_type() }}
-          </p>
+          :style="{
+            backgroundColor: getBackgroundColor(select_to_data(item)),
+          }"
+          ><n-popover trigger="hover">
+            <template #trigger>
+              <p style="margin: 3px; line-height: 1.5em; white-space: nowrap">
+                <b>{{ index + 1 }}日</b><br />
+                {{ select_mb_or_gb(select_to_data(item)) }} {{ data_type() }}
+              </p>
+            </template>
+            <n-table :bordered="false" :single-line="false">
+              <thead>
+                <tr>
+                  <th>ipv4 ⬇</th>
+                  <th>ipv4 ⬆</th>
+                  <th>ipv6 ⬇</th>
+                  <th>ipv6 ⬆</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{{ mb2gb(item.ipv4_down) }} GB</td>
+                  <td>{{ mb2gb(item.ipv4_up) }} GB</td>
+                  <td>{{ mb2gb(item.ipv6_down) }} GB</td>
+                  <td>{{ mb2gb(item.ipv6_up) }} GB</td>
+                </tr>
+                <tr>
+                  <td>花费:</td>
+                  <td>{{ item.cost.toFixed(2) }} 元</td>
+                  <td>使用时长:</td>
+                  <td>{{ (item.used_duration / 60).toFixed(2) }} h</td>
+                </tr>
+              </tbody>
+            </n-table>
+          </n-popover>
         </n-grid-item>
       </n-grid>
       <p>在使用概览上的东西选择：</p>
