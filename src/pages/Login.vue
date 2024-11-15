@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/core";
-import { ref, onMounted, CSSProperties } from "vue";
+import { ref, onMounted } from "vue";
 import { useMessage, useLoadingBar } from "naive-ui";
 import { ColorPaletteOutline } from "@vicons/ionicons5";
 import { open } from "@tauri-apps/plugin-shell";
 import { dataDir } from "@tauri-apps/api/path";
 import { check_update } from "../update";
+import { railStyle } from "../helper";
 
 const loadingBar = useLoadingBar();
 const pop_message = useMessage();
@@ -96,28 +97,6 @@ const logout = async () => {
 
 const set_setting = async () => {
   await invoke("set_setting").catch((err) => pop_message.error(err));
-};
-
-const railStyle = ({
-  focused,
-  checked,
-}: {
-  focused: boolean;
-  checked: boolean;
-}) => {
-  const style: CSSProperties = {};
-  if (checked) {
-    style.background = "#4b9e5f";
-    if (focused) {
-      style.boxShadow = "0 0 0 2px #dbecdfff";
-    }
-  } else {
-    style.background = "#2080f0";
-    if (focused) {
-      style.boxShadow = "0 0 0 2px #2080f040";
-    }
-  }
-  return style;
 };
 
 const manually_check_update = async () => {

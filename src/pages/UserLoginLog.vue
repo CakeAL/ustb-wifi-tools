@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { CSSProperties, ref } from "vue";
+import { onMounted, ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
-import { useMessage } from "naive-ui";
+import { useLoadingBar, useMessage } from "naive-ui";
 import dayjs from "dayjs";
+import { railStyle } from "../helper";
 
 interface UserLoginLog {
   ipv4_up: number;
@@ -34,23 +35,30 @@ const date_range = ref<[number, number]>([Date.now(), Date.now()]);
 const a_date = ref<number>(Date.now());
 const user_login_log = ref<UserLoginLog | null>(null);
 const the_switch = ref(false);
+const loadingBar = useLoadingBar();
+
+onMounted(() => {
+  get_user_login_log();
+});
 
 const get_user_login_log = async () => {
+  loadingBar.start();
   if (the_switch.value === true) {
     let res = await invoke("load_user_login_log", {
       startDate: Math.floor(date_range.value[0] / 1000) + 8 * 3600,
       endDate: Math.floor(date_range.value[1] / 1000) + 8 * 3600,
-    }).catch((err) => pop_message.error(err));
+    }).catch((err) => {pop_message.error(err); loadingBar.error()});
     // console.log(res as string);
     user_login_log.value = JSON.parse(res as string);
   } else {
     let res = await invoke("load_user_login_log", {
       startDate: Math.floor(a_date.value / 1000) + 8 * 3600,
       endDate: Math.floor(a_date.value / 1000) + 8 * 3600,
-    }).catch((err) => pop_message.error(err));
+    }).catch((err) => {pop_message.error(err); loadingBar.error()});
     // console.log(res as string);
     user_login_log.value = JSON.parse(res as string);
   }
+  loadingBar.finish();
 };
 
 const unix_format = (unix: number) => {
@@ -62,27 +70,6 @@ const mb2gb = (mb: number | undefined) => {
   else return parseFloat((mb / 1024).toFixed(2));
 };
 
-const railStyle = ({
-  focused,
-  checked,
-}: {
-  focused: boolean;
-  checked: boolean;
-}) => {
-  const style: CSSProperties = {};
-  if (checked) {
-    style.background = "#4b9e5f";
-    if (focused) {
-      style.boxShadow = "0 0 0 2px #dbecdfff";
-    }
-  } else {
-    style.background = "#2080f0";
-    if (focused) {
-      style.boxShadow = "0 0 0 2px #2080f040";
-    }
-  }
-  return style;
-};
 </script>
 
 <template>

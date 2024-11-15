@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/core";
 import { onMounted, ref } from "vue";
-import { useMessage } from "naive-ui";
+import { useLoadingBar, useMessage } from "naive-ui";
+import { mb2gb } from "../helper";
 
 interface MonthlyData {
   month: number;
@@ -19,7 +20,7 @@ interface YearlyData {
 
 const pop_message = useMessage();
 const month_pay = ref<YearlyData | null>(null);
-const year = ref<number>(0);
+const year = ref<number>(new Date().getFullYear());
 const year_options = Array.from(
   { length: new Date().getFullYear() - 2015 + 1 },
   (_, i) => {
@@ -30,6 +31,7 @@ const year_options = Array.from(
     };
   }
 );
+const loadingBar = useLoadingBar();
 
 const month_column = {
   title: "月份",
@@ -59,17 +61,22 @@ const monthly_columns = [
 ];
 
 onMounted(() => {
-  //   load_month_pay();
+  load_month_pay();
 });
 
 const load_month_pay = async () => {
+  loadingBar.start();
   if (year.value == 0) return;
-  let res = await invoke("load_month_pay", { year: year.value }).catch((err) =>
-    pop_message.error(err)
+  let res = await invoke("load_month_pay", { year: year.value }).catch(
+    (err) => {
+      pop_message.error(err);
+      loadingBar.error();
+    }
   );
   // console.log(res as string);
   month_pay.value = JSON.parse(res as string);
   // console.log(month_pay.value);
+  loadingBar.finish();
 };
 
 const min2hour = (min: number | undefined) => {
@@ -80,9 +87,6 @@ const min2day = (min: number | undefined) => {
   return parseFloat(((min as number) / 60 / 24).toFixed(2));
 };
 
-const mb2gb = (mb: number | undefined) => {
-  return parseFloat(((mb as number) / 1024).toFixed(2));
-};
 </script>
 
 <template>

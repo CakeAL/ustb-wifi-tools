@@ -2,6 +2,7 @@
 import { onMounted, ref, computed } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { useMessage } from "naive-ui";
+import { mb2gb } from "../helper";
 
 interface Note {
   leftFlow: string;
@@ -68,11 +69,6 @@ const if_online = computed(() => {
     return "离线";
   }
 });
-
-const mb2gb = (mb: number | undefined) => {
-  if (mb === undefined) return 0;
-  else return parseFloat((mb / 1024).toFixed(2));
-};
 
 const remain_flow = computed(() => {
   if (

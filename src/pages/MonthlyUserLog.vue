@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { EveryLoginData } from "./UserLoginLog.vue";
-import { useMessage } from "naive-ui";
-
+import { useLoadingBar, useMessage } from "naive-ui";
+import { railStyle, mb2gb } from "../helper";
 import dayjs from "dayjs";
 
 const pop_message = useMessage();
 const monthly_user_log = ref<Array<EveryLoginData>>([]);
-// 把 start_date 设置为当前月第一天0点  
-const start_date = ref<number>(dayjs().startOf('month').startOf('day').valueOf());
+// 把 start_date 设置为当前月第一天0点
+const start_date = ref<number>(
+  dayjs().startOf("month").startOf("day").valueOf()
+);
 const the_week_of_first_day = ref<Array<number>>([]);
 const refresh = ref(true);
 const select_show_value = ref<string>("ipv4_down");
@@ -52,12 +54,22 @@ const select_show_options = [
   },
 ];
 // let flow_max = 0;
+const loadingBar = useLoadingBar();
+const mb_gb_select = ref(false);
+
+onMounted(() => {
+  get_monthly_user_log();
+});
 
 const get_monthly_user_log = async () => {
+  loadingBar.start();
   let res = await invoke("load_monthly_login_log", {
     startDate: Math.floor(start_date.value / 1000) + 8 * 3600,
     days: dayjs.unix(start_date.value / 1000).daysInMonth(),
-  }).catch((err) => pop_message.error(err));
+  }).catch((err) => {
+    pop_message.error(err);
+    loadingBar.error();
+  });
   monthly_user_log.value = JSON.parse(res as string);
   // // 找出当月使用流量最大的
   // flow_max = -1;
@@ -74,6 +86,7 @@ const get_monthly_user_log = async () => {
   // console.log(monthly_user_log.value);
   // 刷新组件
   refresh.value = !refresh.value;
+  loadingBar.finish();
 };
 
 const getBackgroundColor = (data_string: string) => {
@@ -131,8 +144,22 @@ const data_type = (): string => {
     return "元";
   } else if (select_show_value.value == "used_duration") {
     return "分";
-  } else {
+  } else if (mb_gb_select.value === true) {
     return "MB";
+  } else {
+    return "GB";
+  }
+};
+
+const select_mb_or_gb = (value: string) => {
+  if (
+    select_show_value.value === "used_duration" ||
+    select_show_value.value === "cost" ||
+    mb_gb_select.value === true
+  ) {
+    return value;
+  } else {
+    return mb2gb(parseFloat(value));
   }
 };
 </script>
@@ -172,15 +199,27 @@ const data_type = (): string => {
         >
           <p style="margin: 3px; line-height: 1.5em; white-space: nowrap">
             <b>{{ index + 1 }}日</b><br />
-            {{ select_to_data(item) }} {{ data_type() }}
+            {{ select_mb_or_gb(select_to_data(item)) }} {{ data_type() }}
           </p>
         </n-grid-item>
       </n-grid>
       <p>在使用概览上的东西选择：</p>
-      <n-select
-        v-model:value="select_show_value"
-        :options="select_show_options"
-      />
+      <n-space>
+        <n-select
+          v-model:value="select_show_value"
+          :options="select_show_options"
+          style="width: 60vw"
+        />
+        <n-switch
+          v-model:value="mb_gb_select"
+          :rail-style="railStyle"
+          class="my-switch"
+          style="margin-top: calc((34px - 22px) / 2)"
+        >
+          <template #checked> MB </template>
+          <template #unchecked> GB </template>
+        </n-switch></n-space
+      >
       <p>关于统计信息：</p>
       <p>这里统计的每日情况与校园网后台一致，以下线时间为准。</p>
       <p>
