@@ -186,38 +186,41 @@ const open_config = async () => {
       <div v-else>
         <h3>您已登录，如果其他页面不能获取到信息，请关闭软件重新打开。</h3>
       </div>
-      <n-button strong secondary type="info" @click="logout"> 登出 </n-button>
-      <h4>
-        如果想自己更改配置文件：<n-button
-          strong
-          secondary
-          type="info"
-          @click="open_config"
-        >
-          打开配置文件夹
-        </n-button>
-      </h4>
-      <n-popover trigger="hover">
-        <template #trigger>
-          <n-button
-            strong
-            secondary
-            type="primary"
-            @click="submit_login_ustb_wifi"
-            :disabled="button_disabled"
-            class="my-button"
+      <n-grid :x-gap="12" :y-gap="8" :cols="2" class="my-cards">
+        <n-grid-item>
+          <n-card title="登出" hoverable @click="logout" class="my-card">
+            想换个账号登录？
+          </n-card> </n-grid-item
+        ><n-grid-item>
+          <n-card
+            title="手动检查更新"
+            hoverable
+            @click="manually_check_update"
+            class="my-card"
           >
-            点我登陆校园网
-          </n-button>
-        </template>
-        <span
-          >当你被校园网登录“Radius认证超时！”搞烦了可以用，当然也可以直接用！</span
-        >
-      </n-popover>
-      <p>用来手动检查更新的按钮：</p>
-      <n-button tertiary type="info" @click="manually_check_update">
-        我是用来手动检查更新的按钮
-      </n-button>
+            手动地检查更新。
+          </n-card> </n-grid-item
+        ><n-grid-item>
+          <n-card
+            title="登陆校园网"
+            hoverable
+            @click="submit_login_ustb_wifi"
+            class="my-card"
+          >
+            当你被校园网登录“Radius认证超时！”搞烦了可以用，当然也可以直接用！
+          </n-card>
+        </n-grid-item>
+        <n-grid-item>
+          <n-card
+            title="打开配置文件夹"
+            hoverable
+            @click="open_config"
+            class="my-card"
+          >
+            如果你想看都存了些什么的话，或者想自己改。
+          </n-card>
+        </n-grid-item>
+      </n-grid>
     </n-space>
     <n-float-button
       :right="20"
@@ -276,5 +279,14 @@ const open_config = async () => {
 }
 .my-button {
   margin-top: 5px;
+}
+.my-card {
+  background-color: rgba(255, 255, 255, 0.0);
+  cursor: pointer;
+}
+
+.my-card:active {
+  transition: transform 0.1s ease-in-out;
+  transform: scale(0.99); /* 点击时缩小按钮 */
 }
 </style>
