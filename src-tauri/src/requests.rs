@@ -587,7 +587,12 @@ pub async fn login_ustb_wifi(account: &str, password: &str) -> Result<()> {
         .redirect(redirect::Policy::none()) // 设置为不自动重定向
         .build()?;
     // 第一次请求 login.ustb.edu.cn
-    let response = client.get("http://login.ustb.edu.cn/").send().await?;
+    let response = client
+        .get("http://login.ustb.edu.cn/")
+        .timeout(Duration::from_millis(500))
+        .send()
+        .await
+        .map_err(|e| anyhow!("可能没连上校园网：{e:?}"))?;
     if response.status().as_u16() != 302 {
         return Err(anyhow!("Request {}", response.status()));
     }
@@ -606,7 +611,7 @@ pub async fn login_ustb_wifi(account: &str, password: &str) -> Result<()> {
         .send()
         .await?;
     if response.status().as_u16() != 302 {
-        return Err(anyhow!("Request {}", response.status()));
+        return Err(anyhow!("Request {}, 可能由于已登录", response.status()));
     }
     let location = response
         .headers()
@@ -646,7 +651,7 @@ pub async fn login_ustb_wifi(account: &str, password: &str) -> Result<()> {
     if text.contains("认证成功") {
         Ok(())
     } else {
-        Err(anyhow!("认证失败，可能是由于已经登陆，或者账密错误"))
+        Err(anyhow!("认证失败，因为账密错误"))
     }
 }
 
