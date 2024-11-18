@@ -4626,7 +4626,7 @@ dependencies = [
 
 [[package]]
 name = "ustb-wifi-tools"
-version = "0.8.9"
+version = "0.9.0"
 dependencies = [
  "anyhow",
  "chrono",

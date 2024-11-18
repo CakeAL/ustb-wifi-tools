@@ -18,6 +18,7 @@ pub struct Setting {
     pub background_image_path: Option<String>,
     pub background_transparence: Option<u32>,
     pub background_blur: Option<u32>,
+    pub collapsed: Option<bool>,
 }
 
 impl Setting {
@@ -102,6 +103,10 @@ impl Setting {
                 *n = name.to_owned();
             })
             .or_insert(name.to_string());
+    }
+
+    pub fn set_collapsed(&mut self, collapsed: bool) {
+        self.collapsed = Some(collapsed);
     }
 }
 

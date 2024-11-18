@@ -624,3 +624,9 @@ async fn update(
 
     Ok(())
 }
+
+#[tauri::command(async)]
+pub fn collapse(app_state: tauri::State<'_, AppState>, app: tauri::AppHandle, value: bool) {
+    app_state.setting.write().unwrap().set_collapsed(value);
+    let _ = app_state.setting.write().unwrap().write_setting(&app);
+}

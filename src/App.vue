@@ -115,10 +115,22 @@ const apply_background = async () => {
 // download
 onMounted(() => {
   check_update(false);
+  load_collapse();
 });
 
 // sider
-const collapsed = ref(false);
+const collapsed = ref(true);
+const load_collapse = async () => {
+  let res = await invoke("load_setting") as string;
+  if (res.length > 0) {
+    let settings = JSON.parse(res);
+    collapsed.value = settings.collapsed;
+  }
+};
+const collapse = async (value: boolean) => {
+  collapsed.value = value;
+  await invoke("collapse", {value});
+}
 </script>
 
 <template>
@@ -134,8 +146,8 @@ const collapsed = ref(false);
               :width="200"
               :collapsed="collapsed"
               show-trigger
-              @collapse="collapsed = true"
-              @expand="collapsed = false"
+              @collapse="collapse(true)"
+              @expand="collapse(false)"
             >
               <Menu :collapsed="collapsed"></Menu>
             </n-layout-sider>

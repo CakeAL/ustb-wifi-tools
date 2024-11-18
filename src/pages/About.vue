@@ -6,9 +6,9 @@ const show = ref(false);
 const show1 = ref(false);
 </script>
 
-<template> <n-scrollbar style="max-height: 100vh">
-  <div class="container">
-   
+<template>
+  <n-scrollbar style="max-height: 100vh">
+    <div class="container">
       <n-h2 prefix="bar" type="success" style="margin-top: 15px">
         <n-text type="success"> 关于作者以及 Tips </n-text>
       </n-h2>
@@ -123,10 +123,11 @@ const show1 = ref(false);
           <p>4. 通过 pt 站下载大型软件（比如 Photoshop 等）</p>
           <p>5. 自建/使用 ipv6 代理服务器</p>
           <br />
-          <p>当前 version = "0.8.9"</p>
+          <p>当前 version = "0.9.0"</p>
         </n-space>
       </n-card>
-  </div></n-scrollbar>
+    </div></n-scrollbar
+  >
 </template>
 
 <style scoped>
