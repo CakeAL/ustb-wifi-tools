@@ -13,3 +13,8 @@ body {
     color: whitesmoke;
   }
 }
+
+.n-layout, .n-layout-sider {
+  background-color: transparent;
+  height: 100vh;
+}

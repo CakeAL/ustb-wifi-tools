@@ -58,8 +58,8 @@ const open_webvpn = async () => {
 </script>
 
 <template>
-  <div class="container">
-    <n-scrollbar style="max-height: 100vh">
+  <n-scrollbar style="max-height: 100vh">
+    <div class="container">
       <n-h2 prefix="bar" type="success" style="margin-top: 15px">
         <n-text type="success"> 其他小工具 </n-text>
       </n-h2>
@@ -95,18 +95,18 @@ const open_webvpn = async () => {
           点我跳转网页
         </n-button>
         <template #footer>
-          用来把一个链接转换成校内 elib/n.ustb.edu.cn 的网址，或者转换回来。以便于在校外轻松访问校内资源，或者在校内访问校外资源（🤔）。
+          用来把一个链接转换成校内 elib/n.ustb.edu.cn
+          的网址，或者转换回来。以便于在校外轻松访问校内资源，或者在校内访问校外资源（🤔）。
         </template>
-      </n-card></n-scrollbar
-    >
-  </div>
+      </n-card>
+    </div>
+  </n-scrollbar>
 </template>
 
 <style scoped>
 .container {
-  height: 100vh;
   overflow: auto;
-  margin: 5px;
+  padding: 10px;
 }
 .my-card {
   margin: 10px 5px;

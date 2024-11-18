@@ -68,8 +68,8 @@ const set_mac_custom_name = async (mac: string, index: number) => {
 </script>
 
 <template>
-  <div class="container">
-    <n-scrollbar style="max-height: 100vh">
+  <n-scrollbar style="max-height: 100vh">
+    <div class="container">
       <n-h2 prefix="bar" type="success" style="margin-top: 15px">
         <n-text type="success"> 解绑 MAC 地址 </n-text>
       </n-h2>
@@ -153,14 +153,13 @@ const set_mac_custom_name = async (mac: string, index: number) => {
           </n-collapse-item>
         </n-collapse>
       </n-card>
-    </n-scrollbar>
-  </div>
+    </div>
+  </n-scrollbar>
 </template>
 
 <style scoped>
 .container {
-  height: 100vh;
   overflow: auto;
-  margin: 5px;
+  padding: 10px;
 }
 </style>

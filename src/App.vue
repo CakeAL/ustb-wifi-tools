@@ -113,11 +113,12 @@ const apply_background = async () => {
 };
 
 // download
-
 onMounted(() => {
   check_update(false);
 });
 
+// sider
+const collapsed = ref(false);
 </script>
 
 <template>
@@ -125,22 +126,23 @@ onMounted(() => {
     <n-message-provider>
       <n-loading-bar-provider>
         <n-config-provider :theme="theme">
-          <div class="container">
-            <n-split
-              direction="horizontal"
-              style="height: 100vh"
-              max="300px"
-              min="200px"
-              default-size="200px"
+          <n-layout has-sider>
+            <n-layout-sider
+              bordered
+              collapse-mode="width"
+              :collapsed-width="64"
+              :width="200"
+              :collapsed="collapsed"
+              show-trigger
+              @collapse="collapsed = true"
+              @expand="collapsed = false"
             >
-              <template #1>
-                <Menu />
-              </template>
-              <template #2>
-                <component :is="currentView" />
-              </template>
-            </n-split>
-          </div>
+              <Menu :collapsed="collapsed"></Menu>
+            </n-layout-sider>
+            <n-layout>
+              <component :is="currentView" />
+            </n-layout>
+          </n-layout>
         </n-config-provider>
       </n-loading-bar-provider>
     </n-message-provider>

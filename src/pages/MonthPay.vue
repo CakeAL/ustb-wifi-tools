@@ -33,31 +33,35 @@ const year_options = Array.from(
 );
 const loadingBar = useLoadingBar();
 
-const month_column = {
-  title: "月份",
-  key: "month",
-};
-
-const month_cost_column = {
-  title: "花费(元)",
-  key: "month_cost",
-};
-
-const month_used_flow_column = {
-  title: "流量(MB)",
-  key: "month_used_flow",
-};
-
-const month_used_duration_column = {
-  title: "使用时长(分钟)",
-  key: "month_used_duration",
-};
-
 const monthly_columns = [
-  month_column,
-  month_cost_column,
-  month_used_flow_column,
-  month_used_duration_column,
+  {
+    title: "月份",
+    key: "month",
+    sorter: (row1: { month: number }, row2: { month: number }) =>
+      row1.month - row2.month,
+  },
+  {
+    title: "花费(元)",
+    key: "month_cost",
+    sorter: (row1: { month_cost: number }, row2: { month_cost: number }) =>
+      row1.month_cost - row2.month_cost,
+  },
+  {
+    title: "流量(MB)",
+    key: "month_used_flow",
+    sorter: (
+      row1: { month_used_flow: number },
+      row2: { month_used_flow: number }
+    ) => row1.month_used_flow - row2.month_used_flow,
+  },
+  {
+    title: "使用时长(分钟)",
+    key: "month_used_duration",
+    sorter: (
+      row1: { month_used_duration: number },
+      row2: { month_used_duration: number }
+    ) => row1.month_used_duration - row2.month_used_duration,
+  },
 ];
 
 onMounted(() => {
@@ -81,8 +85,8 @@ const load_month_pay = async () => {
 </script>
 
 <template>
-  <div class="container">
-    <n-scrollbar style="max-height: 100vh">
+  <n-scrollbar style="max-height: 100vh">
+    <div class="container">
       <n-h2 prefix="bar" type="success" style="margin-top: 15px">
         <n-text type="success"> 年度扣费账单 </n-text>
       </n-h2>
@@ -90,7 +94,8 @@ const load_month_pay = async () => {
       <n-select
         v-model:value="year"
         :options="year_options"
-        @update:value="load_month_pay" />
+        @update:value="load_month_pay"
+      />
       <div v-if="month_pay !== undefined" class="show-data">
         <p>这一年一共花费 {{ month_pay?.year_cost }} 元。</p>
         <p>
@@ -107,15 +112,14 @@ const load_month_pay = async () => {
         <n-data-table
           :columns="monthly_columns"
           :data="month_pay?.monthly_data"
-        /></div
-    ></n-scrollbar>
-  </div>
+        />
+      </div></div
+  ></n-scrollbar>
 </template>
 
 <style scoped>
 .container {
-  height: 100vh;
   overflow: auto;
-  margin: 5px;
+  padding: 10px;
 }
 </style>

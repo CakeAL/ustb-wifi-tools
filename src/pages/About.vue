@@ -6,9 +6,9 @@ const show = ref(false);
 const show1 = ref(false);
 </script>
 
-<template>
+<template> <n-scrollbar style="max-height: 100vh">
   <div class="container">
-    <n-scrollbar style="max-height: 100vh">
+   
       <n-h2 prefix="bar" type="success" style="margin-top: 15px">
         <n-text type="success"> 关于作者以及 Tips </n-text>
       </n-h2>
@@ -126,15 +126,13 @@ const show1 = ref(false);
           <p>当前 version = "0.8.9"</p>
         </n-space>
       </n-card>
-    </n-scrollbar>
-  </div>
+  </div></n-scrollbar>
 </template>
 
 <style scoped>
 .container {
-  height: 100vh;
   overflow: auto;
-  margin: 5px;
+  padding: 10px;
 }
 
 .my-card {

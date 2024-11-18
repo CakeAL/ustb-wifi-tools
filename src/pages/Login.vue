@@ -144,9 +144,9 @@ const open_config = async () => {
   <div class="container">
     <n-space vertical>
       <div v-if="!login_state">
-        <h3>
-          在下方输入学号和密码（如果没改过，是身份证后8位，数据均在本地存储）：
-        </h3>
+        <n-h3 prefix="bar" type="success" style="margin-top: 15px">
+          在下方输入校园网学号和密码（数据均在本地存储）：
+        </n-h3>
         <n-input
           v-model:value="user_name"
           type="text"
@@ -162,14 +162,6 @@ const open_config = async () => {
           style="margin-top: 5px"
         />
         <n-space>
-          <n-switch
-            v-model:value="login_via_vpn"
-            :rail-style="railStyle"
-            class="my-switch"
-          >
-            <template #checked> 我不在校园网 </template>
-            <template #unchecked> 我在校园网 </template>
-          </n-switch>
           <n-button
             strong
             secondary
@@ -180,13 +172,29 @@ const open_config = async () => {
           >
             点我登陆校园网后台获取 cookie⭐️
           </n-button>
+          <n-switch
+            v-model:value="login_via_vpn"
+            :rail-style="railStyle"
+            class="my-switch"
+          >
+            <template #checked> 我不在校园网 </template>
+            <template #unchecked> 我在校园网 </template>
+          </n-switch>
         </n-space>
-        <h3 v-if="button_disabled === true">登录中...</h3>
+        <n-h3
+          prefix="bar"
+          type="success"
+          style="margin-top: 15px"
+          v-if="button_disabled === true"
+          >登录中...</n-h3
+        >
       </div>
       <div v-else>
-        <h3>您已登录，如果其他页面不能获取到信息，请关闭软件重新打开。</h3>
+        <n-h3 prefix="bar" type="success" style="margin-top: 15px"
+          >您已登录，如果其他页面不能获取到信息，请点击登出再重新登录。</n-h3
+        >
       </div>
-      <n-grid :x-gap="12" :y-gap="8" :cols="2" class="my-cards">
+      <n-grid :x-gap="12" :y-gap="8" :cols="2" style="margin-top: 20px">
         <n-grid-item>
           <n-card title="登出" hoverable @click="logout" class="my-card">
             想换个账号登录？
@@ -270,9 +278,8 @@ const open_config = async () => {
 
 <style scoped>
 .container {
-  height: 100vh;
   overflow: auto;
-  margin: 5px;
+  padding: 10px;
 }
 .my-switch {
   margin-top: 10px;
@@ -281,7 +288,7 @@ const open_config = async () => {
   margin-top: 5px;
 }
 .my-card {
-  background-color: rgba(255, 255, 255, 0.0);
+  background-color: rgba(255, 255, 255, 0);
   cursor: pointer;
 }
 

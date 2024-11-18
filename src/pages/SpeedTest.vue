@@ -64,8 +64,7 @@ const load_ip_address = async () => {
 
 <style scoped>
 .container {
-  height: 100vh;
   overflow: auto;
-  margin: 5px;
+  padding: 10px;
 }
 </style>

@@ -1,5 +1,11 @@
 <template>
-  <n-menu :options="menuOptions" class="my-menu"/>
+  <n-menu
+    :collapsed="collapsed"
+    :collapsed-width="64"
+    :collapsed-icon-size="22"
+    :options="menuOptions"
+    class="my-menu"
+  />
 </template>
 
 <style scoped>
@@ -9,7 +15,6 @@
 </style>
 
 <script setup lang="ts">
-
 import { h, Component } from "vue";
 import { NIcon } from "naive-ui";
 import type { MenuOption } from "naive-ui";
@@ -22,8 +27,12 @@ import {
   BrowsersOutline,
   SpeedometerOutline,
   CalendarOutline,
-  BuildOutline
-  } from "@vicons/ionicons5";
+  BuildOutline,
+} from "@vicons/ionicons5";
+
+defineProps<{
+  collapsed: boolean;
+}>();
 
 function renderIcon(icon: Component) {
   return () => h(NIcon, null, { default: () => h(icon) });
@@ -138,6 +147,5 @@ const menuOptions: MenuOption[] = [
     key: "about",
     icon: renderIcon(InformationCircleOutline),
   },
-]
-
+];
 </script>

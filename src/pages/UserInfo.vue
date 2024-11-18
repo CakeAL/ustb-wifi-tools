@@ -118,48 +118,105 @@ const progress_color = computed(() => {
     <n-h2 prefix="bar" type="success" style="margin-top: 15px">
       <n-text type="success"> 当前账号使用详情 </n-text>
     </n-h2>
-    <p>用户类别：{{ account_info.note.service }}</p>
-    <p>当前余额：{{ account_info.note.leftmoeny }}</p>
-    <p>是否在线：{{ if_online }}</p>
-    <p>用户状态：{{ account_info.note.status }}</p>
-    <p>更新日期：{{ account_info.serverDate }}</p>
-    <hr />
-    <n-progress
-      :color="progress_color"
-      :percentage="remain_percentage"
-      :indicator-text-color="progress_color"
-      type="dashboard"
-      gap-position="bottom"
-      class="my-progress"
-    />
-    <p>当前流量使用情况：</p>
-    <p>
-      ipv4 下行：{{ account_flow?.data.v4 }} MB，约合
-      {{ mb2gb(account_flow?.data.v4) }} GB
-    </p>
-    <p>
-      ipv6 下行(不计费)：{{ account_flow?.data.v6 }} MB，约合
-      {{ mb2gb(account_flow?.data.v6) }} GB
-    </p>
-    <p>
-      当前剩余 ipv4 下行流量：{{ remain_flow }} GB，大概是
-      {{ remain_percentage }} %
-    </p>
-    <hr />
-    <p>Tips:</p>
-    <p>ipv6 上下行，ipv4 上行都是不计费的~</p>
-    <p>ipv4 下行超出 120 GB 的部分大约 0.6 RMB/GB</p>
+    <n-list hoverable class="my-list">
+      <n-list-item>
+        <n-thing title="基本信息" content-style="margin-top: 10px;">
+          <template #description>
+            <n-grid x-gap="12" :cols="4">
+              <n-gi>
+                <p>用户类别:</p>
+                <n-tag :bordered="false" type="info">
+                  {{ account_info.note.service }}
+                </n-tag>
+              </n-gi>
+              <n-gi>
+                <p>当前余额:</p>
+                <n-tag :bordered="false" type="info">
+                  {{ account_info.note.leftmoeny }}
+                </n-tag>
+              </n-gi>
+              <n-gi>
+                <p>是否在线:</p>
+                <n-tag :bordered="false" type="info">
+                  {{ if_online }}
+                </n-tag>
+              </n-gi>
+              <n-gi>
+                <p>用户状态:</p>
+                <n-tag :bordered="false" type="info">
+                  {{ account_info.note.status }}
+                </n-tag>
+              </n-gi>
+            </n-grid>
+          </template>
+          更新日期: {{ account_info.serverDate }}
+        </n-thing>
+      </n-list-item>
+      <n-list-item>
+        <n-progress
+          :color="progress_color"
+          :percentage="remain_percentage"
+          :indicator-text-color="progress_color"
+          type="dashboard"
+          gap-position="bottom"
+          class="my-progress"
+        />
+        <n-thing title="当月流量使用情况" content-style="margin-top: 10px;">
+          <template #description>
+            <n-grid x-gap="12" :cols="2">
+              <n-gi>
+                <n-popover trigger="hover" placement="top-start">
+                  <template #trigger>
+                    <n-statistic label="ipv4 ⬇">
+                      {{ mb2gb(account_flow?.data.v4) }} GB
+                    </n-statistic>
+                  </template>
+                  {{ account_flow?.data.v4 }} MB
+                </n-popover>
+              </n-gi>
+              <n-gi>
+                <n-popover trigger="hover" placement="top-start">
+                  <template #trigger>
+                    <n-statistic label="ipv6 ⬇">
+                      {{ mb2gb(account_flow?.data.v6) }} GB
+                    </n-statistic>
+                  </template>
+                  {{ account_flow?.data.v6 }} MB
+                </n-popover>
+              </n-gi>
+            </n-grid>
+          </template>
+          当前剩余 ipv4 下行流量：{{ remain_flow }} GB，大概是
+          {{ remain_percentage }} %
+        </n-thing>
+      </n-list-item>
+      <n-list-item>
+        <n-thing title="Tips" content-style="margin-top: 10px;">
+          <template #description>
+            <p>ipv6 上下行，ipv4 上行都是不计费的~</p>
+            <p>ipv4 下行超出 120 GB 的部分大约 0.6 RMB/GB</p>
+          </template>
+        </n-thing>
+      </n-list-item>
+    </n-list>
   </div>
 </template>
 
 <style scoped>
 .container {
-  height: 100vh;
   overflow: auto;
-  margin: 5px;
+  padding: 10px;
 }
 .my-progress {
   float: right;
-  margin-right: 5px;
+  margin: 10px 5px;
+}
+.my-list {
+  background-color: rgba(240, 248, 255, 0.3);
+}
+@media (prefers-color-scheme: dark) {
+  .my-list {
+    background-color: #26262a3d;
+  }
 }
 </style>

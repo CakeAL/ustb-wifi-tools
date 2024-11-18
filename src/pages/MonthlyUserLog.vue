@@ -165,8 +165,8 @@ const select_mb_or_gb = (value: string) => {
 </script>
 
 <template>
-  <div class="container">
-    <n-scrollbar style="max-height: 100vh">
+  <n-scrollbar style="max-height: 100vh">
+    <div class="container">
       <n-h2 prefix="bar" type="success" style="margin-top: 15px">
         <n-text type="success"> 月度使用概览 </n-text>
       </n-h2>
@@ -258,15 +258,14 @@ const select_mb_or_gb = (value: string) => {
       <p>
         所以，这里的使用情况仅供参考，如果你每天都能在24点前断网，那么它也可能是准确的。
       </p>
-    </n-scrollbar>
-  </div>
+    </div>
+  </n-scrollbar>
 </template>
 
 <style scoped>
 .container {
-  height: 100vh;
   overflow: auto;
-  margin: 5px;
+  padding: 10px;
 }
 .gray {
   height: 50px;
