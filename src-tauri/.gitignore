@@ -6,4 +6,3 @@
 # will have schema files for capabilities auto-completion
 /gen/schemas
 /gen/apple
-/gen/android

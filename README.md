@@ -7,6 +7,8 @@
 旨在可以让大家更方便的获取 USTB 校园网每日使用情况，查询流量，解绑 MAC 地址等。 \
 通过调用校园网的 API，并且数据都在本地进行存储。
 
+[关于校园网 V6 网络的相关解答和讨论](https://github.com/CakeAL/ustb-wifi-tools/discussions/6)
+
 ## 已有功能
 
 - [x] 自动化登录校园网后台（或通过 WebVPN ），并获取 jsession ID
