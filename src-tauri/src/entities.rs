@@ -83,6 +83,7 @@ pub struct AppState {
     pub jsessionid: RwLock<Option<String>>,
     pub setting: RwLock<Setting>,
     pub login_via_vpn: RwLock<bool>,
+    pub onedrive_code_verifier: RwLock<Option<String>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

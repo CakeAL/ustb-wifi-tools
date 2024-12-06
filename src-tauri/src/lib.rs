@@ -3,12 +3,14 @@ pub mod entities;
 mod requests;
 pub mod setting;
 pub mod utils;
+pub mod onedrive;
 
 use std::sync::RwLock;
 
 use crate::commands::*;
 use crate::entities::AppState;
 use crate::setting::Setting;
+use onedrive::{code_to_access_token, open_microsoft_login};
 use tauri::Manager;
 
 
@@ -26,6 +28,7 @@ pub fn run() {
             jsessionid: RwLock::new(None),
             setting: RwLock::new(Setting::default()),
             login_via_vpn: RwLock::new(false),
+            onedrive_code_verifier: RwLock::new(None),
         })
         .invoke_handler(tauri::generate_handler![
             get_cookie,
@@ -54,7 +57,9 @@ pub fn run() {
             set_background_transparence,
             set_background_blur,
             set_mac_custom_name,
-            collapse
+            collapse,
+            open_microsoft_login,
+            code_to_access_token
         ])
         .setup(|app| {
             #[cfg(not(any(target_os = "android", target_os = "linux")))]

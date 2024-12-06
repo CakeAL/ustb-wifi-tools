@@ -112,16 +112,27 @@ const apply_background = async () => {
   }
 };
 
-// download
+// download & onedrive
 onMounted(() => {
   check_update(false);
   load_collapse();
+
+  let url = location.href;
+  let queryParams = new URLSearchParams(new URL(url).search);
+  let code = queryParams.get("code");
+  if (code) {
+    send_auth_code(code);
+  }
 });
+
+const send_auth_code = async (code: any) => {
+  await invoke("code_to_access_token", { code: code });
+};
 
 // sider
 const collapsed = ref(true);
 const load_collapse = async () => {
-  let res = await invoke("load_setting") as string;
+  let res = (await invoke("load_setting")) as string;
   if (res.length > 0) {
     let settings = JSON.parse(res);
     collapsed.value = settings.collapsed;
@@ -129,8 +140,8 @@ const load_collapse = async () => {
 };
 const collapse = async (value: boolean) => {
   collapsed.value = value;
-  await invoke("collapse", {value});
-}
+  await invoke("collapse", { value });
+};
 </script>
 
 <template>

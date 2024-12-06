@@ -35,6 +35,9 @@ rand = "0.8.5"
 md5 = "0.7.0"
 regex = "1.10.4"
 windows-version = "0.1.1"
+sha2 = "0.10.8"
+base64 = "0.22.1"
+zip = "2.2.1"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

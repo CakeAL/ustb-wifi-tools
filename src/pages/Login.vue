@@ -146,6 +146,10 @@ const open_changepassword = async () => {
 const open_guide = async () => {
   await open("https://mp.weixin.qq.com/s/1zavoaNZeqo7fNb2I_53Iw");
 };
+
+const open_microsoft_login = async () => {
+  await invoke("open_microsoft_login").catch((e) => pop_message.error(e));
+};
 </script>
 
 <template>
@@ -255,6 +259,16 @@ const open_guide = async () => {
               class="my-card"
             >
               如果你想看都存了些什么的话，或者想自己改。
+            </n-card>
+          </n-grid-item>
+          <n-grid-item>
+            <n-card
+              title="同步配置文件到 Onedrive"
+              hoverable
+              @click="open_microsoft_login"
+              class="my-card"
+            >
+              登录微软账号后，会将配置文件上传到 Onedrive 的<b>应用</b>文件夹。
             </n-card>
           </n-grid-item>
         </n-grid>
