@@ -6,7 +6,7 @@ use sha2::{Digest, Sha256};
 use tauri::{Manager, WebviewWindow};
 use tauri_plugin_dialog::DialogExt;
 
-use crate::entities::AppState;
+use crate::{entities::AppState, setting::Setting};
 
 #[tauri::command(async)]
 pub async fn open_microsoft_login(app_handle: tauri::AppHandle) -> Result<(), String> {
@@ -110,7 +110,7 @@ pub async fn code_to_access_token(
 
     match ans {
         true => upload_setting_to_onedrive(&app_handle, token_response).await,
-        false => download_setting_to_onedrive().await,
+        false => download_setting_to_onedrive(&app_handle, token_response).await,
     }
 
     let _ = window.close();
@@ -145,7 +145,51 @@ async fn upload_setting_to_onedrive(app_handle: &tauri::AppHandle, token_respons
     }
 }
 
-async fn download_setting_to_onedrive() {}
+async fn download_setting_to_onedrive(
+    app_handle: &tauri::AppHandle,
+    token_response: TokenResponse,
+) {
+    let response = Client::new()
+        .get("https://graph.microsoft.com/v1.0/drive/special/approot:/setting.txt:/content")
+        .bearer_auth(token_response.access_token.unwrap())
+        .send()
+        .await;
+    if let Err(e) = response {
+        app_handle
+            .dialog()
+            .message("下载失败！可能由于网络问题")
+            .blocking_show();
+        println!("Error downloading setting: {}", e);
+    } else {
+        let text = response.unwrap().text().await.unwrap();
+        let text = match URL_SAFE.decode(text.as_bytes()) {
+            Ok(text) => text,
+            Err(e) => {
+                app_handle
+                    .dialog()
+                    .message(format!("解码base64错误：{e:?}"))
+                    .blocking_show();
+                return;
+            }
+        };
+        let setting: Setting = match serde_json::from_slice(&text) {
+            Ok(s) => s,
+            Err(e) => {
+                app_handle
+                    .dialog()
+                    .message(format!("配置文件格式不正确！{e:?}"))
+                    .blocking_show();
+                return;
+            }
+        };
+        // dbg!(&setting);
+        let state = app_handle.state::<AppState>();
+        *state.setting.write().unwrap() = setting;
+        let _ = state.setting.write().unwrap().write_setting(app_handle);
+        app_handle.dialog().message("下载成功！").blocking_show();
+        // dbg!(response.unwrap().text().await);
+    }
+}
 
 fn generate_random_string(length: usize) -> String {
     const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
