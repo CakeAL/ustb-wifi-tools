@@ -116,18 +116,7 @@ const apply_background = async () => {
 onMounted(() => {
   check_update(false);
   load_collapse();
-
-  let url = location.href;
-  let queryParams = new URLSearchParams(new URL(url).search);
-  let code = queryParams.get("code");
-  if (code) {
-    send_auth_code(code);
-  }
 });
-
-const send_auth_code = async (code: any) => {
-  await invoke("code_to_access_token", { code: code });
-};
 
 // sider
 const collapsed = ref(true);

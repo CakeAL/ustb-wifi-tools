@@ -10,7 +10,7 @@ use std::sync::RwLock;
 use crate::commands::*;
 use crate::entities::AppState;
 use crate::setting::Setting;
-use onedrive::{code_to_access_token, open_microsoft_login};
+use onedrive::open_microsoft_login;
 use tauri::Manager;
 
 
@@ -59,7 +59,6 @@ pub fn run() {
             set_mac_custom_name,
             collapse,
             open_microsoft_login,
-            code_to_access_token
         ])
         .setup(|app| {
             #[cfg(not(any(target_os = "android", target_os = "linux")))]

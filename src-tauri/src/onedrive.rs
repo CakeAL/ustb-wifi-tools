@@ -1,3 +1,4 @@
+use crate::{entities::AppState, setting::Setting};
 use base64::{engine::general_purpose::URL_SAFE, Engine as _};
 use rand::Rng;
 use reqwest::Client;
@@ -6,14 +7,9 @@ use sha2::{Digest, Sha256};
 use tauri::{Manager, WebviewWindow};
 use tauri_plugin_dialog::DialogExt;
 
-use crate::{entities::AppState, setting::Setting};
-
 #[tauri::command(async)]
 pub async fn open_microsoft_login(app_handle: tauri::AppHandle) -> Result<(), String> {
-    #[allow(unused_variables)]
-    let url = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=6c2e411f-bea9-4598-8cb9-bebadac59bdc&scope=Files.ReadWrite%20offline_access&response_type=code&redirect_uri=https%3A%2F%2Ftauri.localhost%2F";
-    #[cfg(debug_assertions)]
-    let url = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=6c2e411f-bea9-4598-8cb9-bebadac59bdc&scope=Files.ReadWrite%20offline_access&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A1420%2F";
+    let url: &str = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=6c2e411f-bea9-4598-8cb9-bebadac59bdc&scope=Files.ReadWrite%20offline_access&response_type=code";
 
     let code_verifier = generate_random_string(128);
     let code_challenge = sha256_base64url(&code_verifier);
@@ -24,17 +20,29 @@ pub async fn open_microsoft_login(app_handle: tauri::AppHandle) -> Result<(), St
         .unwrap() = Some(code_verifier);
 
     let url = format!(
-        "{}&code_challenge={}&code_challenge_method=S256",
+        "{}&code_challenge={}&code_challenge_method=S256&redirect_uri=https%3A%2F%2Flogin.microsoftonline.com%2Fcommon%2Foauth2%2Fnativeclient",
         url, code_challenge
     );
-
     WebviewWindow::builder(
-        &app_handle,
+        &app_handle.clone(),
         "Onedrive",
         tauri::WebviewUrl::External(url.parse().unwrap()),
     )
     .inner_size(480.0, 670.0)
     .title("Onedrive 登录")
+    .on_navigation(move |url| {
+        dbg!(url.path());
+        if url.path() == "/common/oauth2/nativeclient" {
+            let pair = url.query_pairs().next().unwrap();
+            let code = pair.1.to_string();
+            // dbg!(code);
+            let app_handle = app_handle.clone();
+            tauri::async_runtime::spawn(async move {
+                let _ = code_to_access_token(app_handle, code).await;
+            });
+        }
+        true
+    })
     .build()
     .map_err(|e| e.to_string())?;
     Ok(())
@@ -51,11 +59,8 @@ struct TokenResponse {
     refresh_token: Option<String>,
 }
 
-#[tauri::command(async)]
-pub async fn code_to_access_token(
-    app_handle: tauri::AppHandle,
-    code: String,
-) -> Result<(), String> {
+async fn code_to_access_token(app_handle: tauri::AppHandle, code: String) -> Result<(), String> {
+    dbg!(&code);
     let window = app_handle
         .get_webview_window("Onedrive")
         .ok_or("?".to_string())?;
@@ -71,10 +76,10 @@ pub async fn code_to_access_token(
     let response = match Client::new()
         .post("https://login.microsoftonline.com/common/oauth2/v2.0/token")
         .header("Content-Type", "application/x-www-form-urlencoded")
-        .header("Origin", "http://localhost:1420")
+        // .header("Origin", "https://login.microsoftonline.com/common/oauth2/nativeclient")
         .form(&[
             ("client_id", "6c2e411f-bea9-4598-8cb9-bebadac59bdc"),
-            ("redirect_uri", "http://localhost:1420/"),
+            ("redirect_uri", "https://login.microsoftonline.com/common/oauth2/nativeclient"),
             ("code", &code),
             ("grant_type", "authorization_code"),
             ("code_verifier", &code_verifier),

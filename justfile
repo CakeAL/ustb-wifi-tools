@@ -22,5 +22,8 @@ build-android:
 clippy: 
     cd src-tauri && cargo clippy
 
+clean: 
+    cd src-tauri && cargo clean
+
 change_version:
     python3 change_version.py

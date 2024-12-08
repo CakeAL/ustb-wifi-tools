@@ -123,7 +123,7 @@ const show1 = ref(false);
           <p>4. 通过 pt 站下载大型软件（比如 Photoshop 等）</p>
           <p>5. 自建/使用 ipv6 代理服务器</p>
           <br />
-          <p>当前 version = "0.9.0"</p>
+          <p>当前 version = "0.9.1"</p>
         </n-space>
       </n-card>
     </div></n-scrollbar
