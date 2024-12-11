@@ -87,7 +87,7 @@ function renderChart(month: Array<number>, data: Array<number>) {
 
 <style scoped>
 #chart {
-  height: 50vh;
+  height: 48vh;
   width: 100%;
   background-color: rgba(255, 255, 255, 0.3);
   border-radius: 4px;

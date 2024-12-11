@@ -66,7 +66,7 @@ const monthly_columns = [
 ];
 
 onMounted(() => {
-  load_month_pay().then(() => handleUpdateValue("cost"));
+  load_month_pay().then(() => handleUpdateValue(tabValue.value));
 });
 
 const load_month_pay = async () => {
@@ -86,18 +86,18 @@ const load_month_pay = async () => {
 };
 
 const chartData = ref<Array<number>>([]);
-const tabValue = ref("cost");
+const tabValue = ref("flow");
 
-const handleUpdateValue = (value: string) => {  
+const handleUpdateValue = (value: string) => {
   switch (value) {
-    case "cost":      
+    case "cost":
       chartData.value = month_pay?.value?.monthly_data.map(
         (v) => v.month_cost
       ) as Array<number>;
       return true;
     case "flow":
-      chartData.value = month_pay?.value?.monthly_data.map(
-        (v) => mb2gb(v.month_used_flow)
+      chartData.value = month_pay?.value?.monthly_data.map((v) =>
+        mb2gb(v.month_used_flow)
       ) as Array<number>;
       return true;
     case "duration":
@@ -115,33 +115,59 @@ const handleUpdateValue = (value: string) => {
       <n-h2 prefix="bar" type="success" style="margin-top: 15px">
         <n-text type="success"> 年度扣费账单 </n-text>
       </n-h2>
-      <p>选择一个年份：</p>
       <n-select
         v-model:value="year"
         :options="year_options"
         @update:value="load_month_pay"
       />
       <div v-if="month_pay !== undefined" class="show-data">
-        <p>这一年一共花费 {{ month_pay?.year_cost }} 元。</p>
-        <p>
-          总共使用时长 {{ month_pay?.year_used_duration }} 分钟，约合
-          {{ min2hour(month_pay?.year_used_duration) }} 小时，{{
-            min2day(month_pay?.year_used_duration)
-          }}
-          天（不同设备使用时长会叠加）。
-        </p>
-        <p>
-          总共使用流量 {{ month_pay?.year_used_flow }} MB，约合
-          {{ mb2gb(month_pay?.year_used_flow) }} GB。
-        </p>
-        <n-tabs type="segment" animated @update:value="handleUpdateValue" v-model:value="tabValue">
-          <n-tab-pane name="cost" tab="花费(元)"> </n-tab-pane>
-          <n-tab-pane name="flow" tab="流量(GB)"> </n-tab-pane>
-          <n-tab-pane name="duration" tab="使用时长(分钟)"> </n-tab-pane>
+        <n-card hoverable class="my-card">
+          <n-grid x-gap="12" :cols="3">
+            <n-gi>
+              <n-statistic label="总共花费">
+                {{ month_pay?.year_cost }} 元
+              </n-statistic>
+            </n-gi>
+            <n-gi>
+              <n-popover trigger="hover" placement="top-start">
+                <template #trigger>
+                  <n-statistic label="使用流量">
+                    {{ mb2gb(month_pay?.year_used_flow) }} GB
+                  </n-statistic>
+                </template>
+                {{ month_pay?.year_used_flow }} MB
+              </n-popover>
+            </n-gi>
+            <n-gi>
+              <n-popover trigger="hover" placement="top-start">
+                <template #trigger>
+                  <n-statistic label="使用时长">
+                    {{ min2hour(month_pay?.year_used_duration) }} 小时
+                  </n-statistic>
+                </template>
+                {{ month_pay?.year_used_duration }} 分钟，约合
+                {{ min2hour(month_pay?.year_used_duration) }} 小时，{{
+                  min2day(month_pay?.year_used_duration)
+                }}
+                天（不同设备使用时长会叠加）。
+              </n-popover>
+            </n-gi>
+          </n-grid>
+        </n-card>
+        <n-tabs
+          type="segment"
+          animated
+          @update:value="handleUpdateValue"
+          v-model:value="tabValue"
+        >
+          <n-tab-pane name="flow" tab="流量(GB)" style="padding: 0"> </n-tab-pane>
+          <n-tab-pane name="cost" tab="花费(元)" style="padding: 0"> </n-tab-pane>
+          <n-tab-pane name="duration" tab="使用时长(分钟)" style="padding: 0"> </n-tab-pane>
         </n-tabs>
         <YearlyChart
           :month="month_pay?.monthly_data.map((v) => v.month)"
           :data="chartData"
+          style="margin-top: 5px;"
         ></YearlyChart>
         <n-data-table
           :columns="monthly_columns"
@@ -156,5 +182,10 @@ const handleUpdateValue = (value: string) => {
 .container {
   overflow: auto;
   padding: 10px;
+}
+.my-card {
+  margin: 5px 0;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
 }
 </style>

@@ -176,10 +176,9 @@ const select_mb_or_gb = (value: string) => {
         type="month"
         clearable
         @update:value="get_monthly_user_log"
-        style="margin-bottom: 10px"
       />
-      <n-tabs type="segment" animated>
-        <n-tab-pane name="calender" tab="日历">
+      <n-tabs type="segment" animated style="margin-top: 5px">
+        <n-tab-pane name="calender" tab="日历" style="padding-top: 8px">
           <n-grid :x-gap="12" :y-gap="8" :cols="7" :key="refresh">
             <n-grid-item class="gray"><p>日</p></n-grid-item>
             <n-grid-item class="gray"><p>一</p></n-grid-item>
@@ -194,7 +193,6 @@ const select_mb_or_gb = (value: string) => {
               class="gray"
             >
             </n-grid-item>
-
             <n-grid-item
               v-for="(item, index) in monthly_user_log"
               :key="index"
@@ -239,37 +237,40 @@ const select_mb_or_gb = (value: string) => {
               </n-popover>
             </n-grid-item>
           </n-grid>
-          <p>在使用概览上的东西选择：</p>
-          <n-space>
-            <n-select
-              v-model:value="select_show_value"
-              :options="select_show_options"
-              style="width: 60vw"
-            />
-            <n-switch
-              v-model:value="mb_gb_select"
-              :rail-style="railStyle"
-              class="my-switch"
-              style="margin-top: calc((34px - 22px) / 2)"
-            >
-              <template #checked> MB </template>
-              <template #unchecked> GB </template>
-            </n-switch></n-space
-          >
+          <n-grid x-gap="12" :cols="4" style="margin-top: 8px;">
+            <n-gi><n-p style="line-height: 34px;">选择显示在日历上的内容：</n-p></n-gi>
+            <n-gi span="2"
+              ><n-select
+                v-model:value="select_show_value"
+                :options="select_show_options"
+            /></n-gi>
+            <n-gi>
+              <n-switch
+                v-model:value="mb_gb_select"
+                :rail-style="railStyle"
+                class="my-switch"
+                style="margin-top: calc((34px - 22px) / 2)"
+              >
+                <template #checked> MB </template>
+                <template #unchecked> GB </template>
+              </n-switch>
+            </n-gi>
+          </n-grid>
         </n-tab-pane>
-        <n-tab-pane name="chart" tab="折线图">
+        <n-tab-pane name="chart" tab="折线图" style="padding-top: 8px">
           <MonthlyChart :monthly_user_log="monthly_user_log"></MonthlyChart>
         </n-tab-pane>
       </n-tabs>
-
-      <p>关于统计信息：</p>
+      <n-card title="关于统计信息：" hoverable class="my-card">
       <p>这里统计的每日情况与校园网后台一致，以下线时间为准。</p>
       <p>
         例如：你的手机连接了Wi-Fi，没断过，从第一天晚上8点用到了第二天凌晨4点，一共用了流量2GB，才断网，那么校园网后台才会统计一次信息，此时这2GB流量是算在第二天的。
       </p>
       <p>
         所以，这里的使用情况仅供参考，如果你每天都能在24点前断网，那么它也可能是准确的。
-      </p>
+      </p>  
+      </n-card>
+      
     </div>
   </n-scrollbar>
 </template>
@@ -288,5 +289,10 @@ const select_mb_or_gb = (value: string) => {
 .day {
   height: 50px;
   border-radius: 5px;
+}
+.my-card {
+  margin: 10px 0;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
 }
 </style>

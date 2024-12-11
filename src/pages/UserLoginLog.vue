@@ -144,14 +144,18 @@ const mb2gb = (mb: number | undefined) => {
       <n-h2 prefix="bar" type="success" style="margin-top: 15px">
         <n-text type="success"> 每日使用详情 </n-text>
       </n-h2>
+      <n-grid x-gap="12" :cols="6">
+    <n-gi>
       <n-switch
         v-model:value="the_switch"
         :rail-style="railStyle"
-        style="margin-bottom: 10px"
+        style="margin-top: 6px;"
       >
         <template #checked> 选很多天 </template>
         <template #unchecked> 选一天 </template>
       </n-switch>
+    </n-gi>
+    <n-gi span="5">
       <n-date-picker
         v-model:value="date_range"
         type="daterange"
@@ -166,6 +170,8 @@ const mb2gb = (mb: number | undefined) => {
         @update:value="get_user_login_log"
         v-else
       />
+    </n-gi>
+  </n-grid>
       <div v-if="user_login_log !== null" class="show-data">
         <n-thing title="该段时间" content-style="margin-top: 10px;">
           <template #description>

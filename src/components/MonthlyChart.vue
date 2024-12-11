@@ -174,7 +174,7 @@ function renderChart(monthly_user_log: Array<EveryLoginData>) {
 
 <style scoped>
 #chart {
-  height: 70vh;
+  height: 65vh;
   width: 100%;
   background-color: rgba(255, 255, 255, 0.3);
   border-radius: 4px;
