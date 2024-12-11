@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    Chart: typeof import('./src/components/chart.vue')['default']
     Greet: typeof import('./src/components/Greet.vue')['default']
     Menu: typeof import('./src/components/Menu.vue')['default']
     NButton: typeof import('naive-ui')['NButton']
@@ -46,6 +47,8 @@ declare module 'vue' {
     NStatistic: typeof import('naive-ui')['NStatistic']
     NSwitch: typeof import('naive-ui')['NSwitch']
     NTable: typeof import('naive-ui')['NTable']
+    NTabPane: typeof import('naive-ui')['NTabPane']
+    NTabs: typeof import('naive-ui')['NTabs']
     NTag: typeof import('naive-ui')['NTag']
     NText: typeof import('naive-ui')['NText']
     NThing: typeof import('naive-ui')['NThing']

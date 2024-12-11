@@ -5,6 +5,7 @@ import { EveryLoginData } from "./UserLoginLog.vue";
 import { useLoadingBar, useMessage } from "naive-ui";
 import { railStyle, mb2gb, min2hour } from "../helper";
 import dayjs from "dayjs";
+import Chart from "../components/chart.vue";
 
 const pop_message = useMessage();
 const monthly_user_log = ref<Array<EveryLoginData>>([]);
@@ -162,6 +163,7 @@ const select_mb_or_gb = (value: string) => {
     return mb2gb(parseFloat(value));
   }
 };
+
 </script>
 
 <template>
@@ -175,81 +177,92 @@ const select_mb_or_gb = (value: string) => {
         type="month"
         clearable
         @update:value="get_monthly_user_log"
+        style="margin-bottom: 10px"
       />
-      <br />
-      <n-grid :x-gap="12" :y-gap="8" :cols="7" :key="refresh">
-        <n-grid-item class="gray"><p>日</p></n-grid-item>
-        <n-grid-item class="gray"><p>一</p></n-grid-item>
-        <n-grid-item class="gray"><p>二</p></n-grid-item>
-        <n-grid-item class="gray"><p>三</p></n-grid-item>
-        <n-grid-item class="gray"><p>四</p></n-grid-item>
-        <n-grid-item class="gray"><p>五</p></n-grid-item>
-        <n-grid-item class="gray"><p>六</p></n-grid-item>
-        <n-grid-item
-          v-for="(, index) in the_week_of_first_day"
-          :key="index"
-          class="gray"
-        >
-        </n-grid-item>
+      <n-tabs type="segment" animated>
+        <n-tab-pane name="calender" tab="日历">
+          <n-grid :x-gap="12" :y-gap="8" :cols="7" :key="refresh">
+            <n-grid-item class="gray"><p>日</p></n-grid-item>
+            <n-grid-item class="gray"><p>一</p></n-grid-item>
+            <n-grid-item class="gray"><p>二</p></n-grid-item>
+            <n-grid-item class="gray"><p>三</p></n-grid-item>
+            <n-grid-item class="gray"><p>四</p></n-grid-item>
+            <n-grid-item class="gray"><p>五</p></n-grid-item>
+            <n-grid-item class="gray"><p>六</p></n-grid-item>
+            <n-grid-item
+              v-for="(, index) in the_week_of_first_day"
+              :key="index"
+              class="gray"
+            >
+            </n-grid-item>
 
-        <n-grid-item
-          v-for="(item, index) in monthly_user_log"
-          :key="index"
-          class="day"
-          :style="{
-            backgroundColor: getBackgroundColor(select_to_data(item)),
-          }"
-          ><n-popover trigger="hover">
-            <template #trigger>
-              <p style="margin: 3px; line-height: 1.5em; white-space: nowrap">
-                <b>{{ index + 1 }}日</b><br />
-                {{ select_mb_or_gb(select_to_data(item)) }} {{ data_type() }}
-              </p>
-            </template>
-            <n-table :bordered="false" :single-line="false">
-              <thead>
-                <tr>
-                  <th>ipv4 ⬇</th>
-                  <th>ipv4 ⬆</th>
-                  <th>ipv6 ⬇</th>
-                  <th>ipv6 ⬆</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>{{ mb2gb(item.ipv4_down) }} GB</td>
-                  <td>{{ mb2gb(item.ipv4_up) }} GB</td>
-                  <td>{{ mb2gb(item.ipv6_down) }} GB</td>
-                  <td>{{ mb2gb(item.ipv6_up) }} GB</td>
-                </tr>
-                <tr>
-                  <td>花费:</td>
-                  <td>{{ item.cost.toFixed(2) }} 元</td>
-                  <td>使用时长:</td>
-                  <td>{{ min2hour(item.used_duration) }} h</td>
-                </tr>
-              </tbody>
-            </n-table>
-          </n-popover>
-        </n-grid-item>
-      </n-grid>
-      <p>在使用概览上的东西选择：</p>
-      <n-space>
-        <n-select
-          v-model:value="select_show_value"
-          :options="select_show_options"
-          style="width: 60vw"
-        />
-        <n-switch
-          v-model:value="mb_gb_select"
-          :rail-style="railStyle"
-          class="my-switch"
-          style="margin-top: calc((34px - 22px) / 2)"
-        >
-          <template #checked> MB </template>
-          <template #unchecked> GB </template>
-        </n-switch></n-space
-      >
+            <n-grid-item
+              v-for="(item, index) in monthly_user_log"
+              :key="index"
+              class="day"
+              :style="{
+                backgroundColor: getBackgroundColor(select_to_data(item)),
+              }"
+              ><n-popover trigger="hover">
+                <template #trigger>
+                  <p
+                    style="margin: 3px; line-height: 1.5em; white-space: nowrap"
+                  >
+                    <b>{{ index + 1 }}日</b><br />
+                    {{ select_mb_or_gb(select_to_data(item)) }}
+                    {{ data_type() }}
+                  </p>
+                </template>
+                <n-table :bordered="false" :single-line="false">
+                  <thead>
+                    <tr>
+                      <th>ipv4 ⬇</th>
+                      <th>ipv4 ⬆</th>
+                      <th>ipv6 ⬇</th>
+                      <th>ipv6 ⬆</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>{{ mb2gb(item.ipv4_down) }} GB</td>
+                      <td>{{ mb2gb(item.ipv4_up) }} GB</td>
+                      <td>{{ mb2gb(item.ipv6_down) }} GB</td>
+                      <td>{{ mb2gb(item.ipv6_up) }} GB</td>
+                    </tr>
+                    <tr>
+                      <td>花费:</td>
+                      <td>{{ item.cost.toFixed(2) }} 元</td>
+                      <td>使用时长:</td>
+                      <td>{{ min2hour(item.used_duration) }} h</td>
+                    </tr>
+                  </tbody>
+                </n-table>
+              </n-popover>
+            </n-grid-item>
+          </n-grid>
+          <p>在使用概览上的东西选择：</p>
+          <n-space>
+            <n-select
+              v-model:value="select_show_value"
+              :options="select_show_options"
+              style="width: 60vw"
+            />
+            <n-switch
+              v-model:value="mb_gb_select"
+              :rail-style="railStyle"
+              class="my-switch"
+              style="margin-top: calc((34px - 22px) / 2)"
+            >
+              <template #checked> MB </template>
+              <template #unchecked> GB </template>
+            </n-switch></n-space
+          >
+        </n-tab-pane>
+        <n-tab-pane name="chart" tab="折线图">
+          <Chart :monthly_user_log="monthly_user_log"></Chart>
+        </n-tab-pane>
+      </n-tabs>
+
       <p>关于统计信息：</p>
       <p>这里统计的每日情况与校园网后台一致，以下线时间为准。</p>
       <p>
