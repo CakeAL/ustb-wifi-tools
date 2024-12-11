@@ -5,7 +5,7 @@ import { EveryLoginData } from "./UserLoginLog.vue";
 import { useLoadingBar, useMessage } from "naive-ui";
 import { railStyle, mb2gb, min2hour } from "../helper";
 import dayjs from "dayjs";
-import Chart from "../components/chart.vue";
+import MonthlyChart from "../components/MonthlyChart.vue";
 
 const pop_message = useMessage();
 const monthly_user_log = ref<Array<EveryLoginData>>([]);
@@ -163,7 +163,6 @@ const select_mb_or_gb = (value: string) => {
     return mb2gb(parseFloat(value));
   }
 };
-
 </script>
 
 <template>
@@ -259,7 +258,7 @@ const select_mb_or_gb = (value: string) => {
           >
         </n-tab-pane>
         <n-tab-pane name="chart" tab="折线图">
-          <Chart :monthly_user_log="monthly_user_log"></Chart>
+          <MonthlyChart :monthly_user_log="monthly_user_log"></MonthlyChart>
         </n-tab-pane>
       </n-tabs>
 

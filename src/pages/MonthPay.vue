@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { onMounted, ref } from "vue";
 import { useLoadingBar, useMessage } from "naive-ui";
 import { mb2gb, min2day, min2hour } from "../helper";
+import YearlyChart from "../components/YearlyChart.vue";
 
 interface MonthlyData {
   month: number;
@@ -65,7 +66,7 @@ const monthly_columns = [
 ];
 
 onMounted(() => {
-  load_month_pay();
+  load_month_pay().then(() => handleUpdateValue("cost"));
 });
 
 const load_month_pay = async () => {
@@ -81,6 +82,30 @@ const load_month_pay = async () => {
   month_pay.value = JSON.parse(res as string);
   // console.log(month_pay.value);
   loadingBar.finish();
+  handleUpdateValue(tabValue.value);
+};
+
+const chartData = ref<Array<number>>([]);
+const tabValue = ref("cost");
+
+const handleUpdateValue = (value: string) => {  
+  switch (value) {
+    case "cost":      
+      chartData.value = month_pay?.value?.monthly_data.map(
+        (v) => v.month_cost
+      ) as Array<number>;
+      return true;
+    case "flow":
+      chartData.value = month_pay?.value?.monthly_data.map(
+        (v) => mb2gb(v.month_used_flow)
+      ) as Array<number>;
+      return true;
+    case "duration":
+      chartData.value = month_pay?.value?.monthly_data.map(
+        (v) => v.month_used_duration
+      ) as Array<number>;
+      return true;
+  }
 };
 </script>
 
@@ -109,9 +134,19 @@ const load_month_pay = async () => {
           总共使用流量 {{ month_pay?.year_used_flow }} MB，约合
           {{ mb2gb(month_pay?.year_used_flow) }} GB。
         </p>
+        <n-tabs type="segment" animated @update:value="handleUpdateValue" v-model:value="tabValue">
+          <n-tab-pane name="cost" tab="花费(元)"> </n-tab-pane>
+          <n-tab-pane name="flow" tab="流量(GB)"> </n-tab-pane>
+          <n-tab-pane name="duration" tab="使用时长(分钟)"> </n-tab-pane>
+        </n-tabs>
+        <YearlyChart
+          :month="month_pay?.monthly_data.map((v) => v.month)"
+          :data="chartData"
+        ></YearlyChart>
         <n-data-table
           :columns="monthly_columns"
           :data="month_pay?.monthly_data"
+          style="margin-top: 12px"
         />
       </div></div
   ></n-scrollbar>

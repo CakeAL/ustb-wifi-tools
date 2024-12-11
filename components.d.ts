@@ -8,8 +8,10 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Chart: typeof import('./src/components/chart.vue')['default']
+    copy: typeof import('./src/components/MonthlyChart copy.vue')['default']
     Greet: typeof import('./src/components/Greet.vue')['default']
     Menu: typeof import('./src/components/Menu.vue')['default']
+    MonthlyChart: typeof import('./src/components/MonthlyChart.vue')['default']
     NButton: typeof import('naive-ui')['NButton']
     NCard: typeof import('naive-ui')['NCard']
     NCheckbox: typeof import('naive-ui')['NCheckbox']
@@ -52,5 +54,6 @@ declare module 'vue' {
     NTag: typeof import('naive-ui')['NTag']
     NText: typeof import('naive-ui')['NText']
     NThing: typeof import('naive-ui')['NThing']
+    YearlyChart: typeof import('./src/components/YearlyChart.vue')['default']
   }
 }

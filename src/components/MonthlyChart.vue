@@ -1,43 +1,7 @@
 <script setup lang="ts">
-// 折线图
-import * as echarts from "echarts/core";
-import {
-  TitleComponent,
-  TitleComponentOption,
-  ToolboxComponent,
-  ToolboxComponentOption,
-  TooltipComponent,
-  TooltipComponentOption,
-  GridComponent,
-  GridComponentOption,
-  LegendComponent,
-  LegendComponentOption,
-} from "echarts/components";
-import { LineChart, LineSeriesOption } from "echarts/charts";
-import { UniversalTransition } from "echarts/features";
-import { CanvasRenderer } from "echarts/renderers";
 import { onMounted, watch } from "vue";
 import { EveryLoginData } from "../pages/UserLoginLog.vue";
-
-echarts.use([
-  TitleComponent,
-  ToolboxComponent,
-  TooltipComponent,
-  GridComponent,
-  LegendComponent,
-  LineChart,
-  CanvasRenderer,
-  UniversalTransition,
-]);
-
-type EChartsOption = echarts.ComposeOption<
-  | TitleComponentOption
-  | ToolboxComponentOption
-  | TooltipComponentOption
-  | GridComponentOption
-  | LegendComponentOption
-  | LineSeriesOption
->;
+import { echarts, EChartsOption } from "../main";
 
 const props = defineProps({
   monthly_user_log: Array<EveryLoginData>,
@@ -50,16 +14,9 @@ const label = {
 };
 
 onMounted(() => {
-  fetch("/macarons.json")
-    .then((r) => r.json())
-    .then((theme) => {
-      echarts.registerTheme("macarons", theme);
-    })
-    .then(() => {
-      if (props.monthly_user_log) {
-        renderChart(props.monthly_user_log);
-      }
-    });
+  if (props.monthly_user_log) {
+    renderChart(props.monthly_user_log);
+  }
 });
 
 watch(
