@@ -9,6 +9,8 @@
 
 [关于校园网 V6 网络的相关解答和讨论](https://github.com/CakeAL/ustb-wifi-tools/discussions/6)
 
+[图标设计来自：appicon-forge](https://github.com/zhangyu1818/appicon-forge)
+
 ## 已有功能
 
 - [x] 自动化登录校园网后台（或通过 WebVPN ），并获取 jsession ID
@@ -28,10 +30,10 @@
 - [x] 迁移框架版本至 Tauri 2
 - [x] 更新提醒 
 - [x] 前端页面美化
-- [ ] 前端加入图表展示，更加直观
+- [x] 前端加入图表展示，更加直观
+- [x] 设计应用图标，现在的图标是 Tauri 默认的
 - [ ] 密码输入错误超过 3 次之后显示验证码（懒得搞，输错3次密码自己等半小时。）
 - [ ] 给应用签名（苹果要钱，不签了）
-- [ ] 设计应用图标，现在的图标是 Tauri 默认的
 
 ## 下载链接
 
@@ -52,6 +54,9 @@
 ![](pics/image2.png)
 ![](pics/image3.png)
 ![](pics/image4.png)
+![](pics/image5.png)
+![](pics/image6.png)
+![](pics/image7.png)
 
 ## 开发
 
