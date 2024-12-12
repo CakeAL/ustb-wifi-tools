@@ -139,97 +139,91 @@ const mb2gb = (mb: number | undefined) => {
 </script>
 
 <template>
-  <n-scrollbar x-scrollable style="max-height: 100vh">
-    <div class="container">
-      <n-h2 prefix="bar" type="success" style="margin-top: 15px">
-        <n-text type="success"> 每日使用详情 </n-text>
-      </n-h2>
-      <n-grid x-gap="12" :cols="6">
-    <n-gi>
-      <n-switch
-        v-model:value="the_switch"
-        :rail-style="railStyle"
-        style="margin-top: 6px;"
-      >
-        <template #checked> 选很多天 </template>
-        <template #unchecked> 选一天 </template>
-      </n-switch>
-    </n-gi>
-    <n-gi span="5">
-      <n-date-picker
-        v-model:value="date_range"
-        type="daterange"
-        clearable
-        @update:value="get_user_login_log"
-        v-if="the_switch === true"
-      />
-      <n-date-picker
-        v-model:value="a_date"
-        type="date"
-        clearable
-        @update:value="get_user_login_log"
-        v-else
-      />
-    </n-gi>
-  </n-grid>
-      <div v-if="user_login_log !== null" class="show-data">
-        <n-thing title="该段时间" content-style="margin-top: 10px;">
-          <template #description>
-            <n-table
-              :bordered="false"
-              :single-line="false"
-              striped
-              class="thistime"
-            >
-              <thead>
-                <tr>
-                  <th>ipv4 ⬇</th>
-                  <th>ipv4 ⬆</th>
-                  <th>ipv6 ⬇</th>
-                  <th>ipv6 ⬆</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>{{ mb2gb(user_login_log?.ipv4_down) }} GB</td>
-                  <td>{{ mb2gb(user_login_log?.ipv4_up) }} GB</td>
-                  <td>{{ mb2gb(user_login_log?.ipv6_down) }} GB</td>
-                  <td>{{ mb2gb(user_login_log?.ipv6_up) }} GB</td>
-                </tr>
-                <tr>
-                  <td>💰 花费:</td>
-                  <td>🕙 使用时长:</td>
-                  <td>🛜 消耗流量:</td>
-                  <td></td>
-                </tr>
-                <tr>
-                  <td>{{ user_login_log?.cost.toFixed(2) }} 元</td>
-                  <td>{{ min2hour(user_login_log?.used_duration) }} h</td>
-                  <td>{{ user_login_log?.used_flow }} MB</td>
-                  <td></td>
-                </tr>
-              </tbody>
-            </n-table>
-          </template>
-        </n-thing>
-        <br />
-        <n-data-table
-          :columns="columns"
-          :data="user_login_log?.every_login_data"
-          :bordered="false"
-          :max-height="600"
+  <div class="container">
+    <n-h2 prefix="bar" type="success" style="margin-top: 15px">
+      <n-text type="success"> 每日使用详情 </n-text>
+    </n-h2>
+    <n-grid x-gap="12" :cols="6">
+      <n-gi>
+        <n-switch
+          v-model:value="the_switch"
+          :rail-style="railStyle"
+          style="margin-top: 6px"
+        >
+          <template #checked> 选很多天 </template>
+          <template #unchecked> 选一天 </template>
+        </n-switch>
+      </n-gi>
+      <n-gi span="5">
+        <n-date-picker
+          v-model:value="date_range"
+          type="daterange"
+          clearable
+          @update:value="get_user_login_log"
+          v-if="the_switch === true"
         />
-      </div>
+        <n-date-picker
+          v-model:value="a_date"
+          type="date"
+          clearable
+          @update:value="get_user_login_log"
+          v-else
+        />
+      </n-gi>
+    </n-grid>
+    <div v-if="user_login_log !== null" class="show-data">
+      <n-thing title="该段时间" content-style="margin-top: 10px;">
+        <template #description>
+          <n-table
+            :bordered="false"
+            :single-line="false"
+            striped
+            class="thistime"
+          >
+            <thead>
+              <tr>
+                <th>ipv4 ⬇</th>
+                <th>ipv4 ⬆</th>
+                <th>ipv6 ⬇</th>
+                <th>ipv6 ⬆</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{{ mb2gb(user_login_log?.ipv4_down) }} GB</td>
+                <td>{{ mb2gb(user_login_log?.ipv4_up) }} GB</td>
+                <td>{{ mb2gb(user_login_log?.ipv6_down) }} GB</td>
+                <td>{{ mb2gb(user_login_log?.ipv6_up) }} GB</td>
+              </tr>
+              <tr>
+                <td>💰 花费:</td>
+                <td>🕙 使用时长:</td>
+                <td>🛜 消耗流量:</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>{{ user_login_log?.cost.toFixed(2) }} 元</td>
+                <td>{{ min2hour(user_login_log?.used_duration) }} h</td>
+                <td>{{ user_login_log?.used_flow }} MB</td>
+                <td></td>
+              </tr>
+            </tbody>
+          </n-table>
+        </template>
+      </n-thing>
       <br />
+      <n-data-table
+        :columns="columns"
+        :data="user_login_log?.every_login_data"
+        :bordered="false"
+        :max-height="600"
+      />
     </div>
-  </n-scrollbar>
+    <br />
+  </div>
 </template>
 
 <style scoped>
-.container {
-  overflow: auto;
-  padding: 10px;
-}
 .show-data {
   margin-top: 10px;
 }

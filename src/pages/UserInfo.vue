@@ -114,7 +114,7 @@ const progress_color = computed(() => {
 </script>
 
 <template>
-  <div class="container" v-if="account_info !== null">
+  <div v-if="account_info !== null">
     <n-h2 prefix="bar" type="success" style="margin-top: 15px">
       <n-text type="success"> 当前账号使用详情 </n-text>
     </n-h2>
@@ -203,10 +203,6 @@ const progress_color = computed(() => {
 </template>
 
 <style scoped>
-.container {
-  overflow: auto;
-  padding: 10px;
-}
 .my-progress {
   float: right;
   margin: 10px 5px;

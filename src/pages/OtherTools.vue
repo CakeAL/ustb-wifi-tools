@@ -58,56 +58,50 @@ const open_webvpn = async () => {
 </script>
 
 <template>
-  <n-scrollbar style="max-height: 100vh">
-    <div class="container">
-      <n-h2 prefix="bar" type="success" style="margin-top: 15px">
-        <n-text type="success"> 其他小工具 </n-text>
-      </n-h2>
-      <n-card title="查一下别人当月流量" hoverable class="my-card">
-        <p>如果你不在校园网，应先登录为“我不在校园网”模式。</p>
-        <n-input
-          v-model:value="user_name"
-          type="text"
-          placeholder="学号/工号"
-          @blur="load_user_flow"
-          round
-        />
-        <template #footer v-if="account_flow">
-          这个人 ipv4 用了
-          {{ (account_flow.data.v4 / 1024).toFixed(2) }} GB，ipv6 用了
-          {{ (account_flow.data.v6 / 1024).toFixed(2) }} GB
-        </template>
-      </n-card>
-      <n-card title="查一下电费" hoverable class="my-card">
-        <n-input
-          v-model:value="ammeter_number"
-          type="text"
-          placeholder="电表号"
-          @blur="load_ammeter"
-          round
-        />
-        <template #footer v-if="ammeter_data">
-          还剩 {{ ammeter_data }} kW·h
-        </template>
-      </n-card>
-      <n-card title="WebVPN 转换" hoverable class="my-card">
-        <n-button strong secondary type="info" @click="open_webvpn">
-          点我跳转网页
-        </n-button>
-        <template #footer>
-          用来把一个链接转换成校内 elib/n.ustb.edu.cn
-          的网址，或者转换回来。以便于在校外轻松访问校内资源，或者在校内访问校外资源（🤔）。
-        </template>
-      </n-card>
-    </div>
-  </n-scrollbar>
+  <div class="container">
+    <n-h2 prefix="bar" type="success" style="margin-top: 15px">
+      <n-text type="success"> 其他小工具 </n-text>
+    </n-h2>
+    <n-card title="查一下别人当月流量" hoverable class="my-card">
+      <p>如果你不在校园网，应先登录为“我不在校园网”模式。</p>
+      <n-input
+        v-model:value="user_name"
+        type="text"
+        placeholder="学号/工号"
+        @blur="load_user_flow"
+        round
+      />
+      <template #footer v-if="account_flow">
+        这个人 ipv4 用了
+        {{ (account_flow.data.v4 / 1024).toFixed(2) }} GB，ipv6 用了
+        {{ (account_flow.data.v6 / 1024).toFixed(2) }} GB
+      </template>
+    </n-card>
+    <n-card title="查一下电费" hoverable class="my-card">
+      <n-input
+        v-model:value="ammeter_number"
+        type="text"
+        placeholder="电表号"
+        @blur="load_ammeter"
+        round
+      />
+      <template #footer v-if="ammeter_data">
+        还剩 {{ ammeter_data }} kW·h
+      </template>
+    </n-card>
+    <n-card title="WebVPN 转换" hoverable class="my-card">
+      <n-button strong secondary type="info" @click="open_webvpn">
+        点我跳转网页
+      </n-button>
+      <template #footer>
+        用来把一个链接转换成校内 elib/n.ustb.edu.cn
+        的网址，或者转换回来。以便于在校外轻松访问校内资源，或者在校内访问校外资源（🤔）。
+      </template>
+    </n-card>
+  </div>
 </template>
 
 <style scoped>
-.container {
-  overflow: auto;
-  padding: 10px;
-}
 .my-card {
   margin: 10px 5px;
   width: 98%;

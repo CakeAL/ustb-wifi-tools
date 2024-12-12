@@ -152,7 +152,11 @@ const collapse = async (value: boolean) => {
               <Menu :collapsed="collapsed"></Menu>
             </n-layout-sider>
             <n-layout>
-              <component :is="currentView" />
+              <n-scrollbar style="max-height: 100vh">
+              <Transition name="slide-up" mode="out-in">
+                <component :is="currentView" style="padding: 10px; scrollbar-width: 0;"/>
+              </Transition>
+              </n-scrollbar>
             </n-layout>
           </n-layout>
         </n-config-provider>
@@ -177,5 +181,14 @@ const collapse = async (value: boolean) => {
   left: 0;
   width: calc(100vw - 20px);
   padding: 10px;
+}
+
+.slide-up-enter-active {
+  transition: all 0.20s ease-out;
+}
+
+.slide-up-enter-from {
+  opacity: 0;
+  transform: translateY(150px);
 }
 </style>

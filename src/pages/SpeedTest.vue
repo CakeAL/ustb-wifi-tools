@@ -46,7 +46,7 @@ const load_ip_address = async () => {
 </script>
 
 <template>
-  <div class="container">
+  <div>
     <n-space vertical>
       <n-h2 prefix="bar" type="success" style="margin-top: 15px">
         <n-text type="success"> 测个速，不费校园网流量的 </n-text>
@@ -62,9 +62,4 @@ const load_ip_address = async () => {
   </div>
 </template>
 
-<style scoped>
-.container {
-  overflow: auto;
-  padding: 10px;
-}
-</style>
+<style scoped></style>
