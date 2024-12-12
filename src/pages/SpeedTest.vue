@@ -54,6 +54,47 @@ const copyToClipboard = async (str: string) => {
     })
     .catch((err) => pop_message.error(err));
 };
+
+interface IpResultData {
+  ip: string;
+  dec: string;
+  country: string;
+  countryCode: string;
+  province: string;
+  city: string;
+  districts: string;
+  idc: string;
+  isp: string;
+  net: string;
+  zipcode: string;
+  areacode: string;
+  protocol: string;
+  location: string;
+  myip: string;
+  time: string;
+}
+
+interface IpResult {
+  code: number;
+  msg: string;
+  data: IpResultData;
+}
+
+const ip_str = ref("");
+const ip_info = ref<IpResult | null>(null);
+const get_ip_location = async () => {
+  let res = await invoke<string>("get_ip_location", { ip: ip_str.value }).catch(
+    (err) => pop_message.error(err)
+  );
+  ip_info.value = JSON.parse(res as string);
+  if (ip_info.value?.code === -1) {
+    pop_message.error("未提交查询IP参数");
+  } else if (ip_info.value?.code === 201) {
+    pop_message.error("IP地址不正确或域名解析失败");
+  } else if (ip_info.value?.code === 202) {
+    pop_message.error("访问接口超过QPS限制15次/秒, 稍等再查询");
+  }
+};
 </script>
 
 <template>
@@ -85,6 +126,48 @@ const copyToClipboard = async (str: string) => {
         >
       </n-card>
     </n-spin>
+    <n-card title="查询 IP 归属地" hoverable class="my-card">
+      <n-p
+        >服务来自：<a href="https://api.mir6.com">https://api.mir6.com</a></n-p
+      >
+      <n-input
+        v-model:value="ip_str"
+        type="text"
+        placeholder="IPv4 或 IPv6 地址"
+        @blur="get_ip_location"
+        round
+      />
+      <n-grid x-gap="12" y-gap="4" :cols="4" v-if="ip_info" style="margin-top: 10px">
+        <n-gi class="my-gi"><n-text type="success"> IP地址</n-text></n-gi>
+        <n-gi class="my-gi">{{ ip_info.data.ip }}</n-gi>
+        <n-gi class="my-gi"><n-text type="success">国家</n-text></n-gi>
+        <n-gi class="my-gi">{{ ip_info.data.country }}</n-gi>
+        <n-gi class="my-gi"><n-text type="success">国家代码</n-text></n-gi>
+        <n-gi class="my-gi">{{ ip_info.data.countryCode }}</n-gi>
+        <n-gi class="my-gi"><n-text type="success">省份</n-text></n-gi>
+        <n-gi class="my-gi">{{ ip_info.data.province }}</n-gi>
+        <n-gi class="my-gi"><n-text type="success">城市</n-text></n-gi>
+        <n-gi class="my-gi">{{ ip_info.data.city }}</n-gi>
+        <n-gi class="my-gi"><n-text type="success">区县</n-text></n-gi>
+        <n-gi class="my-gi">{{ ip_info.data.districts || "无" }}</n-gi>
+        <n-gi class="my-gi"><n-text type="success">IDC服务提供商</n-text></n-gi>
+        <n-gi class="my-gi">{{ ip_info.data.idc }}</n-gi>
+        <n-gi class="my-gi"><n-text type="success">运营商</n-text></n-gi>
+        <n-gi class="my-gi">{{ ip_info.data.isp }}</n-gi>
+        <n-gi class="my-gi"><n-text type="success">网络类型</n-text></n-gi>
+        <n-gi class="my-gi">{{ ip_info.data.net }}</n-gi>
+        <n-gi class="my-gi"><n-text type="success">邮政编码</n-text></n-gi>
+        <n-gi class="my-gi">{{ ip_info.data.zipcode }}</n-gi>
+        <n-gi class="my-gi"><n-text type="success">区号</n-text></n-gi>
+        <n-gi class="my-gi">{{ ip_info.data.areacode }}</n-gi>
+        <n-gi class="my-gi"><n-text type="success">协议</n-text></n-gi>
+        <n-gi class="my-gi">{{ ip_info.data.protocol }}</n-gi>
+        <n-gi class="my-gi"><n-text type="success">归属地</n-text></n-gi>
+        <n-gi class="my-gi">{{ ip_info.data.location }}</n-gi>
+        <n-gi class="my-gi"><n-text type="success">此条数据更新时间</n-text></n-gi>
+        <n-gi class="my-gi">{{ ip_info.data.time }}</n-gi>
+      </n-grid>
+    </n-card>
   </div>
 </template>
 
@@ -93,5 +176,11 @@ const copyToClipboard = async (str: string) => {
   margin: 10px 0;
   width: 100%;
   background: rgba(255, 255, 255, 0.1);
+}
+.my-gi {
+  padding: 2px;
+  border: solid 1px rgba(255, 255, 255, 0.3);
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
 }
 </style>

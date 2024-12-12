@@ -59,6 +59,7 @@ pub fn run() {
             set_mac_custom_name,
             collapse,
             open_microsoft_login,
+            get_ip_location
         ])
         .setup(|app| {
             #[cfg(not(any(target_os = "android", target_os = "linux")))]

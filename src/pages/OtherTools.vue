@@ -89,10 +89,8 @@ const open_webvpn = async () => {
         还剩 {{ ammeter_data }} kW·h
       </template>
     </n-card>
-    <n-card title="WebVPN 转换" hoverable class="my-card">
-      <n-button strong secondary type="info" @click="open_webvpn">
-        点我跳转网页
-      </n-button>
+    <n-card title="WebVPN 转换" hoverable @click="open_webvpn" class="my-card">
+      <n-p>服务来自：Web VPN Converter，点击本卡片跳转。</n-p>
       <template #footer>
         用来把一个链接转换成校内 elib/n.ustb.edu.cn
         的网址，或者转换回来。以便于在校外轻松访问校内资源，或者在校内访问校外资源（🤔）。

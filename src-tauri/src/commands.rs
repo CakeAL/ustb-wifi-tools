@@ -1,4 +1,7 @@
+use std::net::IpAddr;
+
 use chrono::DateTime;
+use reqwest::Client;
 use tauri::{ipc::Channel, utils::config::WindowConfig, Manager};
 
 use crate::{
@@ -629,4 +632,21 @@ async fn update(
 pub fn collapse(app_state: tauri::State<'_, AppState>, app: tauri::AppHandle, value: bool) {
     app_state.setting.write().unwrap().set_collapsed(value);
     let _ = app_state.setting.write().unwrap().write_setting(&app);
+}
+
+#[tauri::command(async)]
+pub async fn get_ip_location(ip: String) -> Result<String, String> {
+    if let Err(e) = ip.parse::<IpAddr>() {
+        return Err(format!("IP 格式错误：{e:?}"));
+    }
+
+    let response = Client::new()
+        .get(format!("https://api.mir6.com/api/ip_json?ip={}", ip))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let text = response.text().await.map_err(|e| e.to_string())?;
+
+    Ok(text)
 }
