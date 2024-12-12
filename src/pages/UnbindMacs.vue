@@ -72,21 +72,16 @@ const set_mac_custom_name = async (mac: string, index: number) => {
     <n-h2 prefix="bar" type="success" style="margin-top: 15px">
       <n-text type="success"> 解绑 MAC 地址 </n-text>
     </n-h2>
-    <p>MAC Address是什么？简单来说校园网靠这个来识别是否是你的设备。</p>
-    <p>
-      所以随机MAC地址开启的话，就会导致你之前的设备被顶掉，详情可看B站视频：<a
-        @click="open('https://www.bilibili.com/video/av792486473/')"
-        style="
-          text-underline-offset: 5px;
-          text-decoration: underline;
-          cursor: pointer;
-        "
-        >BV1JC4y1S7WS</a
-      >
-      <!-- 点 bv 会打开 av 的网页🤔 -->
-    </p>
-    <p>当前机器的无线MAC地址是（仅供参考）：{{ this_mac }}</p>
-    <p>如果把该地址解绑会导致立刻断网。</p>
+    <n-card hoverable class="my-card">
+      <n-popover trigger="hover" placement="top-start">
+        <template #trigger>
+          <n-statistic label="当前设备无线 MAC 地址（仅供参考）">
+            {{ this_mac }}
+          </n-statistic>
+        </template>
+        如果把该地址解绑会导致立刻断网！其实就是注销登录罢了。
+      </n-popover>
+    </n-card>
     <div v-if="mac_addrs !== null" class="show-data">
       <n-table :bordered="false" :single-line="false">
         <thead>
@@ -116,15 +111,33 @@ const set_mac_custom_name = async (mac: string, index: number) => {
           </tr>
         </tbody>
       </n-table>
-      <br />
-      <n-button strong secondary type="info" @click="unbind">
+      <n-button
+        strong
+        secondary
+        type="info"
+        @click="unbind"
+        style="width: 100%; margin-top: 10px"
+      >
         确定解绑
       </n-button>
     </div>
-    <p>
-      校园网后台的设备名十有八九是获取不到的，但是现在可以自定义设备名啦。这样我们就可以标记我们认识的设备了，如果你知道它本机的MAC地址是什么的话。
-    </p>
-    <n-card hoverable>
+    <n-card title="说明" hoverable class="my-card">
+      <n-p>MAC Address是什么？简单来说校园网靠这个来识别是否是你的设备。</n-p>
+      <n-p>
+        所以随机MAC地址开启的话，就会导致你之前的设备被顶掉，详情可看B站视频：<a
+          @click="open('https://www.bilibili.com/video/av792486473/')"
+          style="
+            text-underline-offset: 5px;
+            text-decoration: underline;
+            cursor: pointer;
+          "
+          >BV1JC4y1S7WS</a
+        >
+        <!-- 点 bv 会打开 av 的网页🤔 -->
+      </n-p>
+      <n-p>
+        校园网后台（因为年久失修）的设备名十有八九是获取不到的，但是本软件提供了自定义设备名功能。这样我们就可以标记我们认识的设备了，并且配置文件可以通过 Onedrive 进行同步！如果你知道它本机的MAC地址是什么的话。
+      </n-p>
       <n-collapse>
         <n-collapse-item title="macOS / iOS 固定 MAC 地址方法" name="1">
           <div>
@@ -152,4 +165,10 @@ const set_mac_custom_name = async (mac: string, index: number) => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.my-card {
+  margin: 10px 0;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+}
+</style>

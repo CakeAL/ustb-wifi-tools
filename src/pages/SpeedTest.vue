@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/core";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { useMessage } from "naive-ui";
 import { ref, onMounted } from "vue";
 
@@ -15,6 +16,7 @@ const options = [
 ];
 const ipv4_address = ref<string>("");
 const ipv6_address = ref<string>("");
+const show = ref<boolean>(true);
 
 onMounted(() => {
   load_ip_address();
@@ -42,24 +44,54 @@ const load_ip_address = async () => {
   } else {
     ipv6_address.value = resp[1];
   }
+  show.value = false;
+};
+
+const copyToClipboard = async (str: string) => {
+  await writeText(str)
+    .then(() => {
+      pop_message.success("成功复制到剪切板");
+    })
+    .catch((err) => pop_message.error(err));
 };
 </script>
 
 <template>
   <div>
-    <n-space vertical>
-      <n-h2 prefix="bar" type="success" style="margin-top: 15px">
-        <n-text type="success"> 测个速，不费校园网流量的 </n-text>
-      </n-h2>
-      <n-select v-model:value="site_num" :options="options" />
-      <n-button strong secondary type="primary" @click="open_speed_test">
-        点我
-      </n-button>
-      <h3>当前您的公网地址是：</h3>
-      <p>ipv4: {{ ipv4_address }}</p>
-      <p>ipv6: {{ ipv6_address }}</p>
-    </n-space>
+    <n-h2 prefix="bar" type="success" style="margin-top: 15px">
+      <n-text type="success"> 测个速，不费校园网流量的 </n-text>
+    </n-h2>
+    <n-select v-model:value="site_num" :options="options" />
+    <n-button
+      strong
+      secondary
+      type="primary"
+      @click="open_speed_test"
+      style="width: 100%; margin-top: 10px"
+    >
+      点我
+    </n-button>
+    <n-spin :show="show">
+      <n-card
+        title="当前您的公网地址是（点击可复制）"
+        hoverable
+        class="my-card"
+      >
+        <n-h6 @click="copyToClipboard(ipv4_address)" style="cursor: pointer"
+          >IPv4: {{ ipv4_address }}</n-h6
+        >
+        <n-h6 @click="copyToClipboard(ipv6_address)" style="cursor: pointer"
+          >IPv6: {{ ipv6_address }}</n-h6
+        >
+      </n-card>
+    </n-spin>
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.my-card {
+  margin: 10px 0;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+}
+</style>

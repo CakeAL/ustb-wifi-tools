@@ -1,6 +1,6 @@
 [package]
 name = "ustb-wifi-tools"
-version = "0.9.1"
+version = "1.0.0"
 description = "A Tauri App that can be used to get information of the USTB Wifi"
 authors = ["CakeAL"]
 edition = "2021"
@@ -38,6 +38,7 @@ windows-version = "0.1.1"
 sha2 = "0.10.8"
 base64 = "0.22.1"
 zip = "2.2.1"
+tauri-plugin-clipboard-manager = "2.2.0"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

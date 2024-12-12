@@ -23,6 +23,7 @@
     "core:window:allow-start-dragging",
     "updater:default",
     "dialog:default",
-    "shell:default"
+    "shell:default",
+    "clipboard-manager:allow-write-text"
   ]
 }

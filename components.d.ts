@@ -7,8 +7,6 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    Chart: typeof import('./src/components/chart.vue')['default']
-    copy: typeof import('./src/components/MonthlyChart copy.vue')['default']
     Greet: typeof import('./src/components/Greet.vue')['default']
     Menu: typeof import('./src/components/Menu.vue')['default']
     MonthlyChart: typeof import('./src/components/MonthlyChart.vue')['default']
@@ -27,6 +25,7 @@ declare module 'vue' {
     NGridItem: typeof import('naive-ui')['NGridItem']
     NH2: typeof import('naive-ui')['NH2']
     NH3: typeof import('naive-ui')['NH3']
+    NH6: typeof import('naive-ui')['NH6']
     NIcon: typeof import('naive-ui')['NIcon']
     NImage: typeof import('naive-ui')['NImage']
     NInput: typeof import('naive-ui')['NInput']
@@ -47,6 +46,7 @@ declare module 'vue' {
     NSelect: typeof import('naive-ui')['NSelect']
     NSlider: typeof import('naive-ui')['NSlider']
     NSpace: typeof import('naive-ui')['NSpace']
+    NSpin: typeof import('naive-ui')['NSpin']
     NStatistic: typeof import('naive-ui')['NStatistic']
     NSwitch: typeof import('naive-ui')['NSwitch']
     NTable: typeof import('naive-ui')['NTable']

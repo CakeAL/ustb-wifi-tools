@@ -1,9 +1,9 @@
 pub mod commands;
 pub mod entities;
+pub mod onedrive;
 mod requests;
 pub mod setting;
 pub mod utils;
-pub mod onedrive;
 
 use std::sync::RwLock;
 
@@ -13,10 +13,10 @@ use crate::setting::Setting;
 use onedrive::open_microsoft_login;
 use tauri::Manager;
 
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut builder = tauri::Builder::new()
+        .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init());
     #[cfg(not(any(target_os = "android", target_os = "linux")))]
