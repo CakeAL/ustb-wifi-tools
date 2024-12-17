@@ -10,8 +10,13 @@ interface MacAddress {
   custom_name: string;
 }
 
+interface ThisMacAddress {
+  iface_name: String;
+  mac_address: String;
+}
+
 const pop_message = useMessage();
-const this_mac = ref<string>("");
+const this_mac = ref<Array<ThisMacAddress>>([]);
 const mac_addrs = ref<MacAddress[] | null>(null);
 const unbind_macs = ref<Array<boolean>>([]);
 const custom_names = ref<Array<string>>([]);
@@ -22,9 +27,12 @@ onMounted(() => {
 });
 
 const get_current_device_mac = async () => {
-  this_mac.value = (await invoke("get_current_device_mac").catch((err) =>
+  let res = (await invoke("get_current_device_mac").catch((err) =>
     pop_message.error(err)
   )) as string;
+  console.log(res);
+
+  this_mac.value = JSON.parse(res);
 };
 
 const load_mac_address = async () => {
@@ -72,16 +80,20 @@ const set_mac_custom_name = async (mac: string, index: number) => {
     <n-h2 prefix="bar" type="success" style="margin-top: 15px">
       <n-text type="success"> 解绑 MAC 地址 </n-text>
     </n-h2>
-    <n-card hoverable class="my-card">
-      <n-popover trigger="hover" placement="top-start">
-        <template #trigger>
+    <n-popover trigger="hover" placement="top-start">
+      <template #trigger>
+        <n-card hoverable class="my-card">
           <n-statistic label="当前设备无线 MAC 地址（仅供参考）">
-            {{ this_mac }}
+            <span v-for="(mac, index) in this_mac" :key="index"
+              >{{ mac.iface_name }}: {{ mac.mac_address }}</span
+            ><br />
           </n-statistic>
-        </template>
-        如果把该地址解绑会导致立刻断网！其实就是注销登录罢了。
-      </n-popover>
-    </n-card>
+        </n-card>
+      </template>
+      如果把该地址解绑会导致立刻断网！其实就是注销登录罢了。<br/>
+      最前面的是网络接口，如果你的电脑有多个网卡。<br/>
+      一般来说，Windows 设备上 "Wi-Fi"，macOS 设备上 "en0" 是无线网卡的接口。
+    </n-popover>
     <div v-if="mac_addrs !== null" class="show-data">
       <n-table :bordered="false" :single-line="false">
         <thead>
@@ -136,7 +148,8 @@ const set_mac_custom_name = async (mac: string, index: number) => {
         <!-- 点 bv 会打开 av 的网页🤔 -->
       </n-p>
       <n-p>
-        校园网后台（因为年久失修）的设备名十有八九是获取不到的，但是本软件提供了自定义设备名功能。这样我们就可以标记我们认识的设备了，并且配置文件可以通过 Onedrive 进行同步！如果你知道它本机的MAC地址是什么的话。
+        校园网后台（因为年久失修）的设备名十有八九是获取不到的，但是本软件提供了自定义设备名功能。这样我们就可以标记我们认识的设备了，并且配置文件可以通过
+        Onedrive 进行同步！如果你知道它本机的MAC地址是什么的话。
       </n-p>
       <n-collapse>
         <n-collapse-item title="macOS / iOS 固定 MAC 地址方法" name="1">

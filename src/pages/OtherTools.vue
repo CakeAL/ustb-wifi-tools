@@ -103,6 +103,6 @@ const open_webvpn = async () => {
 .my-card {
   margin: 10px 5px;
   width: 98%;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
 }
 </style>

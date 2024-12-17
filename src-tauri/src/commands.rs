@@ -2,6 +2,7 @@ use std::net::IpAddr;
 
 use chrono::DateTime;
 use reqwest::Client;
+use serde::Serialize;
 use tauri::{ipc::Channel, utils::config::WindowConfig, Manager};
 
 use crate::{
@@ -278,17 +279,35 @@ pub async fn set_mac_custom_name(
         .map_err(|e| e.to_string())
 }
 
+#[derive(Debug, Serialize)]
+struct MacAddress {
+    iface_name: String,
+    mac_address: String,
+}
+
 #[tauri::command]
 pub fn get_current_device_mac() -> Result<String, String> {
-    match std::env::consts::OS {
-        "windows" => mac_address::mac_address_by_name("WLAN")
-            .map_err(|e| format!("获取 MAC 地址错误: {}", e))
-            .map(|mac_address| mac_address.unwrap_or_default().to_string()),
-        "macos" => mac_address::mac_address_by_name("en0")
-            .map_err(|e| format!("获取 MAC 地址错误: {}", e))
-            .map(|mac_address| mac_address.unwrap_or_default().to_string()),
-        _ => Ok("不支持当前系统获取 MAC 地址".to_string()),
-    }
+    use if_addrs::Interface;
+    let ifaces = if_addrs::get_if_addrs()
+        .map_err(|e| e.to_string())?
+        .into_iter()
+        .filter_map(|iface| match iface.addr {
+            if_addrs::IfAddr::V4(_) if !iface.is_loopback() => Some(iface),
+            _ => None,
+        })
+        .collect::<Vec<Interface>>();
+
+    let macs: Vec<MacAddress> = ifaces
+        .into_iter()
+        .map(|iface| MacAddress {
+            iface_name: iface.name.clone(),
+            mac_address: mac_address::mac_address_by_name(&iface.name)
+                .unwrap_or_default()
+                .unwrap_or_default()
+                .to_string().replace(':', ""),
+        })
+        .collect();
+    Ok(serde_json::json!(macs).to_string())
 }
 
 // 传进来的应该是不需要解绑的，提醒。
