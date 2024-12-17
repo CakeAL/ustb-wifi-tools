@@ -85,14 +85,14 @@ const set_mac_custom_name = async (mac: string, index: number) => {
         <n-card hoverable class="my-card">
           <n-statistic label="当前设备无线 MAC 地址（仅供参考）">
             <span v-for="(mac, index) in this_mac" :key="index"
-              >{{ mac.iface_name }}: {{ mac.mac_address }}</span
-            ><br />
+              >{{ mac.iface_name }}: {{ mac.mac_address }}<br /></span
+            >
           </n-statistic>
         </n-card>
       </template>
       如果把该地址解绑会导致立刻断网！其实就是注销登录罢了。<br/>
       最前面的是网络接口，如果你的电脑有多个网卡。<br/>
-      一般来说，Windows 设备上 "Wi-Fi"，macOS 设备上 "en0" 是无线网卡的接口。
+      一般来说，Windows 设备上 "WLAN"，macOS 设备上 "en0" 是无线网卡的接口。
     </n-popover>
     <div v-if="mac_addrs !== null" class="show-data">
       <n-table :bordered="false" :single-line="false">

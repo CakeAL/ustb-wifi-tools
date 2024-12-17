@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { useMessage } from "naive-ui";
 import { ref, onMounted } from "vue";
+import { open } from "@tauri-apps/plugin-shell";
 
 const pop_message = useMessage();
 const site_num = ref<number>(1);
@@ -128,7 +129,15 @@ const get_ip_location = async () => {
     </n-spin>
     <n-card title="查询 IP 归属地" hoverable class="my-card">
       <n-p
-        >服务来自：<a href="https://api.mir6.com">https://api.mir6.com</a></n-p
+        >服务来自：<a
+          @click="open('https://api.mir6.com')"
+          style="
+            text-underline-offset: 5px;
+            text-decoration: underline;
+            cursor: pointer;
+          "
+          >https://api.mir6.com</a
+        ></n-p
       >
       <n-input
         v-model:value="ip_str"
