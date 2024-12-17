@@ -23,14 +23,20 @@ pub async fn open_microsoft_login(app_handle: tauri::AppHandle) -> Result<(), St
         "{}&code_challenge={}&code_challenge_method=S256&redirect_uri=https%3A%2F%2Flogin.microsoftonline.com%2Fcommon%2Foauth2%2Fnativeclient",
         url, code_challenge
     );
-    WebviewWindow::builder(
-        &app_handle.clone(),
+    let app_handle = app_handle.clone();
+    let mut win = WebviewWindow::builder(
+        &app_handle,
         "Onedrive",
         tauri::WebviewUrl::External(url.parse().unwrap()),
-    )
-    .inner_size(480.0, 670.0)
-    .title("Onedrive 登录")
-    .on_navigation(move |url| {
+    );
+
+    #[cfg(not(target_os = "android"))]
+    {
+        win = win.inner_size(480.0, 670.0).title("Onedrive 登录");
+    }
+
+    let app_handle = app_handle.clone();
+    win.on_navigation(move |url| {
         dbg!(url.path());
         if url.path() == "/common/oauth2/nativeclient" {
             let pair = url.query_pairs().next().unwrap();
@@ -64,7 +70,12 @@ async fn code_to_access_token(app_handle: tauri::AppHandle, code: String) -> Res
     let window = app_handle
         .get_webview_window("Onedrive")
         .ok_or("?".to_string())?;
-    let _ = window.hide();
+
+    #[cfg(not(target_os = "android"))]
+    {
+        let _ = window.hide();
+    }
+
     let code_verifier = app_handle
         .state::<AppState>()
         .onedrive_code_verifier
@@ -79,7 +90,10 @@ async fn code_to_access_token(app_handle: tauri::AppHandle, code: String) -> Res
         // .header("Origin", "https://login.microsoftonline.com/common/oauth2/nativeclient")
         .form(&[
             ("client_id", "6c2e411f-bea9-4598-8cb9-bebadac59bdc"),
-            ("redirect_uri", "https://login.microsoftonline.com/common/oauth2/nativeclient"),
+            (
+                "redirect_uri",
+                "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            ),
             ("code", &code),
             ("grant_type", "authorization_code"),
             ("code_verifier", &code_verifier),
@@ -94,7 +108,10 @@ async fn code_to_access_token(app_handle: tauri::AppHandle, code: String) -> Res
                 .dialog()
                 .message("由于网络问题失败。")
                 .blocking_show();
-            let _ = window.close();
+            #[cfg(not(target_os = "android"))]
+            {
+                let _ = window.close();
+            }
             return Err(e.to_string());
         }
     };
@@ -118,7 +135,10 @@ async fn code_to_access_token(app_handle: tauri::AppHandle, code: String) -> Res
         false => download_setting_to_onedrive(&app_handle, token_response).await,
     }
 
-    let _ = window.close();
+    #[cfg(not(target_os = "android"))]
+    {
+        let _ = window.close();
+    }
     Ok(())
 }
 
