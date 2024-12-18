@@ -185,7 +185,13 @@ pub async fn load_user_login_log(
     match get_user_login_log(&session_id, &start_date, &end_date, via_vpn).await {
         Ok(Some(value)) => Ok(serde_json::json!(value).to_string()),
         Ok(None) => Err("请确认是否已经登录".to_string()),
-        Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
+        Err(e) => {
+            if e.to_string() == "NO DATA" {
+                Err(format!("目前暂时没有该数据"))
+            } else {
+                Err(format!("检查网络情况: {}", e))
+            }
+        }
     }
 }
 
@@ -239,7 +245,13 @@ pub async fn load_monthly_login_log(
             Ok(serde_json::json!(flow_every_day).to_string())
         }
         Ok(None) => Err("请确认是否已经登录".to_string()),
-        Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
+        Err(e) => {
+            if e.to_string() == "NO DATA" {
+                Err(format!("目前暂时没有该数据"))
+            } else {
+                Err(format!("检查网络情况: {}", e))
+            }
+        }
     }
 }
 
@@ -304,7 +316,8 @@ pub fn get_current_device_mac() -> Result<String, String> {
             mac_address: mac_address::mac_address_by_name(&iface.name)
                 .unwrap_or_default()
                 .unwrap_or_default()
-                .to_string().replace(':', ""),
+                .to_string()
+                .replace(':', ""),
         })
         .collect();
     Ok(serde_json::json!(macs).to_string())

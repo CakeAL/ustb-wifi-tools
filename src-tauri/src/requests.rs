@@ -345,6 +345,7 @@ pub async fn get_user_login_log(
             ("startDate", start_date),
             ("endDate", end_date),
         ])
+        .timeout(Duration::from_millis(500))
         .send()
         .await?
         .text()
@@ -441,9 +442,8 @@ pub async fn get_user_login_log(
     }
     // dbg!(every_login_datas);
     Ok(Some(UserLoginLog {
-        // 获取数据如果没有数据会在 unwrap 崩掉该 task，但是 WHO CARES?
         #[allow(clippy::get_first)]
-        ipv4_up: redtexts.get(0).unwrap().trim().parse()?,
+        ipv4_up: redtexts.get(0).ok_or(anyhow!("NO DATA"))?.trim().parse()?,
         ipv4_down: redtexts.get(1).unwrap().trim().parse()?,
         ipv6_up: redtexts.get(2).unwrap().trim().parse()?,
         ipv6_down: redtexts.get(3).unwrap().trim().parse()?,
