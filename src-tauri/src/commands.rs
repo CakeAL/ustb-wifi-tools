@@ -187,9 +187,9 @@ pub async fn load_user_login_log(
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => {
             if e.to_string() == "NO DATA" {
-                Err(format!("目前暂时没有该数据"))
+                Err("目前暂时没有该数据".to_string())
             } else {
-                Err(format!("检查网络情况: {}", e))
+                Err(format!("请检查网络情况: {}", e))
             }
         }
     }
@@ -247,9 +247,9 @@ pub async fn load_monthly_login_log(
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => {
             if e.to_string() == "NO DATA" {
-                Err(format!("目前暂时没有该数据"))
+                Err("目前暂时没有该数据".to_string())
             } else {
-                Err(format!("检查网络情况: {}", e))
+                Err(format!("请检查网络情况: {}", e))
             }
         }
     }
