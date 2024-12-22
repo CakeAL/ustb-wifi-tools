@@ -8,6 +8,7 @@ interface MacAddress {
   device_name: string;
   mac_address: string;
   custom_name: string;
+  unbind: boolean;
 }
 
 interface ThisMacAddress {
@@ -16,10 +17,8 @@ interface ThisMacAddress {
 }
 
 const pop_message = useMessage();
-const this_mac = ref<Array<ThisMacAddress>>([]);
-const mac_addrs = ref<MacAddress[] | null>(null);
-const unbind_macs = ref<Array<boolean>>([]);
-const custom_names = ref<Array<string>>([]);
+const this_mac = ref<ThisMacAddress[]>([]);
+const mac_addrs = ref<MacAddress[]>([]);
 
 onMounted(() => {
   get_current_device_mac();
@@ -40,23 +39,13 @@ const load_mac_address = async () => {
     pop_message.error(err)
   );
   mac_addrs.value = JSON.parse(res as string);
-  if (mac_addrs.value !== null) {
-    for (let i = 0; i < mac_addrs.value.length; i += 1) {
-      unbind_macs.value.push(false);
-      custom_names.value.push(mac_addrs.value[i].custom_name);
-    }
-  }
 };
 
 const unbind = async () => {
-  // console.log(unbind_macs.value); 传入 false 的
-  let macs: string[] = [];
-  let i: number;
-  for (i = 0; i < unbind_macs.value.length; i += 1) {
-    if (unbind_macs.value[i] === false && mac_addrs.value !== null) {
-      macs.push(mac_addrs.value[i].mac_address);
-    }
-  }
+  //  传入 false 的
+  let macs: string[] = mac_addrs.value
+    .filter((mac) => !mac.unbind)
+    .map((mac) => mac.mac_address);
   // console.log(macs);
   await invoke("do_unbind_macs", {
     macs: macs,
@@ -65,13 +54,32 @@ const unbind = async () => {
 };
 
 const set_mac_custom_name = async (mac: string, index: number) => {
-  if (custom_names.value[index] === "") {
+  if (mac_addrs.value[index].custom_name === "") {
     return;
   }
   await invoke("set_mac_custom_name", {
     mac,
-    name: custom_names.value[index],
+    name: mac_addrs.value[index].custom_name,
   }).catch((err) => pop_message.error(err));
+};
+
+const unbind_cur_device = async () => {
+  let macs = mac_addrs.value
+    .filter(
+      (mac) =>
+        !this_mac.value.map((mac) => mac.mac_address).includes(mac.mac_address)
+    )
+    .map((mac) => mac.mac_address);
+  if (macs.length === 0) {
+    pop_message.error(
+      "没有与之相匹配的 MAC 地址，可能由于当前账号在此电脑上没有登录过🤔"
+    );
+  }
+  // console.log(macs);
+  await invoke("do_unbind_macs", {
+    macs: macs,
+  }).catch((err) => pop_message.error(err));
+  setTimeout(load_mac_address, 100);
 };
 </script>
 
@@ -85,54 +93,71 @@ const set_mac_custom_name = async (mac: string, index: number) => {
         <n-card hoverable class="my-card">
           <n-statistic label="当前设备无线 MAC 地址（仅供参考）">
             <span v-for="(mac, index) in this_mac" :key="index"
-              >{{ mac.iface_name }}: {{ mac.mac_address }}<br /></span
-            >
+              >{{ mac.iface_name }}: {{ mac.mac_address }}<br
+            /></span>
           </n-statistic>
         </n-card>
       </template>
-      如果把该地址解绑会导致立刻断网！其实就是注销登录罢了。<br/>
-      最前面的是网络接口，如果你的电脑有多个网卡。<br/>
+      如果把该地址解绑会导致立刻断网！其实就是注销登录罢了。<br />
+      最前面的是网络接口，如果你的电脑有多个网卡。<br />
       一般来说，Windows 设备上 "WLAN"，macOS 设备上 "en0" 是无线网卡的接口。
     </n-popover>
-    <div v-if="mac_addrs !== null" class="show-data">
-      <n-table :bordered="false" :single-line="false">
-        <thead>
-          <tr>
-            <th>序号</th>
-            <th>校园网后台设备名</th>
-            <th>自定义设备名</th>
-            <th>MAC Address</th>
-            <th>是否解绑</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(mac_addr, index) in mac_addrs" :key="index">
-            <th>{{ index + 1 }}</th>
-            <th>{{ mac_addr.device_name }}</th>
-            <th>
-              <n-input
-                v-model:value="custom_names[index]"
-                type="text"
-                @blur="set_mac_custom_name(mac_addr.mac_address, index)"
-              />
-            </th>
-            <th>{{ mac_addr.mac_address }}</th>
-            <th>
-              <n-checkbox size="large" v-model:checked="unbind_macs[index]" />
-            </th>
-          </tr>
-        </tbody>
-      </n-table>
-      <n-button
-        strong
-        secondary
-        type="info"
-        @click="unbind"
-        style="width: 100%; margin-top: 10px"
+    <n-table :bordered="false" :single-line="false">
+      <thead>
+        <tr>
+          <th>序号</th>
+          <th>校园网后台设备名</th>
+          <th>自定义设备名</th>
+          <th>MAC Address</th>
+          <th>是否解绑</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(mac_addr, index) in mac_addrs" :key="index">
+          <th>{{ index + 1 }}</th>
+          <th>{{ mac_addr.device_name }}</th>
+          <th>
+            <n-input
+              v-model:value="mac_addr.custom_name"
+              type="text"
+              @blur="set_mac_custom_name(mac_addr.mac_address, index)"
+            />
+          </th>
+          <th>{{ mac_addr.mac_address }}</th>
+          <th>
+            <n-checkbox size="large" v-model:checked="mac_addr.unbind" />
+          </th>
+        </tr>
+      </tbody>
+    </n-table>
+    <n-grid :x-gap="12" :y-gap="8" :cols="2" style="margin-top: 10px">
+      <n-grid-item>
+        <n-popover trigger="hover" placement="top-start">
+          <template #trigger>
+            <n-button
+              strong
+              secondary
+              type="info"
+              @click="unbind_cur_device"
+              style="width: 100%"
+            >
+              一键解绑当前设备
+            </n-button></template
+          >此选项会自动匹配当前设备MAC地址以及校园网记录的MAC地址，并解绑当前设备的MAC地址；<br />也就是“注销登录”</n-popover
+        ></n-grid-item
       >
-        确定解绑
-      </n-button>
-    </div>
+      <n-grid-item>
+        <n-button
+          strong
+          secondary
+          type="primary"
+          @click="unbind"
+          style="width: 100%"
+        >
+          确定解绑
+        </n-button></n-grid-item
+      >
+    </n-grid>
     <n-card title="说明" hoverable class="my-card">
       <n-p>MAC Address是什么？简单来说校园网靠这个来识别是否是你的设备。</n-p>
       <n-p>
