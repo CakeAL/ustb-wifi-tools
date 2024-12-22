@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/core";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useMessage } from "naive-ui";
 import { open } from "@tauri-apps/plugin-shell";
-
+import { CheckmarkCircleOutline, CloseCircleOutline } from "@vicons/ionicons5";
 interface MacAddress {
   device_name: string;
   mac_address: string;
@@ -47,6 +47,10 @@ const unbind = async () => {
     .filter((mac) => !mac.unbind)
     .map((mac) => mac.mac_address);
   // console.log(macs);
+  if (macs.length === mac_addrs.value.length) {
+    pop_message.warning("你还没选任何要解绑的 MAC 地址😭");
+    return;
+  }
   await invoke("do_unbind_macs", {
     macs: macs,
   }).catch((err) => pop_message.error(err));
@@ -71,9 +75,10 @@ const unbind_cur_device = async () => {
     )
     .map((mac) => mac.mac_address);
   if (macs.length === 0) {
-    pop_message.error(
+    pop_message.warning(
       "没有与之相匹配的 MAC 地址，可能由于当前账号在此电脑上没有登录过🤔"
     );
+    return;
   }
   // console.log(macs);
   await invoke("do_unbind_macs", {
@@ -81,6 +86,15 @@ const unbind_cur_device = async () => {
   }).catch((err) => pop_message.error(err));
   setTimeout(load_mac_address, 100);
 };
+
+const whether_login_cur_device = computed(() => {
+  let macs = mac_addrs.value
+    .filter((mac) =>
+      this_mac.value.map((mac) => mac.mac_address).includes(mac.mac_address)
+    )
+    .map((mac) => mac.mac_address);
+  return macs.length > 0 ? true : false;
+});
 </script>
 
 <template>
@@ -96,13 +110,34 @@ const unbind_cur_device = async () => {
               >{{ mac.iface_name }}: {{ mac.mac_address }}<br
             /></span>
           </n-statistic>
+          <n-p style="margin-top: 0">
+            当前设备是否登录了该查询的账号：
+            <n-icon-wrapper
+              :size="24"
+              :border-radius="12"
+              style="position: relative; top: 6px"
+              v-if="whether_login_cur_device"
+            >
+              <n-icon :size="24" :component="CheckmarkCircleOutline" />
+            </n-icon-wrapper>
+            <n-icon-wrapper
+              :size="24"
+              :border-radius="12"
+              color="#F2C97D"
+              icon-color="#000"
+              style="position: relative; top: 6px"
+              v-else
+            >
+              <n-icon :size="24" :component="CloseCircleOutline" />
+            </n-icon-wrapper>
+          </n-p>
         </n-card>
       </template>
       如果把该地址解绑会导致立刻断网！其实就是注销登录罢了。<br />
-      最前面的是网络接口，如果你的电脑有多个网卡。<br />
+      最前面的是网络接口，如果你的电脑有多个网卡，那么也会有多行。<br />
       一般来说，Windows 设备上 "WLAN"，macOS 设备上 "en0" 是无线网卡的接口。
     </n-popover>
-    <n-table :bordered="false" :single-line="false">
+    <n-table :bordered="false" style="background-color: transparent;">
       <thead>
         <tr>
           <th>序号</th>
@@ -113,7 +148,17 @@ const unbind_cur_device = async () => {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(mac_addr, index) in mac_addrs" :key="index">
+        <tr
+          v-for="(mac_addr, index) in mac_addrs"
+          :key="index"
+          :class="
+            this_mac
+              .map((mac) => mac.mac_address)
+              .includes(mac_addr.mac_address)
+              ? 'highlight-row'
+              : ''
+          "
+        >
           <th>{{ index + 1 }}</th>
           <th>{{ mac_addr.device_name }}</th>
           <th>
@@ -124,7 +169,7 @@ const unbind_cur_device = async () => {
             />
           </th>
           <th>{{ mac_addr.mac_address }}</th>
-          <th>
+          <th style="text-align: center">
             <n-checkbox size="large" v-model:checked="mac_addr.unbind" />
           </th>
         </tr>
@@ -208,5 +253,28 @@ const unbind_cur_device = async () => {
   margin: 10px 0;
   width: 100%;
   background: rgba(255, 255, 255, 0.1);
+}
+
+
+.highlight-row > :first-child {
+  /* border-left: 1px solid #f2c97d;
+  border-top: 1px solid #f2c97d; */
+  border-bottom: 1px solid #f2c97d;
+  /* border-radius: 0 0 0 12px; */
+  box-shadow: inset 0px -80px 0px 0px rgba(242, 201, 125, 0.1);
+}
+
+.highlight-row > :not(:first-child):not(:last-child) {
+  /* border-top: 1px solid #f2c97d; */
+  border-bottom: 1px solid #f2c97d;
+  box-shadow: inset 0px -80px 0px 0px rgba(242, 201, 125, 0.1);
+}
+
+.highlight-row > :last-child {
+  /* border-right: 1px solid #f2c97d;
+  border-top: 1px solid #f2c97d; */
+  border-bottom: 1px solid #f2c97d;
+  /* border-radius: 0 0 12px 0; */
+  box-shadow: inset 0px -80px 0px 0px rgba(242, 201, 125, 0.1);
 }
 </style>

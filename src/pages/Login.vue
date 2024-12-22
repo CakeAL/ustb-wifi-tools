@@ -157,7 +157,7 @@ const open_microsoft_login = async () => {
     <n-space vertical>
       <div v-if="!login_state">
         <n-h3 prefix="bar" type="success" style="margin-top: 15px">
-          在下方输入校园网学号和密码（数据均在本地存储）：
+          输入校园网学号和密码（均在本地存储，也可通过 Onedrive 同步）
         </n-h3>
         <n-input
           v-model:value="user_name"
@@ -173,26 +173,28 @@ const open_microsoft_login = async () => {
           round
           style="margin-top: 5px"
         />
-        <n-space>
-          <n-button
-            strong
-            secondary
-            type="primary"
-            @click="get_cookies"
-            :disabled="button_disabled"
-            class="my-button"
+        <n-grid :x-gap="12" :y-gap="8" :cols="2" style="margin-top: 10px">
+          <n-grid-item>
+            <n-button
+              strong
+              secondary
+              type="primary"
+              @click="get_cookies"
+              :disabled="button_disabled"
+            >
+              点我登陆校园网后台获取 cookie⭐️
+            </n-button> </n-grid-item
+          ><n-grid-item>
+            <n-switch
+              v-model:value="login_via_vpn"
+              :rail-style="railStyle"
+              class="my-switch"
+            >
+              <template #checked> 我不在校园网 </template>
+              <template #unchecked> 我在校园网 </template>
+            </n-switch></n-grid-item
           >
-            点我登陆校园网后台获取 cookie⭐️
-          </n-button>
-          <n-switch
-            v-model:value="login_via_vpn"
-            :rail-style="railStyle"
-            class="my-switch"
-          >
-            <template #checked> 我不在校园网 </template>
-            <template #unchecked> 我在校园网 </template>
-          </n-switch>
-        </n-space>
+        </n-grid>
         <n-h3
           prefix="bar"
           type="success"
@@ -206,7 +208,7 @@ const open_microsoft_login = async () => {
           >您已登录，如果其他页面不能获取到信息，请点击登出再重新登录。</n-h3
         >
       </div>
-      <n-grid :x-gap="12" :y-gap="8" :cols="2" style="margin-top: 20px">
+      <n-grid :x-gap="12" :y-gap="8" :cols="2" style="margin-top: 10px">
         <n-grid-item>
           <n-card title="登出" hoverable @click="logout" class="my-card">
             想换个账号登录？
@@ -320,14 +322,15 @@ const open_microsoft_login = async () => {
 
 <style scoped>
 .my-switch {
-  margin-top: 9px;
-}
-.my-button {
-  margin-top: 6px;
+  margin-top: calc((34px - 22px) / 2);
 }
 .my-card {
   background-color: rgba(255, 255, 255, 0);
   cursor: pointer;
+}
+
+.my-card:hover {
+  box-shadow: rgba(127, 231, 196, 0.4) 3px 3px, rgba(127, 231, 196, 0.3) 6px 6px, rgba(127, 231, 196, 0.2) 9px 9px, rgba(127, 231, 196, 0.1) 12px 12px, rgba(127, 231, 196, 0.05) 15px 15px;
 }
 
 .my-card:active {

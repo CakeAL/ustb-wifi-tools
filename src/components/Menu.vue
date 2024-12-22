@@ -46,7 +46,7 @@ const menuOptions: MenuOption[] = [
         {
           href: "#/",
         },
-        "登陆"
+        "账号管理"
       ),
     key: "login",
     icon: renderIcon(LogInOutline),
