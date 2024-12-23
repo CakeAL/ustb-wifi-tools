@@ -229,7 +229,7 @@ const open_microsoft_login = async () => {
             @click="submit_login_ustb_wifi"
             class="my-card"
           >
-            当你被校园网登录“Radius认证超时！”搞烦了可以用，当然也可以直接用！
+            不会出现“Radius认证超时！”的问题（可能需要多点几次）。
           </n-card>
         </n-grid-item>
         <n-grid-item>
