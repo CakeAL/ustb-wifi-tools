@@ -124,21 +124,18 @@ pub async fn load_refresh_account(app_state: tauri::State<'_, AppState>) -> Resu
 #[tauri::command(async)]
 pub async fn load_user_flow_by_state(
     app_state: tauri::State<'_, AppState>,
+    user_name: String,
 ) -> Result<String, String> {
-    let account = app_state.setting.read().unwrap().username.clone();
     let via_vpn = *app_state.login_via_vpn.read().unwrap();
     let session_id = match app_state.jsessionid.read().unwrap().clone() {
         Some(s) => s,
         None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
     };
 
-    match account {
-        Some(account) => Ok(get_load_user_flow(&account, &session_id, via_vpn)
-            .await
-            .map_err(|e| format!("Error while loading user flow: {}", e))
-            .map(|res| res.to_string())?),
-        None => Err("Account is none, try again".to_string()),
-    }
+    get_load_user_flow(&user_name, &session_id, via_vpn)
+        .await
+        .map_err(|e| format!("Error while loading user flow: {}", e))
+        .map(|res| res.to_string())
 }
 
 #[tauri::command(async)]

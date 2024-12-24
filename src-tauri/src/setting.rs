@@ -3,6 +3,7 @@ use std::{
     fs::{self, create_dir, File, OpenOptions},
     io::{Read, Write},
     path::PathBuf,
+    thread::panicking,
 };
 
 use anyhow::{anyhow, Result};
@@ -11,8 +12,7 @@ use tauri::Manager;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Setting {
-    pub username: Option<String>,
-    pub password: Option<String>,
+    pub account: Vec<(String, String)>, // (username, password)
     pub ammeter_number: Option<u32>,
     pub mac_custom_name: HashMap<String, String>,
     pub background_image_path: Option<String>,
@@ -50,8 +50,18 @@ impl Setting {
     }
 
     pub fn set_account(&mut self, username: String, password: String) {
-        self.username = Some(username);
-        self.password = Some(password);
+        for (saved_username, saved_password) in self.account.iter_mut() {
+            if saved_username == &username && saved_password == &password {
+                // nothing happened
+                return;
+            } else if saved_username == &username {
+                // 密码有更改
+                *saved_password = password.clone();
+                return;
+            }
+        }
+        // 系新账号
+        self.account.push((username, password));
     }
 
     pub fn set_ammeter_number(&mut self, ammeter_number: u32) {

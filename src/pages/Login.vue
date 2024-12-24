@@ -2,23 +2,26 @@
 import { invoke } from "@tauri-apps/api/core";
 import { ref, onMounted } from "vue";
 import { useMessage, useLoadingBar } from "naive-ui";
-import { ColorPaletteOutline } from "@vicons/ionicons5";
+import { ColorPaletteOutline, ChevronDownOutline } from "@vicons/ionicons5";
 import { open } from "@tauri-apps/plugin-shell";
 import { dataDir } from "@tauri-apps/api/path";
 import { check_update } from "../update";
 import { railStyle } from "../helper";
+import { store } from "../store";
 
 const loadingBar = useLoadingBar();
 const pop_message = useMessage();
 const sessionid = ref<string>("");
 const user_name = ref<string>("");
 const password = ref<string>("");
+const account = ref<[string, string]>(["", ""]);
 const button_disabled = ref<boolean>(false);
 const login_state = ref<boolean>(false);
 const login_via_vpn = ref<boolean>(false);
 const showModal = ref<boolean>(false);
 const transparence = ref<number>(0);
 const blur = ref<number>(0);
+const options = ref<any>([]);
 
 onMounted(() => {
   check_login_state();
@@ -31,11 +34,25 @@ const load_setting = async () => {
   )) as string;
   if (res.length > 0) {
     let settings = JSON.parse(res);
-    user_name.value = settings.username;
-    password.value = settings.password;
+    account.value = settings.account;
     transparence.value = settings.background_transparence;
     blur.value = settings.background_blur;
+
+    user_name.value = account.value[0][0];
+    password.value = account.value[0][1];
+
+    options.value = account.value.map((account, num) => {
+      return {
+        label: account[0],
+        key: num,
+      };
+    });
   }
+};
+
+const handleSelect = (key: number) => {
+  user_name.value = account.value[key][0];
+  password.value = account.value[key][1];
 };
 
 const check_login_state = async () => {
@@ -77,6 +94,7 @@ const get_cookies = async () => {
         loadingBar.finish();
         login_state.value = true;
         set_setting();
+        store.setUserName(user_name.value);
       } else {
         // 失败
         login_state.value = false;
@@ -91,6 +109,7 @@ const logout = async () => {
     has_error = true;
   });
   if (has_error === false) {
+    store.clearUserName();
     pop_message.success(res as string);
   }
 };
@@ -159,22 +178,33 @@ const open_microsoft_login = async () => {
         <n-h3 prefix="bar" type="success" style="margin-top: 15px">
           输入校园网学号和密码（均在本地存储，也可通过 Onedrive 同步）
         </n-h3>
-        <n-input
-          v-model:value="user_name"
-          type="text"
-          placeholder="学号/工号"
-          round
-        />
-        <n-input
-          v-model:value="password"
-          type="password"
-          show-password-on="mousedown"
-          placeholder="密码"
-          round
-          style="margin-top: 5px"
-        />
-        <n-grid :x-gap="12" :y-gap="8" :cols="2" style="margin-top: 10px">
-          <n-grid-item>
+        <n-grid :x-gap="5" :y-gap="8" :cols="5" style="margin-top: 10px">
+          <n-grid-item :span="2">
+            <n-input
+              v-model:value="user_name"
+              type="text"
+              placeholder="学号/工号"
+              round
+          /></n-grid-item>
+          <n-grid-item :span="2">
+            <n-input
+              v-model:value="password"
+              type="password"
+              show-password-on="mousedown"
+              placeholder="密码"
+              round /></n-grid-item
+          ><n-grid-item>
+            <n-dropdown
+              trigger="hover"
+              :options="options"
+              @select="handleSelect"
+            >
+              <n-button type="info"
+                >选择账号 <n-icon size="20"><ChevronDownOutline /></n-icon
+              ></n-button> </n-dropdown></n-grid-item
+        ></n-grid>
+        <n-grid :x-gap="12" :y-gap="8" :cols="5" style="margin-top: 10px">
+          <n-grid-item :span="2">
             <n-button
               strong
               secondary
@@ -182,7 +212,7 @@ const open_microsoft_login = async () => {
               @click="get_cookies"
               :disabled="button_disabled"
             >
-              点我登陆校园网后台获取 cookie⭐️
+              登陆校园网后台获取统计数据 ⭐️
             </n-button> </n-grid-item
           ><n-grid-item>
             <n-switch
@@ -205,7 +235,8 @@ const open_microsoft_login = async () => {
       </div>
       <div v-else>
         <n-h3 prefix="bar" type="success" style="margin-top: 15px"
-          >您已登录，如果其他页面不能获取到信息，请点击登出再重新登录。</n-h3
+          >您已登录 {{ store.userName
+          }}<br />如果其他页面不能获取到信息，请点击登出再重新登录。</n-h3
         >
       </div>
       <n-grid :x-gap="12" :y-gap="8" :cols="2" style="margin-top: 10px">
@@ -330,7 +361,9 @@ const open_microsoft_login = async () => {
 }
 
 .my-card:hover {
-  box-shadow: rgba(127, 231, 196, 0.4) 3px 3px, rgba(127, 231, 196, 0.3) 6px 6px, rgba(127, 231, 196, 0.2) 9px 9px, rgba(127, 231, 196, 0.1) 12px 12px, rgba(127, 231, 196, 0.05) 15px 15px;
+  box-shadow: rgba(127, 231, 196, 0.4) 3px 3px, rgba(127, 231, 196, 0.3) 6px 6px,
+    rgba(127, 231, 196, 0.2) 9px 9px, rgba(127, 231, 196, 0.1) 12px 12px,
+    rgba(127, 231, 196, 0.05) 15px 15px;
 }
 
 .my-card:active {

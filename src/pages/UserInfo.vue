@@ -3,6 +3,7 @@ import { onMounted, ref, computed } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { useMessage } from "naive-ui";
 import { mb2gb } from "../helper";
+import { store } from "../store";
 
 interface Note {
   leftFlow: string;
@@ -55,9 +56,11 @@ const load_refresh_account = async () => {
 };
 
 const load_user_flow = async () => {
-  let res = await invoke("load_user_flow_by_state").catch((err) =>
-    pop_message.error(err)
-  );
+  console.log(store.userName);
+  
+  let res = await invoke("load_user_flow_by_state", {
+    userName: store.userName,
+  }).catch((err) => pop_message.error(err));
   //   console.log(res as string);
   account_flow.value = JSON.parse(res as string);
 };
@@ -120,7 +123,7 @@ const progress_color = computed(() => {
     </n-h2>
     <n-list hoverable class="my-list">
       <n-list-item>
-        <n-thing title="基本信息" content-style="margin-top: 10px;">
+        <n-thing :title="store.userName + ' 基本信息'" content-style="margin-top: 10px;">
           <template #description>
             <n-grid x-gap="12" :cols="4">
               <n-gi>
