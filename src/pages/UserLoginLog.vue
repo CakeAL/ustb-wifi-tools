@@ -145,41 +145,21 @@ const mb2gb = (mb: number | undefined) => {
     </n-h2>
     <n-grid x-gap="12" :cols="6">
       <n-gi>
-        <n-switch
-          v-model:value="the_switch"
-          :rail-style="railStyle"
-          style="margin-top: 6px"
-        >
+        <n-switch v-model:value="the_switch" :rail-style="railStyle" style="margin-top: 6px">
           <template #checked> 选很多天 </template>
           <template #unchecked> 选一天 </template>
         </n-switch>
       </n-gi>
       <n-gi span="5">
-        <n-date-picker
-          v-model:value="date_range"
-          type="daterange"
-          clearable
-          @update:value="get_user_login_log"
-          v-if="the_switch === true"
-        />
-        <n-date-picker
-          v-model:value="a_date"
-          type="date"
-          clearable
-          @update:value="get_user_login_log"
-          v-else
-        />
+        <n-date-picker v-model:value="date_range" type="daterange" clearable @update:value="get_user_login_log"
+          v-if="the_switch === true" />
+        <n-date-picker v-model:value="a_date" type="date" clearable @update:value="get_user_login_log" v-else />
       </n-gi>
     </n-grid>
     <div v-if="user_login_log !== null" class="show-data">
       <n-thing title="该段时间" content-style="margin-top: 10px;">
         <template #description>
-          <n-table
-            :bordered="false"
-            :single-line="false"
-            striped
-            class="thistime"
-          >
+          <n-table :bordered="false" :single-line="false" striped class="thistime">
             <thead>
               <tr>
                 <th>ipv4 ⬇</th>
@@ -212,12 +192,7 @@ const mb2gb = (mb: number | undefined) => {
         </template>
       </n-thing>
       <br />
-      <n-data-table
-        :columns="columns"
-        :data="user_login_log?.every_login_data"
-        :bordered="false"
-        :max-height="600"
-      />
+      <n-data-table :columns="columns" :data="user_login_log?.every_login_data" :bordered="false" :max-height="600" />
     </div>
     <br />
   </div>

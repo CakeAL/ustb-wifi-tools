@@ -170,36 +170,36 @@ const select_mb_or_gb = (value: string) => {
     <n-h2 prefix="bar" type="success" style="margin-top: 15px">
       <n-text type="success"> 月度使用概览 </n-text>
     </n-h2>
-    <n-date-picker
-      v-model:value="start_date"
-      type="month"
-      clearable
-      @update:value="get_monthly_user_log"
-    />
+    <n-date-picker v-model:value="start_date" type="month" clearable @update:value="get_monthly_user_log" />
     <n-tabs type="segment" animated style="margin-top: 5px">
       <n-tab-pane name="calender" tab="日历" style="padding-top: 8px">
         <n-grid :x-gap="12" :y-gap="8" :cols="7" :key="refresh">
-          <n-grid-item class="gray"><p>日</p></n-grid-item>
-          <n-grid-item class="gray"><p>一</p></n-grid-item>
-          <n-grid-item class="gray"><p>二</p></n-grid-item>
-          <n-grid-item class="gray"><p>三</p></n-grid-item>
-          <n-grid-item class="gray"><p>四</p></n-grid-item>
-          <n-grid-item class="gray"><p>五</p></n-grid-item>
-          <n-grid-item class="gray"><p>六</p></n-grid-item>
-          <n-grid-item
-            v-for="(, index) in the_week_of_first_day"
-            :key="index"
-            class="gray"
-          >
+          <n-grid-item class="gray">
+            <p>日</p>
           </n-grid-item>
-          <n-grid-item
-            v-for="(item, index) in monthly_user_log"
-            :key="index"
-            class="day"
-            :style="{
-              backgroundColor: getBackgroundColor(select_to_data(item)),
-            }"
-            ><n-popover trigger="hover">
+          <n-grid-item class="gray">
+            <p>一</p>
+          </n-grid-item>
+          <n-grid-item class="gray">
+            <p>二</p>
+          </n-grid-item>
+          <n-grid-item class="gray">
+            <p>三</p>
+          </n-grid-item>
+          <n-grid-item class="gray">
+            <p>四</p>
+          </n-grid-item>
+          <n-grid-item class="gray">
+            <p>五</p>
+          </n-grid-item>
+          <n-grid-item class="gray">
+            <p>六</p>
+          </n-grid-item>
+          <n-grid-item v-for="(, index) in the_week_of_first_day" :key="index" class="gray">
+          </n-grid-item>
+          <n-grid-item v-for="(item, index) in monthly_user_log" :key="index" class="day" :style="{
+            backgroundColor: getBackgroundColor(select_to_data(item)),
+          }"><n-popover trigger="hover">
               <template #trigger>
                 <p style="margin: 3px; line-height: 1.5em; white-space: nowrap">
                   <b>{{ index + 1 }}日</b><br />
@@ -235,21 +235,11 @@ const select_mb_or_gb = (value: string) => {
           </n-grid-item>
         </n-grid>
         <n-grid x-gap="12" :cols="4" style="margin-top: 8px">
-          <n-gi
-            ><n-p style="line-height: 34px">选择显示在日历上的内容：</n-p></n-gi
-          >
-          <n-gi span="2"
-            ><n-select
-              v-model:value="select_show_value"
-              :options="select_show_options"
-          /></n-gi>
+          <n-gi><n-p style="line-height: 34px">选择显示在日历上的内容：</n-p></n-gi>
+          <n-gi span="2"><n-select v-model:value="select_show_value" :options="select_show_options" /></n-gi>
           <n-gi>
-            <n-switch
-              v-model:value="mb_gb_select"
-              :rail-style="railStyle"
-              class="my-switch"
-              style="margin-top: calc((34px - 22px) / 2)"
-            >
+            <n-switch v-model:value="mb_gb_select" :rail-style="railStyle" class="my-switch"
+              style="margin-top: calc((34px - 22px) / 2)">
               <template #checked> MB </template>
               <template #unchecked> GB </template>
             </n-switch>
@@ -279,10 +269,12 @@ const select_mb_or_gb = (value: string) => {
   border-radius: 5px;
   background-color: rgb(80, 80, 80, 0.2);
 }
+
 .day {
   height: 50px;
   border-radius: 5px;
 }
+
 .my-card {
   margin: 10px 0;
   width: 100%;

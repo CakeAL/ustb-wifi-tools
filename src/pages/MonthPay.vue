@@ -114,11 +114,7 @@ const handleUpdateValue = (value: string) => {
     <n-h2 prefix="bar" type="success" style="margin-top: 15px">
       <n-text type="success"> 年度扣费账单 </n-text>
     </n-h2>
-    <n-select
-      v-model:value="year"
-      :options="year_options"
-      @update:value="load_month_pay"
-    />
+    <n-select v-model:value="year" :options="year_options" @update:value="load_month_pay" />
     <div v-if="month_pay !== undefined" class="show-data">
       <n-card hoverable class="my-card">
         <n-grid x-gap="12" :cols="3">
@@ -153,27 +149,15 @@ const handleUpdateValue = (value: string) => {
           </n-gi>
         </n-grid>
       </n-card>
-      <n-tabs
-        type="segment"
-        animated
-        @update:value="handleUpdateValue"
-        v-model:value="tabValue"
-      >
+      <n-tabs type="segment" animated @update:value="handleUpdateValue" v-model:value="tabValue">
         <n-tab-pane name="flow" tab="流量(GB)" style="padding: 0"> </n-tab-pane>
         <n-tab-pane name="cost" tab="花费(元)" style="padding: 0"> </n-tab-pane>
         <n-tab-pane name="duration" tab="使用时长(分钟)" style="padding: 0">
         </n-tab-pane>
       </n-tabs>
-      <YearlyChart
-        :month="month_pay?.monthly_data.map((v) => v.month)"
-        :data="chartData"
-        style="margin-top: 5px"
-      ></YearlyChart>
-      <n-data-table
-        :columns="monthly_columns"
-        :data="month_pay?.monthly_data"
-        style="margin-top: 12px"
-      />
+      <YearlyChart :month="month_pay?.monthly_data.map((v) => v.month)" :data="chartData" style="margin-top: 5px">
+      </YearlyChart>
+      <n-data-table :columns="monthly_columns" :data="month_pay?.monthly_data" style="margin-top: 12px" />
     </div>
   </div>
 </template>

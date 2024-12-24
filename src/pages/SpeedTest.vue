@@ -104,48 +104,22 @@ const get_ip_location = async () => {
       <n-text type="success"> 测个速，不费校园网流量的 </n-text>
     </n-h2>
     <n-select v-model:value="site_num" :options="options" />
-    <n-button
-      strong
-      secondary
-      type="primary"
-      @click="open_speed_test"
-      style="width: 100%; margin-top: 10px"
-    >
+    <n-button strong secondary type="primary" @click="open_speed_test" style="width: 100%; margin-top: 10px">
       点我
     </n-button>
     <n-spin :show="show">
-      <n-card
-        title="当前您的公网地址是（点击可复制）"
-        hoverable
-        class="my-card"
-      >
-        <n-h6 @click="copyToClipboard(ipv4_address)" style="cursor: pointer"
-          >IPv4: {{ ipv4_address }}</n-h6
-        >
-        <n-h6 @click="copyToClipboard(ipv6_address)" style="cursor: pointer"
-          >IPv6: {{ ipv6_address }}</n-h6
-        >
+      <n-card title="当前您的公网地址是（点击可复制）" hoverable class="my-card">
+        <n-h6 @click="copyToClipboard(ipv4_address)" style="cursor: pointer">IPv4: {{ ipv4_address }}</n-h6>
+        <n-h6 @click="copyToClipboard(ipv6_address)" style="cursor: pointer">IPv6: {{ ipv6_address }}</n-h6>
       </n-card>
     </n-spin>
     <n-card title="查询 IP 归属地" hoverable class="my-card">
-      <n-p
-        >服务来自：<a
-          @click="open('https://api.mir6.com')"
-          style="
+      <n-p>服务来自：<a @click="open('https://api.mir6.com')" style="
             text-underline-offset: 5px;
             text-decoration: underline;
             cursor: pointer;
-          "
-          >https://api.mir6.com</a
-        ></n-p
-      >
-      <n-input
-        v-model:value="ip_str"
-        type="text"
-        placeholder="IPv4 或 IPv6 地址"
-        @blur="get_ip_location"
-        round
-      />
+          ">https://api.mir6.com</a></n-p>
+      <n-input v-model:value="ip_str" type="text" placeholder="IPv4 或 IPv6 地址" @blur="get_ip_location" round />
       <n-grid x-gap="12" y-gap="4" :cols="4" v-if="ip_info" style="margin-top: 10px">
         <n-gi class="my-gi"><n-text type="success"> IP地址</n-text></n-gi>
         <n-gi class="my-gi">{{ ip_info.data.ip }}</n-gi>
@@ -186,6 +160,7 @@ const get_ip_location = async () => {
   width: 100%;
   background: rgba(255, 255, 255, 0.1);
 }
+
 .my-gi {
   padding: 2px;
   border: solid 1px rgba(255, 255, 255, 0.3);

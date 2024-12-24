@@ -97,8 +97,8 @@ const apply_background = async () => {
             right: 0; 
             bottom: 0; 
             background-image: url("${convertFileSrc(
-              settings.background_image_path
-            )}"); 
+          settings.background_image_path
+        )}"); 
             background-size: cover; 
             background-position: center; 
             filter: blur(${settings.background_blur}px);
@@ -139,25 +139,14 @@ const collapse = async (value: boolean) => {
       <n-loading-bar-provider>
         <n-config-provider :theme="theme">
           <n-layout has-sider>
-            <n-layout-sider
-              bordered
-              collapse-mode="width"
-              :collapsed-width="64"
-              :width="200"
-              :collapsed="collapsed"
-              show-trigger
-              @collapse="collapse(true)"
-              @expand="collapse(false)"
-            >
+            <n-layout-sider bordered collapse-mode="width" :collapsed-width="64" :width="200" :collapsed="collapsed"
+              show-trigger @collapse="collapse(true)" @expand="collapse(false)">
               <Menu :collapsed="collapsed"></Menu>
             </n-layout-sider>
             <n-layout>
               <n-scrollbar style="max-height: 100vh">
                 <Transition name="slide-up" mode="out-in">
-                  <component
-                    :is="currentView"
-                    style="padding: 10px; scrollbar-width: 0"
-                  />
+                  <component :is="currentView" style="padding: 10px; scrollbar-width: 0" />
                 </Transition>
               </n-scrollbar>
             </n-layout>
@@ -166,15 +155,8 @@ const collapse = async (value: boolean) => {
       </n-loading-bar-provider>
     </n-message-provider>
   </n-modal-provider>
-  <n-progress
-    type="line"
-    :percentage="download_percent"
-    status="success"
-    indicator-placement="inside"
-    processing
-    class="download-progress"
-    v-if="is_download"
-  />
+  <n-progress type="line" :percentage="download_percent" status="success" indicator-placement="inside" processing
+    class="download-progress" v-if="is_download" />
 </template>
 
 <style scoped>

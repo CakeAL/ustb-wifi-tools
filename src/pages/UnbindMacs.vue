@@ -109,9 +109,8 @@ const whether_login_cur_device = computed(() => {
           <n-popover trigger="hover" placement="top-start">
             <template #trigger>
               <n-statistic label="">
-                <span v-for="(mac, index) in this_mac" :key="index"
-                  >{{ mac.iface_name }}: {{ mac.mac_address }}<br
-                /></span>
+                <span v-for="(mac, index) in this_mac" :key="index">{{ mac.iface_name }}: {{ mac.mac_address
+                  }}<br /></span>
               </n-statistic>
             </template>
             如果把该地址解绑会导致立刻断网！其实就是注销登录罢了。<br />
@@ -121,20 +120,10 @@ const whether_login_cur_device = computed(() => {
           </n-popover>
           <template #header-extra>
             当前设备是否登录了该查询的账号：
-            <n-icon-wrapper
-              :size="24"
-              :border-radius="12"
-              v-if="whether_login_cur_device"
-            >
+            <n-icon-wrapper :size="24" :border-radius="12" v-if="whether_login_cur_device">
               <n-icon :size="24" :component="CheckmarkCircleOutline" />
             </n-icon-wrapper>
-            <n-icon-wrapper
-              :size="24"
-              :border-radius="12"
-              color="#F2C97D"
-              icon-color="#000"
-              v-else
-            >
+            <n-icon-wrapper :size="24" :border-radius="12" color="#F2C97D" icon-color="#000" v-else>
               <n-icon :size="24" :component="CloseCircleOutline" />
             </n-icon-wrapper>
           </template>
@@ -152,25 +141,17 @@ const whether_login_cur_device = computed(() => {
         </tr>
       </thead>
       <tbody>
-        <tr
-          v-for="(mac_addr, index) in mac_addrs"
-          :key="index"
-          :class="
-            this_mac
-              .map((mac) => mac.mac_address)
-              .includes(mac_addr.mac_address)
-              ? 'highlight-row'
-              : ''
-          "
-        >
+        <tr v-for="(mac_addr, index) in mac_addrs" :key="index" :class="this_mac
+            .map((mac) => mac.mac_address)
+            .includes(mac_addr.mac_address)
+            ? 'highlight-row'
+            : ''
+          ">
           <th>{{ index + 1 }}</th>
           <th>{{ mac_addr.device_name }}</th>
           <th>
-            <n-input
-              v-model:value="mac_addr.custom_name"
-              type="text"
-              @blur="set_mac_custom_name(mac_addr.mac_address, index)"
-            />
+            <n-input v-model:value="mac_addr.custom_name" type="text"
+              @blur="set_mac_custom_name(mac_addr.mac_address, index)" />
           </th>
           <th>{{ mac_addr.mac_address }}</th>
           <th style="text-align: center">
@@ -183,48 +164,26 @@ const whether_login_cur_device = computed(() => {
       <n-grid-item>
         <n-popover trigger="hover" placement="top-start">
           <template #trigger>
-            <n-button
-              strong
-              secondary
-              type="info"
-              @click="unbind_cur_device"
-              style="width: 100%"
-            >
+            <n-button strong secondary type="info" @click="unbind_cur_device" style="width: 100%">
               一键解绑当前设备
-            </n-button></template
-          >此选项会自动匹配当前设备MAC地址以及校园网记录的MAC地址，并解绑当前设备的MAC地址；<br />也就是“注销登录”</n-popover
-        ></n-grid-item
-      >
+            </n-button></template>此选项会自动匹配当前设备MAC地址以及校园网记录的MAC地址，并解绑当前设备的MAC地址；<br />也就是“注销登录”</n-popover></n-grid-item>
       <n-grid-item>
-        <n-button
-          strong
-          secondary
-          type="primary"
-          @click="unbind"
-          style="width: 100%"
-        >
+        <n-button strong secondary type="primary" @click="unbind" style="width: 100%">
           确定解绑
-        </n-button></n-grid-item
-      >
+        </n-button></n-grid-item>
     </n-grid>
     <n-card title="说明" hoverable class="my-card">
-      <n-p
-        >上面标黄的一栏是当前设备可能的 MAC
-        地址。可以直接点击蓝色按钮注销/解绑当前设备。</n-p
-      >
+      <n-p>上面标黄的一栏是当前设备可能的 MAC
+        地址。可以直接点击蓝色按钮注销/解绑当前设备。</n-p>
       <n-p>MAC Address是什么？简单来说校园网靠这个来识别是否是你的设备。</n-p>
       <n-p>
         所以随机 MAC
         地址开启的话，在你再次登录的时候，你的设备新生成了一个虚拟的 MAC
-        地址，就会导致你之前的设备被顶掉，详情可看B站视频：<a
-          @click="open('https://www.bilibili.com/video/av792486473/')"
-          style="
+        地址，就会导致你之前的设备被顶掉，详情可看B站视频：<a @click="open('https://www.bilibili.com/video/av792486473/')" style="
             text-underline-offset: 5px;
             text-decoration: underline;
             cursor: pointer;
-          "
-          >BV1JC4y1S7WS</a
-        >
+          ">BV1JC4y1S7WS</a>
         <!-- 点 bv 会打开 av 的网页🤔 -->
       </n-p>
       <n-p>
@@ -265,7 +224,7 @@ const whether_login_cur_device = computed(() => {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.highlight-row > :first-child {
+.highlight-row> :first-child {
   /* border-left: 1px solid #f2c97d;
   border-top: 1px solid #f2c97d; */
   border-bottom: 1px solid #f2c97d;
@@ -273,13 +232,13 @@ const whether_login_cur_device = computed(() => {
   box-shadow: inset 0px -80px 0px 0px rgba(242, 201, 125, 0.1);
 }
 
-.highlight-row > :not(:first-child):not(:last-child) {
+.highlight-row> :not(:first-child):not(:last-child) {
   /* border-top: 1px solid #f2c97d; */
   border-bottom: 1px solid #f2c97d;
   box-shadow: inset 0px -80px 0px 0px rgba(242, 201, 125, 0.1);
 }
 
-.highlight-row > :last-child {
+.highlight-row> :last-child {
   /* border-right: 1px solid #f2c97d;
   border-top: 1px solid #f2c97d; */
   border-bottom: 1px solid #f2c97d;

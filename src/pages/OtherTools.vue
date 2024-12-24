@@ -64,13 +64,7 @@ const open_webvpn = async () => {
     </n-h2>
     <n-card title="查一下别人当月流量" hoverable class="my-card">
       <p>如果你不在校园网，应先登录为“我不在校园网”模式。</p>
-      <n-input
-        v-model:value="user_name"
-        type="text"
-        placeholder="学号/工号"
-        @blur="load_user_flow"
-        round
-      />
+      <n-input v-model:value="user_name" type="text" placeholder="学号/工号" @blur="load_user_flow" round />
       <template #footer v-if="account_flow">
         这个人 ipv4 用了
         {{ (account_flow.data.v4 / 1024).toFixed(2) }} GB，ipv6 用了
@@ -78,13 +72,7 @@ const open_webvpn = async () => {
       </template>
     </n-card>
     <n-card title="查一下电费" hoverable class="my-card">
-      <n-input
-        v-model:value="ammeter_number"
-        type="text"
-        placeholder="电表号"
-        @blur="load_ammeter"
-        round
-      />
+      <n-input v-model:value="ammeter_number" type="text" placeholder="电表号" @blur="load_ammeter" round />
       <template #footer v-if="ammeter_data">
         还剩 {{ ammeter_data }} kW·h
       </template>

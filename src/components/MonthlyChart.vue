@@ -36,9 +36,9 @@ function renderChart(monthly_user_log: Array<EveryLoginData>) {
   for (var i = monthly_user_log.length; i > 0; i--) {
     if (
       monthly_user_log[i - 1].ipv4_down +
-        monthly_user_log[i - 1].ipv4_up +
-        monthly_user_log[i - 1].ipv6_down +
-        monthly_user_log[i - 1].ipv6_up ===
+      monthly_user_log[i - 1].ipv4_up +
+      monthly_user_log[i - 1].ipv6_down +
+      monthly_user_log[i - 1].ipv6_up ===
       0
     ) {
       end++;

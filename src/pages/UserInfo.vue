@@ -57,7 +57,7 @@ const load_refresh_account = async () => {
 
 const load_user_flow = async () => {
   console.log(store.userName);
-  
+
   let res = await invoke("load_user_flow_by_state", {
     userName: store.userName,
   }).catch((err) => pop_message.error(err));
@@ -80,7 +80,7 @@ const remain_flow = computed(() => {
   ) {
     let remain = Math.max(
       parseFloat(account_info.value?.note.leftFlow) -
-        account_flow.value?.data.v4,
+      account_flow.value?.data.v4,
       0
     );
     return parseFloat((remain / 1024).toFixed(2));
@@ -95,7 +95,7 @@ const remain_percentage = computed(() => {
     let per = Math.max(
       (parseFloat(account_info.value?.note.leftFlow) -
         account_flow.value?.data.v4) /
-        parseFloat(account_info.value?.note.leftFlow),
+      parseFloat(account_info.value?.note.leftFlow),
       0
     );
     return parseFloat((per * 100).toFixed(2));
@@ -156,14 +156,8 @@ const progress_color = computed(() => {
         </n-thing>
       </n-list-item>
       <n-list-item>
-        <n-progress
-          :color="progress_color"
-          :percentage="remain_percentage"
-          :indicator-text-color="progress_color"
-          type="dashboard"
-          gap-position="bottom"
-          class="my-progress"
-        />
+        <n-progress :color="progress_color" :percentage="remain_percentage" :indicator-text-color="progress_color"
+          type="dashboard" gap-position="bottom" class="my-progress" />
         <n-thing title="当月流量使用情况" content-style="margin-top: 10px;">
           <template #description>
             <n-grid x-gap="12" :cols="2">
@@ -210,9 +204,11 @@ const progress_color = computed(() => {
   float: right;
   margin: 10px 5px;
 }
+
 .my-list {
   background-color: rgba(240, 248, 255, 0.3);
 }
+
 @media (prefers-color-scheme: dark) {
   .my-list {
     background-color: #26262a3d;
