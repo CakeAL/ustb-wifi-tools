@@ -2,7 +2,11 @@
 import { invoke } from "@tauri-apps/api/core";
 import { ref, onMounted } from "vue";
 import { useMessage, useLoadingBar } from "naive-ui";
-import { ColorPaletteOutline, ChevronDownOutline } from "@vicons/ionicons5";
+import {
+  ColorPaletteOutline,
+  ChevronDownOutline,
+  ArrowForwardCircleOutline,
+} from "@vicons/ionicons5";
 import { open } from "@tauri-apps/plugin-shell";
 import { dataDir } from "@tauri-apps/api/path";
 import { check_update } from "../update";
@@ -123,12 +127,19 @@ const manually_check_update = async () => {
 };
 
 const submit_login_ustb_wifi = async () => {
+  loadingBar.start();
   await invoke("submit_login_ustb_wifi", {
     userName: user_name.value,
     password: password.value,
   })
-    .then((res) => pop_message.success(res as string))
-    .catch((err) => pop_message.error(err));
+    .then((res) => {
+      pop_message.success(res as string);
+      loadingBar.finish();
+    })
+    .catch((err) => {
+      pop_message.error(err);
+      loadingBar.error();
+    });
 };
 
 const set_background_image = async () => {
@@ -169,6 +180,37 @@ const open_guide = async () => {
 const open_microsoft_login = async () => {
   await invoke("open_microsoft_login").catch((e) => pop_message.error(e));
 };
+
+const switchModal = ref(false);
+const switchToUserName = ref("");
+const switchToPassword = ref("");
+const handleSelectSwitch = (key: number) => {
+  if (account.value[key][0] === store.userName) {
+    pop_message.warning("不要选择当前的账号");
+    return;
+  } else if (store.userName === "") {
+    pop_message.warning("当前账号可能为空，请先登录当前账号");
+    return;
+  }
+  switchToUserName.value = account.value[key][0];
+  switchToPassword.value = account.value[key][1];
+};
+const switchLoginUstbWifi = async () => {
+  loadingBar.start();
+
+  try {
+    await invoke("switch_login_ustb_wifi", {
+      userName: switchToUserName.value,
+      password: switchToPassword.value,
+    });
+  } catch (error) {
+    pop_message.error(error as string);
+    loadingBar.error();
+    return;
+  }
+  loadingBar.finish();
+  pop_message.success("切换成功");
+};
 </script>
 
 <template>
@@ -201,9 +243,8 @@ const open_microsoft_login = async () => {
             >
               <n-button type="info"
                 >选择账号 <n-icon size="20"><ChevronDownOutline /></n-icon
-              ></n-button> </n-dropdown></n-grid-item
-        ></n-grid>
-        <n-grid :x-gap="12" :y-gap="8" :cols="5" style="margin-top: 10px">
+              ></n-button> </n-dropdown
+          ></n-grid-item>
           <n-grid-item :span="2">
             <n-button
               strong
@@ -214,7 +255,7 @@ const open_microsoft_login = async () => {
             >
               登陆校园网后台获取统计数据 ⭐️
             </n-button> </n-grid-item
-          ><n-grid-item>
+          ><n-grid-item :span="2">
             <n-switch
               v-model:value="login_via_vpn"
               :rail-style="railStyle"
@@ -242,7 +283,7 @@ const open_microsoft_login = async () => {
       <n-grid :x-gap="12" :y-gap="8" :cols="2" style="margin-top: 10px">
         <n-grid-item>
           <n-card title="登出" hoverable @click="logout" class="my-card">
-            想换个账号登录？
+            想换个账号登录校园网后台？
           </n-card> </n-grid-item
         ><n-grid-item>
           <n-card
@@ -260,27 +301,27 @@ const open_microsoft_login = async () => {
             @click="submit_login_ustb_wifi"
             class="my-card"
           >
-            不会出现“Radius认证超时！”的问题（可能需要多点几次）。
+            解决了出现“Radius认证超时！”的问题。
           </n-card>
         </n-grid-item>
         <n-grid-item>
           <n-card
-            title="校园网使用指南"
+            title="一键切换登录校园网账号"
             hoverable
-            @click="open_guide"
+            @click="switchModal = true"
             class="my-card"
           >
-            信息办的微信公众号出的。但是没有任何有用信息。
+            会自动注销当前账号校园网登录，并尝试登录你选择的账号。
           </n-card>
         </n-grid-item>
         <n-grid-item>
           <n-card
-            title="更改校园网密码"
+            title="备份配置文件到 Onedrive"
             hoverable
-            @click="open_changepassword"
+            @click="open_microsoft_login"
             class="my-card"
           >
-            给你跳转到校园网后台修改密码的地方。
+            登录微软账号后，会将配置文件上传到 Onedrive 的<b>应用</b>文件夹。
           </n-card>
         </n-grid-item>
         <n-grid-item>
@@ -295,12 +336,22 @@ const open_microsoft_login = async () => {
         </n-grid-item>
         <n-grid-item>
           <n-card
-            title="同步配置文件到 Onedrive"
+            title="更改校园网密码"
             hoverable
-            @click="open_microsoft_login"
+            @click="open_changepassword"
             class="my-card"
           >
-            登录微软账号后，会将配置文件上传到 Onedrive 的<b>应用</b>文件夹。
+            给你跳转到校园网后台修改密码的地方。
+          </n-card>
+        </n-grid-item>
+        <n-grid-item>
+          <n-card
+            title="校园网使用指南"
+            hoverable
+            @click="open_guide"
+            class="my-card"
+          >
+            信息办的微信公众号出的。但是没有任何有用信息。
           </n-card>
         </n-grid-item>
       </n-grid>
@@ -329,23 +380,59 @@ const open_microsoft_login = async () => {
         >
           去掉背景图片
         </n-button>
-        <p>
+        <n-p>
           背景图片透明度: <br /><br /><n-slider
             :on-dragend="set_background_transparence"
             v-model:value="transparence"
             :default-value="0"
             :step="1"
           />
-        </p>
-        <p>
+        </n-p>
+        <n-p>
           背景图片模糊程度: <br /><br /><n-slider
             :on-dragend="set_background_blur"
             v-model:value="blur"
             :default-value="0"
             :step="1"
           />
-        </p>
-        <p>~以上设置右键刷新页面生效~</p>
+        </n-p>
+        <n-p style="text-align: center">~ 以上设置右键刷新页面生效 ~</n-p>
+      </n-card>
+    </n-modal>
+    <n-modal v-model:show="switchModal">
+      <n-card style="margin: auto 50px">
+        <n-p
+          >请选择一个账号（如果这里没有，你需要先登录校园网后台获取该账号的统计数据，然后这个选项就有了）：</n-p
+        >
+        <n-dropdown
+          trigger="hover"
+          :options="options"
+          @select="handleSelectSwitch"
+        >
+          <n-button type="info"
+            >选择账号 <n-icon size="20"><ChevronDownOutline /></n-icon
+          ></n-button>
+        </n-dropdown>
+        <div
+          v-if="switchToUserName !== '' && store.userName !== ''"
+          style="margin-top: 10px"
+        >
+          <n-statistic
+            label="你确定要切换账号么？此操作会从当前设备注销左侧账号，并尝试登录右侧的账号。"
+          >
+            {{ store.userName }}
+            <n-icon size="24" style="position: relative; top: 3px"
+              ><ArrowForwardCircleOutline
+            /></n-icon>
+            {{ switchToUserName }}
+          </n-statistic>
+          <n-button
+            style="margin-top: 10px"
+            type="warning"
+            @click="switchLoginUstbWifi"
+            >是</n-button
+          >
+        </div>
       </n-card>
     </n-modal>
   </div>

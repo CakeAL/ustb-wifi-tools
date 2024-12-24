@@ -74,7 +74,7 @@ const unbind_cur_device = async () => {
         !this_mac.value.map((mac) => mac.mac_address).includes(mac.mac_address)
     )
     .map((mac) => mac.mac_address);
-  if (macs.length === 0) {
+  if (macs.length === mac_addrs.value.length) {
     pop_message.warning(
       "没有与之相匹配的 MAC 地址，可能由于当前账号在此电脑上没有登录过🤔"
     );
@@ -102,43 +102,45 @@ const whether_login_cur_device = computed(() => {
     <n-h2 prefix="bar" type="success" style="margin-top: 15px">
       <n-text type="success"> 解绑 MAC 地址 </n-text>
     </n-h2>
-    <n-popover trigger="hover" placement="top-start">
-      <template #trigger>
-        <n-card hoverable class="my-card">
-          <n-collapse>
-            <n-collapse-item title="当前设备 MAC 地址（仅供参考）" name="1">
+
+    <n-card hoverable class="my-card">
+      <n-collapse>
+        <n-collapse-item title="当前设备 MAC 地址（仅供参考）" name="1">
+          <n-popover trigger="hover" placement="top-start">
+            <template #trigger>
               <n-statistic label="">
                 <span v-for="(mac, index) in this_mac" :key="index"
                   >{{ mac.iface_name }}: {{ mac.mac_address }}<br
                 /></span>
               </n-statistic>
-              <template #header-extra>
-                当前设备是否登录了该查询的账号：
-                <n-icon-wrapper
-                  :size="24"
-                  :border-radius="12"
-                  v-if="whether_login_cur_device"
-                >
-                  <n-icon :size="24" :component="CheckmarkCircleOutline" />
-                </n-icon-wrapper>
-                <n-icon-wrapper
-                  :size="24"
-                  :border-radius="12"
-                  color="#F2C97D"
-                  icon-color="#000"
-                  v-else
-                >
-                  <n-icon :size="24" :component="CloseCircleOutline" />
-                </n-icon-wrapper>
-              </template>
-            </n-collapse-item>
-          </n-collapse>
-        </n-card>
-      </template>
-      如果把该地址解绑会导致立刻断网！其实就是注销登录罢了。<br />
-      最前面的是网络接口，如果你的电脑有多个网卡，那么也会有多行。<br />
-      一般来说，Windows 设备上 "WLAN"，macOS 设备上 "en0" 是无线网卡的接口。
-    </n-popover>
+            </template>
+            如果把该地址解绑会导致立刻断网！其实就是注销登录罢了。<br />
+            最前面的是网络接口，如果你的电脑有多个网卡，那么也会有多行。<br />
+            一般来说，Windows 设备上 "WLAN"，macOS 设备上 "en0"
+            是无线网卡的接口。
+          </n-popover>
+          <template #header-extra>
+            当前设备是否登录了该查询的账号：
+            <n-icon-wrapper
+              :size="24"
+              :border-radius="12"
+              v-if="whether_login_cur_device"
+            >
+              <n-icon :size="24" :component="CheckmarkCircleOutline" />
+            </n-icon-wrapper>
+            <n-icon-wrapper
+              :size="24"
+              :border-radius="12"
+              color="#F2C97D"
+              icon-color="#000"
+              v-else
+            >
+              <n-icon :size="24" :component="CloseCircleOutline" />
+            </n-icon-wrapper>
+          </template>
+        </n-collapse-item>
+      </n-collapse>
+    </n-card>
     <n-table :bordered="false" style="background-color: transparent">
       <thead>
         <tr>
@@ -206,10 +208,15 @@ const whether_login_cur_device = computed(() => {
       >
     </n-grid>
     <n-card title="说明" hoverable class="my-card">
-      <n-p>上面标黄的一栏是当前设备可能的 MAC 地址。可以直接点击蓝色按钮注销/解绑当前设备。</n-p>
+      <n-p
+        >上面标黄的一栏是当前设备可能的 MAC
+        地址。可以直接点击蓝色按钮注销/解绑当前设备。</n-p
+      >
       <n-p>MAC Address是什么？简单来说校园网靠这个来识别是否是你的设备。</n-p>
       <n-p>
-        所以随机 MAC 地址开启的话，在你再次登录的时候，你的设备新生成了一个虚拟的 MAC 地址，就会导致你之前的设备被顶掉，详情可看B站视频：<a
+        所以随机 MAC
+        地址开启的话，在你再次登录的时候，你的设备新生成了一个虚拟的 MAC
+        地址，就会导致你之前的设备被顶掉，详情可看B站视频：<a
           @click="open('https://www.bilibili.com/video/av792486473/')"
           style="
             text-underline-offset: 5px;

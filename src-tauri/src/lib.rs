@@ -26,6 +26,7 @@ pub fn run() {
     builder
         .manage(AppState {
             jsessionid: RwLock::new(None),
+            cur_account: RwLock::new(String::new()),
             setting: RwLock::new(Setting::default()),
             login_via_vpn: RwLock::new(false),
             onedrive_code_verifier: RwLock::new(None),
@@ -59,7 +60,10 @@ pub fn run() {
             set_mac_custom_name,
             collapse,
             open_microsoft_login,
-            get_ip_location
+            get_ip_location,
+            switch_login_ustb_wifi,
+            get_current_user_name,
+            set_current_user_name
         ])
         .setup(|app| {
             #[cfg(not(any(target_os = "android", target_os = "linux")))]

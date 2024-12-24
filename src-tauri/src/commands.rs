@@ -1,4 +1,4 @@
-use std::net::IpAddr;
+use std::{collections::HashSet, net::IpAddr, time::Duration};
 
 use chrono::DateTime;
 use reqwest::Client;
@@ -21,7 +21,7 @@ pub async fn load_user_flow(
     if via_vpn {
         session_id = match app_state.jsessionid.read().unwrap().clone() {
             Some(s) => s,
-            None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
+            None => return Err("是否已经点击登录校园网后台按钮？".to_string()),
         };
     }
     get_load_user_flow(&account, &session_id, via_vpn)
@@ -111,7 +111,7 @@ pub fn logout(
 pub async fn load_refresh_account(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
     let session_id = match app_state.jsessionid.read().unwrap().clone() {
         Some(s) => s,
-        None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
+        None => return Err("是否已经点击登录校园网后台按钮？".to_string()),
     };
     let via_vpn = *app_state.login_via_vpn.read().unwrap();
     match get_refresh_account(&session_id, via_vpn).await {
@@ -129,7 +129,7 @@ pub async fn load_user_flow_by_state(
     let via_vpn = *app_state.login_via_vpn.read().unwrap();
     let session_id = match app_state.jsessionid.read().unwrap().clone() {
         Some(s) => s,
-        None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
+        None => return Err("是否已经点击登录校园网后台按钮？".to_string()),
     };
 
     get_load_user_flow(&user_name, &session_id, via_vpn)
@@ -145,7 +145,7 @@ pub async fn load_month_pay(
 ) -> Result<String, String> {
     let session_id = match app_state.jsessionid.read().unwrap().clone() {
         Some(s) => s,
-        None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
+        None => return Err("是否已经点击登录校园网后台按钮？".to_string()),
     };
     let via_vpn = *app_state.login_via_vpn.read().unwrap();
 
@@ -167,7 +167,7 @@ pub async fn load_user_login_log(
     }
     let session_id = match app_state.jsessionid.read().unwrap().clone() {
         Some(s) => s,
-        None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
+        None => return Err("是否已经点击登录校园网后台按钮？".to_string()),
     };
     let start_date = DateTime::from_timestamp(start_date, 0)
         .unwrap()
@@ -200,7 +200,7 @@ pub async fn load_monthly_login_log(
 ) -> Result<String, String> {
     let session_id = match app_state.jsessionid.read().unwrap().clone() {
         Some(s) => s,
-        None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
+        None => return Err("是否已经点击登录校园网后台按钮？".to_string()),
     };
     let end_date = start_date + 3600 * 24 * days;
     let start_date_string = DateTime::from_timestamp(start_date, 0)
@@ -256,13 +256,13 @@ pub async fn load_monthly_login_log(
 pub async fn load_mac_address(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
     let session_id = match app_state.jsessionid.read().unwrap().clone() {
         Some(s) => s,
-        None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
+        None => return Err("是否已经点击登录校园网后台按钮？".to_string()),
     };
     let via_vpn = *app_state.login_via_vpn.read().unwrap();
     let mac_custom_address = app_state.setting.read().unwrap().mac_custom_name.clone();
 
     match get_mac_address(&session_id, via_vpn, &mac_custom_address).await {
-        Ok(Some(value)) => Ok(value.to_string()),
+        Ok(Some(v)) => Ok(serde_json::json!(v).to_string()),
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
     }
@@ -328,7 +328,7 @@ pub async fn do_unbind_macs(
 ) -> Result<(), String> {
     let session_id = match app_state.jsessionid.read().unwrap().clone() {
         Some(s) => s,
-        None => return Err("SessionID为空，是否已经登录并单击获取Cookie按钮？".to_string()),
+        None => return Err("是否已经点击登录校园网后台按钮？".to_string()),
     };
     let via_vpn = *app_state.login_via_vpn.read().unwrap();
 
@@ -553,12 +553,22 @@ pub async fn load_ammeter(
     }
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub async fn submit_login_ustb_wifi(user_name: String, password: String) -> Result<String, String> {
-    match login_ustb_wifi(&user_name, &password).await {
-        Ok(()) => Ok("登录成功".to_string()),
-        Err(e) => Err(e.to_string()),
+    // 尝试 5 次登录
+    let mut err = String::new();
+    for _ in 0..5 {
+        match login_ustb_wifi(&user_name, &password).await {
+            Ok(()) => return Ok("登录成功".to_string()),
+            Err(e) => err = e.to_string(),
+        }
+        // 不是，这登录为什么还不是每次都一定能登录上的啊😅
+        // 大概是因为解绑 MAC 地址之后，需要给校园网后台留出处理时间
+        dbg!(&err);
+        tokio::time::sleep(Duration::from_millis(200)).await;
     }
+    // 返回最后一次错误
+    Err(err)
 }
 
 #[tauri::command]
@@ -678,4 +688,87 @@ pub async fn get_ip_location(ip: String) -> Result<String, String> {
     let text = response.text().await.map_err(|e| e.to_string())?;
 
     Ok(text)
+}
+
+#[tauri::command(async)]
+pub async fn switch_login_ustb_wifi(
+    app_state: tauri::State<'_, AppState>,
+    user_name: String,
+    password: String,
+) -> Result<String, String> {
+    // 获取本机 mac 地址
+    use if_addrs::Interface;
+    let ifaces = if_addrs::get_if_addrs()
+        .map_err(|e| e.to_string())?
+        .into_iter()
+        .filter_map(|iface| match iface.addr {
+            if_addrs::IfAddr::V4(_) if !iface.is_loopback() => Some(iface),
+            _ => None,
+        })
+        .collect::<Vec<Interface>>();
+
+    let cur_device_macs: HashSet<String> = ifaces
+        .into_iter()
+        .map(|iface| {
+            mac_address::mac_address_by_name(&iface.name)
+                .unwrap_or_default()
+                .unwrap_or_default()
+                .to_string()
+                .replace(':', "")
+        })
+        .collect();
+
+    // 获取该账号校园网记住的 mac 地址
+    let session_id = match app_state.jsessionid.read().unwrap().clone() {
+        Some(s) => s,
+        None => return Err("是否已经点击登录校园网后台按钮？".to_string()),
+    };
+    let via_vpn = *app_state.login_via_vpn.read().unwrap();
+    if via_vpn {
+        return Err("请在校园网内使用本功能".to_string());
+    }
+    let mac_custom_address = app_state.setting.read().unwrap().mac_custom_name.clone();
+
+    let macs = match get_mac_address(&session_id, via_vpn, &mac_custom_address).await {
+        Ok(Some(value)) => Ok(value),
+        Ok(None) => Err("请确认是否已经登录".to_string()),
+        Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
+    }?
+    .into_iter()
+    .map(|v| v.mac_address)
+    .collect::<HashSet<String>>();
+
+    // 取差集，减去当前设备的匹配的校园网后台已存在的 MAC 地址
+    let diff_macs = macs
+        .difference(&cur_device_macs)
+        .cloned()
+        .collect::<Vec<String>>();
+    // dbg!(&diff_macs);
+    if diff_macs.len() == macs.len() {
+        return Err("无法匹配 MAC 地址，请确认当前账号是否已经在这台设备登录了。".to_string());
+    }
+    match unbind_macs(&session_id, &diff_macs, via_vpn).await {
+        Ok(Some(())) => Ok(()),
+        Ok(None) => Err("请确认是否已经登录".to_string()),
+        Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
+    }?;
+
+    // 登录新账号
+    submit_login_ustb_wifi(user_name, password).await
+}
+
+#[tauri::command(async)]
+pub async fn get_current_user_name(
+    app_state: tauri::State<'_, AppState>,
+) -> Result<String, String> {
+    Ok(app_state.cur_account.read().unwrap().clone())
+}
+
+#[tauri::command(async)]
+pub async fn set_current_user_name(
+    app_state: tauri::State<'_, AppState>,
+    user_name: String,
+) -> Result<(), String> {
+    *app_state.cur_account.write().unwrap() = user_name;
+    Ok(())
 }

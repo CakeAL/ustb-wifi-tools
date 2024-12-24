@@ -3,7 +3,6 @@ use std::{
     fs::{self, create_dir, File, OpenOptions},
     io::{Read, Write},
     path::PathBuf,
-    thread::panicking,
 };
 
 use anyhow::{anyhow, Result};
@@ -50,18 +49,24 @@ impl Setting {
     }
 
     pub fn set_account(&mut self, username: String, password: String) {
-        for (saved_username, saved_password) in self.account.iter_mut() {
+        for (index, (saved_username, saved_password)) in self.account.iter_mut().enumerate() {
             if saved_username == &username && saved_password == &password {
-                // nothing happened
+                // 如果用户名和密码匹配，且没有修改密码
+                // 提升到最前面，这样下次获取账号信息，第一个显示就是上次登录的账号。
+                let item = self.account.remove(index);
+                self.account.insert(0, item);
                 return;
             } else if saved_username == &username {
-                // 密码有更改
+                // 如果用户名匹配且密码有更改
                 *saved_password = password.clone();
+                // 提升到最前面
+                let item = self.account.remove(index);
+                self.account.insert(0, item);
                 return;
             }
         }
         // 系新账号
-        self.account.push((username, password));
+        self.account.insert(0, (username, password));
     }
 
     pub fn set_ammeter_number(&mut self, ammeter_number: u32) {

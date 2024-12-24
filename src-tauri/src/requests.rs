@@ -458,7 +458,7 @@ pub async fn get_mac_address(
     session_id: &str,
     via_vpn: bool,
     mac_custom_name: &HashMap<String, String>,
-) -> Result<Option<Value>> {
+) -> Result<Option<Vec<MacAddress>>> {
     let url = if !via_vpn {
         "http://202.204.60.7:8080/nav_unBandMacJsp"
     } else {
@@ -511,7 +511,7 @@ pub async fn get_mac_address(
                 .unwrap_or_default(),
         })
         .collect::<Vec<_>>();
-    Ok(Some(serde_json::json!(mac_address)))
+    Ok(Some(mac_address))
 }
 
 // 这里传进来的是 **不需要** 解绑的macs
