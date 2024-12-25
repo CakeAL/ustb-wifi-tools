@@ -16,7 +16,7 @@ jobs:
       - name: Get Version number
         id: get_version
         run: |
-          VERSION=$(jr -r '.version' package.json)
+          VERSION=$(jq -r '.version' package.json)
           echo $VERSION
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
       - name: Changelog Reader
