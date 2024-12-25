@@ -105,8 +105,8 @@ const show1 = ref(false);
     </n-card>
     <n-card title="软件版本信息" hoverable class="my-card">
       <n-p>
-        当前 version = "1.0.0" |
-        <a @click="open('https://github.com/CakeAL/ustb-wifi-tools/releases')" style="
+        当前 version = "1.1.0" |
+        <a @click="open('https://github.com/CakeAL/ustb-wifi-tools/blob/main/CHANGELOG.md')" style="
             text-decoration: underline;
             text-underline-offset: 5px;
             cursor: pointer;

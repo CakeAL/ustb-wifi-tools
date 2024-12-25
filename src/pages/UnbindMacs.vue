@@ -4,6 +4,7 @@ import { computed, onMounted, ref } from "vue";
 import { useMessage } from "naive-ui";
 import { open } from "@tauri-apps/plugin-shell";
 import { CheckmarkCircleOutline, CloseCircleOutline } from "@vicons/ionicons5";
+import { store } from "../store";
 interface MacAddress {
   device_name: string;
   mac_address: string;
@@ -119,7 +120,7 @@ const whether_login_cur_device = computed(() => {
             是无线网卡的接口。
           </n-popover>
           <template #header-extra>
-            当前设备是否登录了该查询的账号：
+            当前设备是否与 {{ store.userName }} 绑定：
             <n-icon-wrapper :size="24" :border-radius="12" v-if="whether_login_cur_device">
               <n-icon :size="24" :component="CheckmarkCircleOutline" />
             </n-icon-wrapper>

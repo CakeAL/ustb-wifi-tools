@@ -123,7 +123,9 @@ const set_setting = async () => {
 };
 
 const manually_check_update = async () => {
+  loadingBar.start();
   await check_update(true);
+  loadingBar.finish();
 };
 
 const submit_login_ustb_wifi = async () => {
@@ -255,7 +257,7 @@ const switchLoginUstbWifi = async () => {
             手动地检查更新。
           </n-card> </n-grid-item><n-grid-item>
           <n-card title="登陆校园网" hoverable @click="submit_login_ustb_wifi" class="my-card">
-            解决了出现“Radius认证超时！”的问题。<br/> &nbsp;
+            解决了出现“Radius认证超时！”的问题。<br /> &nbsp;
           </n-card>
         </n-grid-item>
         <n-grid-item>
@@ -270,12 +272,12 @@ const switchLoginUstbWifi = async () => {
         </n-grid-item>
         <n-grid-item>
           <n-card title="打开配置文件夹" hoverable @click="open_config" class="my-card">
-            如果你想看都存了些什么的话，或者想自己改。<br/> &nbsp;
+            如果你想看都存了些什么的话，或者想自己改。<br /> &nbsp;
           </n-card>
         </n-grid-item>
         <n-grid-item>
           <n-card title="更改校园网密码" hoverable @click="open_changepassword" class="my-card">
-            给你跳转到校园网后台修改密码的地方。<br/> &nbsp;
+            给你跳转到校园网后台修改密码的地方。<br /> &nbsp;
           </n-card>
         </n-grid-item>
         <n-grid-item>

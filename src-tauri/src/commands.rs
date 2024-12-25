@@ -598,6 +598,7 @@ async fn update(
     on_event: Channel<DownloadEvent>,
 ) -> Result<(), String> {
     use tauri_plugin_dialog::DialogExt;
+    use tauri_plugin_shell::ShellExt;
     #[cfg(not(any(target_os = "android", target_os = "linux")))]
     use tauri_plugin_updater::UpdaterExt;
 
@@ -609,13 +610,13 @@ async fn update(
         .map_err(|e| e.to_string())?
     {
         // 对话框
-        let answer = app
+        let answer: bool = app
             .dialog()
             .message(format!(
-                "有新版本！{}->{}\n是否更新？",
-                update.current_version, update.version
+                "{}->{}\n更新内容：{}",
+                update.current_version, update.version, update.body.clone().unwrap_or_default()
             ))
-            .title("貌似有版本更新？")
+            .title("有新版本！")
             .buttons(tauri_plugin_dialog::MessageDialogButtons::OkCancel)
             .blocking_show();
 
@@ -646,13 +647,20 @@ async fn update(
                 )
                 .await
                 .map_err(|e| e.to_string())?;
-            app.dialog()
-                .message("下载完成，点击重启")
-                .kind(tauri_plugin_dialog::MessageDialogKind::Info)
-                .title("这是个提示框")
-                .buttons(tauri_plugin_dialog::MessageDialogButtons::Ok)
+            // 添加查看 CHANGELOG
+            let answer = app
+                .dialog()
+                .message("是否查看更新记录")
+                .title("更新完成")
+                .buttons(tauri_plugin_dialog::MessageDialogButtons::YesNo)
                 .blocking_show();
-            // println!("update installed");
+
+            if answer {
+                let _ = app.shell().open(
+                    "https://github.com/CakeAL/ustb-wifi-tools/blob/main/CHANGELOG.md",
+                    None,
+                );
+            }
             app.restart();
         }
     } else if manually {

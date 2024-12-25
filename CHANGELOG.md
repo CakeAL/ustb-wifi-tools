@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.0] - 2024-12-25
+
+### Added
+
+- 账号管理
+- 一键切换校园网登录账号
+- 解绑 MAC 界面：本机匹配到 MAC 高亮显示
+- 解绑 MAC 界面：当前设备是否与"查询的账号"绑定：
+- 解绑 MAC 界面：一键解绑(注销)当前设备匹配的 MAC 地址
+
+### Changed
+
+- 样式修改
+
 ## [1.0.0] - 2024-12-12
 
 ### Added
@@ -45,7 +59,7 @@
 
 ### Changed
 
-- 登录校园网可以自动获取ipv6，我忘了原来能不能自动获取了，好像是能的，改的好像没有意义
+- 登录校园网可以自动获取 ipv6，我忘了原来能不能自动获取了，好像是能的，改的好像没有意义
 
 ## [0.8.7] - 2024-11-06
 
@@ -58,7 +72,7 @@
 
 ### Added
 
-- 更换背景，调整背景透明度和模糊程度（透明度只有在Linux，Windows 10及以下是可以透过去的，否则后面会还有一层macOS/Windows 11 mica半透明效果）
+- 更换背景，调整背景透明度和模糊程度（透明度只有在 Linux，Windows 10 及以下是可以透过去的，否则后面会还有一层 macOS/Windows 11 mica 半透明效果）
 
 ### Fixed
 
@@ -115,7 +129,7 @@
 
 ### Changed
 
-- 月度使用情况的UI更改，暗色模式正常了。大概好看了一些
+- 月度使用情况的 UI 更改，暗色模式正常了。大概好看了一些
 
 ## [0.7.1] - 2024-10-21
 
@@ -152,8 +166,9 @@
 
 ## [0.2.0] - 2024-06-22
 
-初始发布版本 
+初始发布版本
 
+[1.1.0]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.1.0
 [1.0.0]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.0.0
 [0.9.1]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v0.9.1
 [0.9.0]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v0.9.0

@@ -273,6 +273,13 @@ const select_mb_or_gb = (value: string) => {
 .day {
   height: 50px;
   border-radius: 5px;
+  transition: all 0.3s ease-in-out;
+}
+
+.day:hover {
+  box-shadow: rgba(127, 231, 196, 0.4) 0 3px, rgba(127, 231, 196, 0.3) 0 6px,
+    rgba(127, 231, 196, 0.2) 0 9px, rgba(127, 231, 196, 0.1) 0 12px,
+    rgba(127, 231, 196, 0.05) 0 15px;
 }
 
 .my-card {
