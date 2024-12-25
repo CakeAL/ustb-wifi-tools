@@ -6,7 +6,27 @@ on:
       - v*
 
 jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    outputs:
+      changes: ${{ steps.changelog_reader.outputs.changes }}
+      version: ${{ steps.get_version.outputs.VERSION }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get Version number
+        id: get_version
+        run: |
+          VERSION=$(jr -r '.version' package.json)
+          echo $VERSION
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+      - name: Changelog Reader
+        id: changelog_reader
+        uses: mindsers/changelog-reader-action@v2
+        with:
+          path: "CHANGELOG.md"
+          version: ${{ steps.get_version.outputs.VERSION }}
   publish-tauri:
+    needs: changelog
     permissions:
       contents: write
     strategy:
@@ -52,7 +72,7 @@ jobs:
         with:
           tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: "USTB WiFi Tools v__VERSION__"
-          releaseBody: "See the assets to download this version and install."
+          releaseBody: ${{ needs.changelog.outputs.changes }}
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
