@@ -40,7 +40,6 @@ declare module 'vue' {
     NMessageProvider: typeof import('naive-ui')['NMessageProvider']
     NModal: typeof import('naive-ui')['NModal']
     NModalProvider: typeof import('naive-ui')['NModalProvider']
-    NOption: typeof import('naive-ui')['NOption']
     NP: typeof import('naive-ui')['NP']
     NPopover: typeof import('naive-ui')['NPopover']
     NProgress: typeof import('naive-ui')['NProgress']

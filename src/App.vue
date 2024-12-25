@@ -15,6 +15,7 @@ import UnbindMacs from "./pages/UnbindMacs.vue";
 import SpeedTest from "./pages/SpeedTest.vue";
 import MonthlyUserLog from "./pages/MonthlyUserLog.vue";
 import OtherTools from "./pages/OtherTools.vue";
+import { store } from "./store";
 
 type RouteComponent = DefineComponent<{}, {}, any>;
 
@@ -112,11 +113,16 @@ const apply_background = async () => {
   }
 };
 
-// download & onedrive
+// download & onedrive & userName
 onMounted(() => {
   check_update(false);
   load_collapse();
+  getCurUserName();
 });
+
+const getCurUserName = async () => {
+  store.userName = await invoke("get_current_user_name");
+};
 
 // sider
 const collapsed = ref(true);
