@@ -338,6 +338,7 @@ const switchLoginUstbWifi = async () => {
 <style scoped>
 .my-switch {
   margin-top: calc((34px - 22px) / 2);
+  float: inline-end;
 }
 
 .my-card {

@@ -762,6 +762,7 @@ pub async fn switch_login_ustb_wifi(
     }?;
 
     // 登录新账号
+    tokio::time::sleep(Duration::from_millis(200)).await;
     submit_login_ustb_wifi(user_name, password).await
 }
 
