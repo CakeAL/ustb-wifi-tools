@@ -555,9 +555,9 @@ pub async fn load_ammeter(
 
 #[tauri::command(async)]
 pub async fn submit_login_ustb_wifi(user_name: String, password: String) -> Result<String, String> {
-    // 尝试 5 次登录
+    // 尝试 10 次登录
     let mut err = String::new();
-    for _ in 0..5 {
+    for _ in 0..10 {
         match login_ustb_wifi(&user_name, &password).await {
             Ok(()) => return Ok("登录成功".to_string()),
             Err(e) => err = e.to_string(),

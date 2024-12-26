@@ -1,4 +1,4 @@
-use std::{collections::HashMap, f64, time::Duration};
+use std::{collections::HashMap, f64, net::Ipv6Addr, time::Duration};
 
 use anyhow::{anyhow, Result};
 use chrono::NaiveDateTime;
@@ -594,48 +594,73 @@ pub async fn login_ustb_wifi(account: &str, password: &str) -> Result<()> {
         .await
         .map_err(|e| anyhow!("可能没连上校园网：{e:?}"))?;
     if response.status().as_u16() != 302 {
-        return Err(anyhow!("Request {}", response.status()));
+        return Err(anyhow!(
+            "Request {}, 重定向失败, 可能由于已登录",
+            response.status()
+        ));
     }
     let location = response
         .headers()
         .get(LOCATION)
         .and_then(|value| value.to_str().ok())
         .unwrap_or_default();
-    let wlan_user_ipv6 = location.split(['=', '&']).nth(1).unwrap_or_default();
-
-    // dbg!(wlan_user_ipv6);
-    // 第二次请求 1.htm
-    let response = client
-        .get("http://202.204.48.82/1.htm")
-        .query(&[("mv6", wlan_user_ipv6), ("url", "")])
-        .send()
-        .await?;
-    if response.status().as_u16() != 302 {
-        return Err(anyhow!("Request {}, 可能由于已登录", response.status()));
+    dbg!(location);
+    let mut wlan_user_ipv6 = location
+        .split(['=', '&'])
+        .nth(1)
+        .unwrap_or_default()
+        .to_string();
+    
+    let (wlan_user_ip, wlan_ac_name, wlan_ac_ip);
+    if wlan_user_ipv6.parse::<Ipv6Addr>().is_err() {
+        // wlan_user_ipv6 不是一个ipv6地址，说明连接是 USTB_Wi-Fi，没有 ipv6 地址
+        // http://202.204.48.66/a79.htm?wlanacname=WX5560X&wlanuserip=10.24.21.251&nasip=10%2E0%2E108%2E19
+        let ips = location.split(['=', '&']).collect::<Vec<&str>>();
+        (wlan_user_ip, wlan_ac_name, wlan_ac_ip) = (
+            ips.get(3).copied().unwrap_or_default().to_string(),
+            ips.get(1).copied().unwrap_or_default().to_string(),
+            ips.get(5).copied().unwrap_or_default().replace("%2E", "."),
+        );
+        wlan_user_ipv6 = "".to_string();
+        dbg!(&wlan_user_ipv6, &wlan_user_ip, &wlan_ac_name, &wlan_ac_ip);
+    } else {
+        // 第二次请求 1.htm
+        let response = client
+            .get("http://202.204.48.82/1.htm")
+            .query(&[("mv6", wlan_user_ipv6.as_str()), ("url", "")])
+            .send()
+            .await?;
+        if response.status().as_u16() != 302 {
+            return Err(anyhow!(
+                "Request {}, 重定向失败, 可能由于已登录",
+                response.status()
+            ));
+        }
+        let location = response
+            .headers()
+            .get(LOCATION)
+            .and_then(|value| value.to_str().ok())
+            .unwrap_or_default();
+        dbg!(location);
+        let ips = location.split(['=', '&']).collect::<Vec<&str>>();
+        (wlan_user_ip, wlan_ac_name, wlan_ac_ip) = (
+            ips.get(1).copied().unwrap_or_default().to_string(),
+            ips.get(3).copied().unwrap_or_default().to_string(),
+            ips.get(5).copied().unwrap_or_default().replace("%2E", "."),
+        );
+        dbg!(&wlan_user_ipv6, &wlan_user_ip, &wlan_ac_name, &wlan_ac_ip);
     }
-    let location = response
-        .headers()
-        .get(LOCATION)
-        .and_then(|value| value.to_str().ok())
-        .unwrap_or_default();
-    let ips = location.split(['=', '&']).collect::<Vec<&str>>();
-    let (wlan_user_ip, wlan_ac_name, wlan_ac_ip) = (
-        ips.get(1).copied().unwrap_or_default(),
-        ips.get(3).copied().unwrap_or_default(),
-        ips.get(5).copied().unwrap_or_default().replace("%2E", "."),
-    );
-    dbg!(wlan_user_ipv6, wlan_user_ip, wlan_ac_name, &wlan_ac_ip);
 
     let params = [
         ("callback", "dr1004"),
         ("login_method", "1"),
         ("user_account", account),
         ("user_password", password),
-        ("wlan_user_ip", wlan_user_ip),
-        ("wlan_user_ipv6", wlan_user_ipv6),
+        ("wlan_user_ip", &wlan_user_ip),
+        ("wlan_user_ipv6", &wlan_user_ipv6),
         ("wlan_user_mac", "000000000000"),
         ("wlan_ac_ip", &wlan_ac_ip),
-        ("wlan_ac_name", wlan_ac_name),
+        ("wlan_ac_name", &wlan_ac_name),
         ("jsVersion", "4.1"),
         ("terminal_type", "1"),
         ("lang", "zh-cn"),
