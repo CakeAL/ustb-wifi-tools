@@ -241,7 +241,7 @@ pub async fn get_refresh_account(session_id: &str, via_vpn: bool) -> Result<Opti
     Ok(Some(response))
 }
 
-pub async fn get_month_pay(session_id: &str, year: u16, via_vpn: bool) -> Result<Option<Value>> {
+pub async fn get_month_pay(session_id: &str, year: u16, via_vpn: bool) -> Result<Option<MonthPayInfo>> {
     let url = if !via_vpn {
         "http://202.204.60.7:8080/MonthPayAction.action"
     } else {
@@ -305,12 +305,12 @@ pub async fn get_month_pay(session_id: &str, year: u16, via_vpn: bool) -> Result
     }
     // println!("{:?}", monthly_datas);
 
-    Ok(Some(serde_json::json!(MonthPayInfo {
+    Ok(Some(MonthPayInfo {
         year_cost: redtexts.get(1).unwrap().parse()?,
         year_used_duration: redtexts.get(2).unwrap().parse()?,
         year_used_flow: redtexts.get(3).unwrap().parse()?,
         monthly_data: monthly_datas,
-    })))
+    }))
 }
 
 // 已废弃->这里的year_month应该是类似于 202203 或者 202312 这样的格式

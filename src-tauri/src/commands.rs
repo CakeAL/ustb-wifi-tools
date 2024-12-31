@@ -1,6 +1,6 @@
 use std::{collections::HashSet, net::IpAddr, time::Duration};
 
-use chrono::DateTime;
+use chrono::{DateTime, Datelike, Local};
 use reqwest::Client;
 use serde::Serialize;
 use tauri::{ipc::Channel, utils::config::WindowConfig, Manager};
@@ -149,10 +149,19 @@ pub async fn load_month_pay(
     };
     let via_vpn = *app_state.login_via_vpn.read().unwrap();
 
-    match get_month_pay(&session_id, year, via_vpn).await {
-        Ok(Some(value)) => Ok(value.to_string()),
+    let mut month_pay_info = match get_month_pay(&session_id, year, via_vpn).await {
+        Ok(Some(v)) => Ok(v),
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
+    }?;
+
+    // 如果 year 大于 今年，手动加载去年 12 月的数据进来
+    let this_year = Local::now().year() as u16;
+    if year > this_year {
+        todo!()
+        // 前端应该改成，超过当年 1 月之后，才显示今年数据，否则是去年数据
+    } else {
+        Ok(serde_json::json!(month_pay_info).to_string())
     }
 }
 
