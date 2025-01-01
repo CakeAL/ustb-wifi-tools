@@ -15,8 +15,8 @@ const label = {
 
 onMounted(() => {
   if (props.data && props.month) {
-    let data = props.data.reverse();
-    let month = props.month.reverse();
+    let data = props.data;
+    let month = props.month;
     renderChart(month, data);
   }
 });
@@ -27,8 +27,8 @@ watch(
   },
   () => {
     if (props.data && props.month) {
-      let data = props.data.reverse();
-      let month = props.month.reverse();
+      let data = props.data;
+      let month = props.month;
       renderChart(month, data);
     }
   },
