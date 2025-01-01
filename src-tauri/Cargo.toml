@@ -1,6 +1,6 @@
 [package]
 name = "ustb-wifi-tools"
-version = "1.1.1"
+version = "1.1.2"
 description = "A Tauri App that can be used to get information of the USTB Wifi"
 authors = ["CakeAL"]
 edition = "2021"

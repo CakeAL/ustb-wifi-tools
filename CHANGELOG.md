@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.2] - 2025-01-01
+
+### Added
+
+- 年度扣费账单支持获取 12 月份内容（校园网扣费账单没有该数据，手动请求 12 月使用详情）
+- 支持 2023 年 07 月及之前的数据获取（只有当月的，且不支持 2022 年 09 月，因为校园网后台没有🤭）
+
+### Changed
+
+- 年度扣费账单支持获取 2022 年 6 月 ～ 2023 年 8 月因为口罩原因流量免费期间的数据（ref：⬆️）
+
 ## [1.1.1] - 2024-12-26
 
 ### Changed
@@ -178,6 +189,8 @@
 
 初始发布版本
 
+[1.1.2]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.1.2
+[1.1.1]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.1.1
 [1.1.0]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.1.0
 [1.0.0]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.0.0
 [0.9.1]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v0.9.1

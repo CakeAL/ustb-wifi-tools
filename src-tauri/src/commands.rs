@@ -6,7 +6,7 @@ use serde::Serialize;
 use tauri::{ipc::Channel, utils::config::WindowConfig, Manager};
 
 use crate::{
-    entities::{AppState, DownloadEvent, EveryLoginData, MonthlyData},
+    entities::{AppState, DownloadEvent, EveryLoginData, MonthlyData, UserLoginLog},
     requests::*,
     setting::Setting,
 };
@@ -156,6 +156,9 @@ pub async fn load_month_pay(
     }?;
     // 翻转一下，因为后台给的数据是倒叙的
     month_pay_info.monthly_data.reverse();
+    if month_pay_info.monthly_data.is_empty() {
+        return Ok(serde_json::json!(month_pay_info).to_string());
+    }
 
     // 如果 year 大于 今年，手动加载去年 12 月的数据进来
     let this_year = Local::now().year() as u16;
@@ -164,12 +167,9 @@ pub async fn load_month_pay(
         let end_date = format!("{}-12-31", year);
         let dec_data = match get_user_login_log(&session_id, &start_date, &end_date, via_vpn).await
         {
-            Ok(Some(v)) => Ok(v),
-            Ok(None) => Err("请确认是否已经登录".to_string()),
-            Err(_) => {
-                return Ok(serde_json::json!(month_pay_info).to_string());
-            }
-        }?;
+            Ok(Some(v)) => v,
+            _ => UserLoginLog::default(),
+        };
         month_pay_info.year_cost += dec_data.cost;
         month_pay_info.year_used_duration += dec_data.used_duration;
         month_pay_info.year_used_flow += dec_data.used_flow;
@@ -180,6 +180,79 @@ pub async fn load_month_pay(
             month_used_duration: dec_data.used_duration,
         });
         // 前端应该改成，超过当年 1 月之后，才显示今年数据，否则是去年数据
+    }
+
+    // 如果是2023年，手动获取前8个月的数据
+    if year == 2023 {
+        month_pay_info.monthly_data.drain(0..8);
+        let mut handles = vec![];
+        for i in 0..8 {
+            let session_id = session_id.clone();
+            let month = i + 1;
+            let handle = tokio::spawn(async move {
+                let start_date = format!("2023-{:02}-01", month);
+                let end_date = format!("2023-{:02}-31", month);
+                (
+                    month,
+                    get_user_login_log(&session_id, &start_date, &end_date, via_vpn).await,
+                )
+            });
+            handles.push(handle);
+        }
+        for handle in handles {
+            let (month, data) = handle.await.unwrap();
+            let data = match data {
+                Ok(Some(v)) => v,
+                _ => UserLoginLog::default(),
+            };
+            month_pay_info.monthly_data.insert(
+                month - 1,
+                MonthlyData {
+                    month: month as u8,
+                    month_cost: data.cost,
+                    month_used_flow: data.used_flow,
+                    month_used_duration: data.used_duration,
+                },
+            );
+            month_pay_info.year_cost += data.cost;
+            month_pay_info.year_used_flow += data.used_flow;
+        }
+    } 
+    // 如果是 2022 年，手动获取 6 ～ 11 月数据（前面12月已经获取完了）
+    else if year == 2022 { 
+        month_pay_info.monthly_data.drain(5..11);
+        let mut handles = vec![];
+        for i in 5..11 {
+            let session_id = session_id.clone();
+            let month = i + 1;
+            let handle = tokio::spawn(async move {
+                let start_date = format!("2022-{:02}-01", month);
+                let end_date = format!("2022-{:02}-31", month);
+                (
+                    month,
+                    get_user_login_log(&session_id, &start_date, &end_date, via_vpn).await,
+                )
+            });
+            handles.push(handle);
+        }
+        for handle in handles {
+            let (month, data) = handle.await.unwrap();
+            let data = match data {
+                Ok(Some(v)) => v,
+                _ => UserLoginLog::default(),
+            };
+            month_pay_info.monthly_data.insert(
+                month - 1,
+                MonthlyData {
+                    month: month as u8,
+                    month_cost: data.cost,
+                    month_used_flow: data.used_flow,
+                    month_used_duration: data.used_duration,
+                },
+            );
+            month_pay_info.year_cost += data.cost;
+            month_pay_info.year_used_flow += data.used_flow;
+        }
     }
 
     Ok(serde_json::json!(month_pay_info).to_string())

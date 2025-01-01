@@ -45,7 +45,7 @@ pub struct MonthlyData {
     pub month_used_duration: u32,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct UserLoginLog {
     pub ipv4_up: f64,
     pub ipv4_down: f64,
