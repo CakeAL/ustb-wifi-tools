@@ -241,7 +241,11 @@ pub async fn get_refresh_account(session_id: &str, via_vpn: bool) -> Result<Opti
     Ok(Some(response))
 }
 
-pub async fn get_month_pay(session_id: &str, year: u16, via_vpn: bool) -> Result<Option<MonthPayInfo>> {
+pub async fn get_month_pay(
+    session_id: &str,
+    year: u16,
+    via_vpn: bool,
+) -> Result<Option<MonthPayInfo>> {
     let url = if !via_vpn {
         "http://202.204.60.7:8080/MonthPayAction.action"
     } else {
@@ -313,7 +317,8 @@ pub async fn get_month_pay(session_id: &str, year: u16, via_vpn: bool) -> Result
     }))
 }
 
-// 已废弃->这里的year_month应该是类似于 202203 或者 202312 这样的格式
+// year_month 在 2023 年 7 月及之前是这样的形式 应该是类似于 202203
+// 判定传进来的 start_date 如果 小于等于 2023年7月31日直接显示当月的
 // start_date 2024-05-01 end_date 2024-05-31
 // 校园网的API并不能返回全部数据，有条数限制。
 pub async fn get_user_login_log(
@@ -327,7 +332,20 @@ pub async fn get_user_login_log(
     } else {
         "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/UserLoginLogAction.action"
     };
-    // let month = format!("CHECKER.TBLUSERLOGIN{}", year_month); // 按月份已经废了，现在只能按照开始结束日期查
+    let mut _type = 4;
+    let mut _month = "CHECKER.TBLUSERLOGIN202304".to_string();
+
+    {
+        let date = start_date.split('-').collect::<Vec<&str>>();
+        let year = date[0].parse::<i32>().unwrap_or(2333);
+        let month = date[1].parse::<i32>().unwrap_or(2333);
+        if year < 2023 || (year <= 2023 && month <= 7) {
+            _type = 3;
+            _month = format!("CHECKER.TBLUSERLOGIN{}{:02}", year, month);
+            // dbg!(&_month);
+        }
+    }
+
     let mut req = Client::new().post(url);
     if !via_vpn {
         req = req.header("Cookie", format!("JSESSIONID={}", session_id));
@@ -340,12 +358,11 @@ pub async fn get_user_login_log(
     let response = req
         .header("Cookie", format!("JSESSIONID={}", session_id))
         .form(&[
-            ("type", "4"),
-            ("month", "CHECKER.TBLUSERLOGIN202304"), // 按月已经没用了，这里是固定写法，传过去也没用
+            ("type", _type.to_string().as_str()),
+            ("month", _month.as_str()),
             ("startDate", start_date),
             ("endDate", end_date),
         ])
-        .timeout(Duration::from_millis(500))
         .send()
         .await?
         .text()
@@ -610,7 +627,7 @@ pub async fn login_ustb_wifi(account: &str, password: &str) -> Result<()> {
         .nth(1)
         .unwrap_or_default()
         .to_string();
-    
+
     let (wlan_user_ip, wlan_ac_name, wlan_ac_ip);
     if wlan_user_ipv6.parse::<Ipv6Addr>().is_err() {
         // wlan_user_ipv6 不是一个ipv6地址，说明连接是 USTB_Wi-Fi，没有 ipv6 地址

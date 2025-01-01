@@ -120,7 +120,7 @@ const handleUpdateValue = (value: string) => {
         <n-grid x-gap="12" :cols="3">
           <n-gi>
             <n-statistic label="总共花费">
-              {{ month_pay?.year_cost }} 元
+              {{ month_pay?.year_cost.toFixed(2) }} 元
             </n-statistic>
           </n-gi>
           <n-gi>

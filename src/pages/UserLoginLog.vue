@@ -195,11 +195,21 @@ const mb2gb = (mb: number | undefined) => {
       <n-data-table :columns="columns" :data="user_login_log?.every_login_data" :bordered="false" :max-height="600" />
     </div>
     <br />
+    <n-card title="注意：" hoverable class="my-card">
+      <n-p>由于校园网后台限制，2023 年 7 月及之前只能查询当月信息。无法查询某一时段或者某一天的信息。</n-p>
+      <n-p>所以如果你选择了 2023-06-25，那么实际上查询的时候 2023 年 6 月的所有信息。</n-p>
+    </n-card>
   </div>
 </template>
 
 <style scoped>
 .show-data {
   margin-top: 10px;
+}
+
+.my-card {
+  margin: 5px 0;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
 }
 </style>
