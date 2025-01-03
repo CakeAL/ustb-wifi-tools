@@ -605,7 +605,7 @@ pub async fn login_ustb_wifi(account: &str, password: &str) -> Result<()> {
         .build()?;
     // 第一次请求 login.ustb.edu.cn
     let response = client
-        .get("http://login.ustb.edu.cn/")
+        .get("http://202.204.48.82:80") // login.ustb.edu.cn 这里使用域名有概率解析不到 ip 不知道为什么🧐
         .timeout(Duration::from_millis(500))
         .send()
         .await
@@ -621,7 +621,6 @@ pub async fn login_ustb_wifi(account: &str, password: &str) -> Result<()> {
         .get(LOCATION)
         .and_then(|value| value.to_str().ok())
         .unwrap_or_default();
-    dbg!(location);
     let mut wlan_user_ipv6 = location
         .split(['=', '&'])
         .nth(1)
@@ -630,14 +629,8 @@ pub async fn login_ustb_wifi(account: &str, password: &str) -> Result<()> {
 
     let (wlan_user_ip, wlan_ac_name, wlan_ac_ip);
     if wlan_user_ipv6.parse::<Ipv6Addr>().is_err() {
-        // wlan_user_ipv6 不是一个ipv6地址，说明连接是 USTB_Wi-Fi，没有 ipv6 地址
-        // http://202.204.48.66/a79.htm?wlanacname=WX5560X&wlanuserip=10.24.21.251&nasip=10%2E0%2E108%2E19
-        let ips = location.split(['=', '&']).collect::<Vec<&str>>();
-        (wlan_user_ip, wlan_ac_name, wlan_ac_ip) = (
-            ips.get(3).copied().unwrap_or_default().to_string(),
-            ips.get(1).copied().unwrap_or_default().to_string(),
-            ips.get(5).copied().unwrap_or_default().replace("%2E", "."),
-        );
+        // wlan_user_ipv6 不是一个ipv6地址，说明连接是 USTB_Wi-Fi 或者该设备没有开启 ipv6
+        (wlan_user_ip, wlan_ac_name, wlan_ac_ip) = get_params(location)?;
         wlan_user_ipv6 = "".to_string();
         dbg!(&wlan_user_ipv6, &wlan_user_ip, &wlan_ac_name, &wlan_ac_ip);
     } else {
@@ -658,13 +651,7 @@ pub async fn login_ustb_wifi(account: &str, password: &str) -> Result<()> {
             .get(LOCATION)
             .and_then(|value| value.to_str().ok())
             .unwrap_or_default();
-        dbg!(location);
-        let ips = location.split(['=', '&']).collect::<Vec<&str>>();
-        (wlan_user_ip, wlan_ac_name, wlan_ac_ip) = (
-            ips.get(1).copied().unwrap_or_default().to_string(),
-            ips.get(3).copied().unwrap_or_default().to_string(),
-            ips.get(5).copied().unwrap_or_default().replace("%2E", "."),
-        );
+        (wlan_user_ip, wlan_ac_name, wlan_ac_ip) = get_params(location)?;
         dbg!(&wlan_user_ipv6, &wlan_user_ip, &wlan_ac_name, &wlan_ac_ip);
     }
 
@@ -695,6 +682,42 @@ pub async fn login_ustb_wifi(account: &str, password: &str) -> Result<()> {
     } else {
         Err(anyhow!("认证失败，因为账密错误"))
     }
+}
+
+fn get_params(location: &str) -> Result<(String, String, String)> {
+    // http://202.204.48.66/a79.htm?wlanacname=WX5560X&wlanuserip=10.24.21.251&nasip=10%2E0%2E108%2E19
+    // http://202.204.48.66/a79.htm?wlanuserip=10.39.179.219&wlanacname=WX5560H&nasip=10%2E0%2E124%2E68
+    dbg!(location);
+    let params = location
+        .split('?')
+        .last()
+        .ok_or(anyhow!("未获得重定向网址参数"))?
+        .split('&')
+        .map(|s| {
+            let mut split = s.split('=');
+            (
+                split.next().unwrap_or_default(),
+                split.next().unwrap_or_default(),
+            )
+        })
+        .collect::<HashMap<_, _>>();
+    Ok((
+        params
+            .get("wlanuserip")
+            .copied()
+            .unwrap_or_default()
+            .to_string(),
+        params
+            .get("wlanacname")
+            .copied()
+            .unwrap_or_default()
+            .to_string(),
+        params
+            .get("nasip")
+            .copied()
+            .unwrap_or_default()
+            .replace("%2E", "."),
+    ))
 }
 
 #[cfg(test)]
@@ -784,7 +807,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_login_ustb_wifi() {
-        let account: &str = "1";
+        let account = "1";
         let password = "1";
         let res = login_ustb_wifi(account, password).await;
         println!("{:?}", res);
