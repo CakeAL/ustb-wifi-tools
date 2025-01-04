@@ -604,12 +604,43 @@ pub async fn login_ustb_wifi(account: &str, password: &str) -> Result<()> {
         .redirect(redirect::Policy::none()) // 设置为不自动重定向
         .build()?;
     // 第一次请求 login.ustb.edu.cn
-    let response = client
-        .get("http://202.204.48.82:80") // login.ustb.edu.cn 这里使用域名有概率解析不到 ip 不知道为什么🧐
-        .timeout(Duration::from_millis(500))
-        .send()
-        .await
-        .map_err(|e| anyhow!("可能没连上校园网：{e:?}"))?;
+    // 域名 login.ustb.edu.cn 有概率解析不到 ip 不知道为什么🧐，所以先尝试使用ip
+    let login_urls = [
+        "http://[2001:da8:ad:3212::3]",
+        "http://202.204.48.82:80",
+        "http://login.ustb.edu.cn",
+    ];
+    let response = {
+        let (tx, mut rx) = tokio::sync::mpsc::channel(3);
+        for url in login_urls {
+            let url = url.to_string();
+            let client = client.clone();
+            let tx = tx.clone();
+            tokio::spawn(async move {
+                let res = client
+                    .get(&url)
+                    .timeout(Duration::from_millis(500))
+                    .send()
+                    .await;
+                // dbg!(&res);
+                let _ = tx.send((res, url)).await;
+            });
+        }
+        loop {
+            tokio::select! {
+                Some(v) = rx.recv() => {
+                    if let Ok(response) = v.0 {
+                        dbg!(v.1); break Ok(response);
+                    } else {
+                        continue;
+                    }
+                },
+                _ = tokio::time::sleep(Duration::from_millis(550)) => {
+                    break Err(anyhow!("可能没连上校园网，尝试重新连接 Wi-Fi"));
+                },
+            }
+        }
+    }?;
     if response.status().as_u16() != 302 {
         return Err(anyhow!(
             "Request {}, 重定向失败, 可能由于已登录",
@@ -637,6 +668,7 @@ pub async fn login_ustb_wifi(account: &str, password: &str) -> Result<()> {
         // 第二次请求 1.htm
         let response = client
             .get("http://202.204.48.82/1.htm")
+            .timeout(Duration::from_millis(500))
             .query(&[("mv6", wlan_user_ipv6.as_str()), ("url", "")])
             .send()
             .await?;
@@ -672,6 +704,7 @@ pub async fn login_ustb_wifi(account: &str, password: &str) -> Result<()> {
     ];
     let response = client
         .get("http://202.204.48.66:801/eportal/portal/login")
+        .timeout(Duration::from_millis(500))
         .query(&params)
         .send()
         .await?;
