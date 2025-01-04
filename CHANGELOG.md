@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.3] - 2025-01-04
+
+### Changed
+
+- 更改校园网登录方式，提升登录成功率
+
+### Fixed
+
+- 在没有 ipv6 的情况下的登录若干问题
+
 ## [1.1.2] - 2025-01-01
 
 ### Added
@@ -189,6 +199,7 @@
 
 初始发布版本
 
+[1.1.3]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.1.3
 [1.1.2]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.1.2
 [1.1.1]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.1.1
 [1.1.0]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.1.0
