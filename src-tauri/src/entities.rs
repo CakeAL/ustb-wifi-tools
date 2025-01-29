@@ -79,6 +79,7 @@ pub struct MacAddress {
     pub custom_name: String,
 }
 
+#[derive(Default)]
 pub struct AppState {
     pub jsessionid: RwLock<Option<String>>,
     pub cur_account: RwLock<String>,

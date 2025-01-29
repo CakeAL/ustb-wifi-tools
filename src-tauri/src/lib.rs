@@ -5,11 +5,8 @@ mod requests;
 pub mod setting;
 pub mod utils;
 
-use std::sync::RwLock;
-
 use crate::commands::*;
 use crate::entities::AppState;
-use crate::setting::Setting;
 use onedrive::open_microsoft_login;
 use tauri::Manager;
 
@@ -24,13 +21,7 @@ pub fn run() {
         builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
     }
     builder
-        .manage(AppState {
-            jsessionid: RwLock::new(None),
-            cur_account: RwLock::new(String::new()),
-            setting: RwLock::new(Setting::default()),
-            login_via_vpn: RwLock::new(false),
-            onedrive_code_verifier: RwLock::new(None),
-        })
+        .manage(AppState::default())
         .invoke_handler(tauri::generate_handler![
             get_cookie,
             load_refresh_account,
