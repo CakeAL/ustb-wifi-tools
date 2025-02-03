@@ -21,7 +21,7 @@ interface YearlyData {
 
 const pop_message = useMessage();
 const month_pay = ref<YearlyData | null>(null);
-const year = ref<number>(new Date().getMonth() > 1 ? new Date().getFullYear() : new Date().getFullYear() - 1);
+const year = ref<number>(new Date().getMonth() > 0 ? new Date().getFullYear() : new Date().getFullYear() - 1);
 const year_options = Array.from(
   { length: new Date().getFullYear() - 2015 + 1 },
   (_, i) => {
