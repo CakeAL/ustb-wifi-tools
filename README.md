@@ -41,7 +41,7 @@
 1. Windows 系统请下载后缀为 `.exe`，一般需要下载 `x64` 的版本，如果你确定你的电脑是 ARM 架构芯片，请选择 `arm64` 版本。
 2. 由于没有应用签名，会报毒，忽略即可，如果不信任我可以自己看源代码。然后给我打钱。
 3. macOS 系统请下载后缀为`.dmg`，M 系列芯片（2020 年及以后）请选择 `aarch64` 版本，Intel 芯片请选择 `x64` 版本。
-4. macOS 由于还没搞应用签名，需要使用 `xattr -cr /Applications/ustb-wifi-tools.app` 来跳过签名认证。
+4. macOS 由于没有应用签名，需要使用 `xattr -d com.apple.quarantine '/Applications/USTB Wifi Tools.app/'` 来绕过签名认证。
 5. Linux 用户请自行编译，并按照 Tauri 的要求安装 webkit2gtk
 
 > [!NOTE]  

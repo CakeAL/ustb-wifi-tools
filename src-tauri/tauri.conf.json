@@ -44,7 +44,8 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "createUpdaterArtifacts": true
+    "createUpdaterArtifacts": true,
+    "copyright": "Copyright © 2025 CakeAL All Rights Reserved"
   },
   "plugins": {
     "updater": {

@@ -110,7 +110,7 @@ const show1 = ref(false);
             text-decoration: underline;
             text-underline-offset: 5px;
             cursor: pointer;
-          ">历史更新记录</a> </n-p><n-p> Copyright © 2024 CakeAL All Rights Reserved </n-p>
+          ">历史更新记录</a> </n-p><n-p> Copyright © 2025 CakeAL All Rights Reserved </n-p>
     </n-card>
   </div>
 </template>

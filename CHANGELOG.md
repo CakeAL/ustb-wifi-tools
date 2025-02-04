@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.4] - 2025-02-04
+
+### Fixed
+
+- 二月份仍旧默认显示去年的数据
+
 ## [1.1.3] - 2025-01-04
 
 ### Changed
@@ -199,6 +205,7 @@
 
 初始发布版本
 
+[1.1.4]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.1.4
 [1.1.3]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.1.3
 [1.1.2]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.1.2
 [1.1.1]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.1.1
