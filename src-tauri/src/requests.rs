@@ -1,4 +1,4 @@
-use std::{collections::HashMap, f64, net::Ipv6Addr, time::Duration};
+use std::{collections::HashMap, f64, net::Ipv6Addr, sync::LazyLock, time::Duration};
 
 use anyhow::{anyhow, Result};
 use chrono::NaiveDateTime;
@@ -15,6 +15,13 @@ use crate::entities::{
     AmmeterData, EveryLoginData, MacAddress, MonthPayInfo, MonthlyData, UserLoginLog,
 };
 
+pub static CLIENT: LazyLock<Client> = LazyLock::new(|| {
+    Client::builder()
+        .no_proxy()
+        .build()
+        .unwrap_or_default()
+});
+
 // Ciallo～(∠・ω< )⌒☆
 pub async fn get_load_user_flow(account: &str, session_id: &str, via_vpn: bool) -> Result<Value> {
     let url = if !via_vpn {
@@ -22,7 +29,7 @@ pub async fn get_load_user_flow(account: &str, session_id: &str, via_vpn: bool) 
     } else {
         format!("https://elib.ustb.edu.cn/http-801/77726476706e69737468656265737421a2a713d275603c1e2a50c7face/eportal/portal/visitor/loadUserFlow?account={account}")
     };
-    let mut req = Client::new().get(url);
+    let mut req = CLIENT.get(url);
     if via_vpn {
         req = req.header(
             "Cookie",
@@ -39,9 +46,8 @@ pub async fn get_load_user_flow(account: &str, session_id: &str, via_vpn: bool) 
 
 // 该函数复活了
 pub async fn simulate_login(account: &str, password: &str) -> Result<Option<String>> {
-    let client = Client::new();
     // 访问登录页
-    let res = client
+    let res = CLIENT
         .get("http://202.204.60.7:8080/nav_login")
         .send()
         .await?;
@@ -67,7 +73,7 @@ pub async fn simulate_login(account: &str, password: &str) -> Result<Option<Stri
     // dbg!(check_code);
     tokio::time::sleep(Duration::from_millis(10)).await;
     // 获取用户名/密码错误3次以上的随机验证码（密码输错3次以内是隐藏的），需要带 cookie，这是必要的
-    client
+    CLIENT
         .get(format!(
             "http://202.204.60.7:8080/RandomCodeAction.action?randomNum={}",
             rand::thread_rng().gen_range(0.0..1.0)
@@ -81,7 +87,7 @@ pub async fn simulate_login(account: &str, password: &str) -> Result<Option<Stri
         .await?;
     tokio::time::sleep(Duration::from_millis(10)).await;
     // 发送登录请求，携带 Cookie 和必要的 header，这样可以激活这个 cookie
-    let response = client
+    let response = CLIENT
         .post("http://202.204.60.7:8080/LoginAction.action")
         .header("content-type", "application/x-www-form-urlencoded")
         .header("upgrade-insecure-requests", "1")
@@ -107,9 +113,8 @@ pub async fn simulate_login(account: &str, password: &str) -> Result<Option<Stri
 }
 
 pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Option<String>> {
-    let client = Client::new();
     // 访问 lib webvpn
-    let res = client.get("https://elib.ustb.edu.cn/login").send().await?;
+    let res = CLIENT.get("https://elib.ustb.edu.cn/login").send().await?;
     let res_header = res.headers().clone();
     let res_cookie = res_header.get_all(SET_COOKIE).iter().next();
     let wengine_vpn_ticketelib_ustb_edu_cn = if let Some(header_value) = res_cookie {
@@ -131,7 +136,7 @@ pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Opt
         .as_str();
     dbg!(captcha_id);
     // 发送登录请求
-    let res = client
+    let res = CLIENT
         .post("https://elib.ustb.edu.cn/do-login")
         .header(
             "Cookie",
@@ -158,7 +163,7 @@ pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Opt
         return Ok(None); // 账号或密码出现错误！
     }
     // 访问校园网后台登录页
-    let res = client.get("https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/nav_login")
+    let res = CLIENT.get("https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/nav_login")
     .header("Cookie", format!("wengine_vpn_ticketelib_ustb_edu_cn={}", wengine_vpn_ticketelib_ustb_edu_cn))
     .send().await?;
     // 获取登录页中的 check_code 用来提交 post 请求使用
@@ -172,7 +177,7 @@ pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Opt
     tokio::time::sleep(Duration::from_millis(10)).await;
     // 获取用户名/密码错误3次以上的随机验证码（密码输错3次以内是隐藏的），需要带 cookie，这是必要的
     // 这里需要使用 webvpn 的 cookie
-    client
+    CLIENT
         .get(format!(
             "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/RandomCodeAction.action?vpn-1&randomNum={}",
             rand::thread_rng().gen_range(0.0..1.0)
@@ -193,7 +198,7 @@ pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Opt
     //
     tokio::time::sleep(Duration::from_millis(10)).await;
     // 发送登录请求，携带 Cookie 和必要的 header，这样可以激活这个 cookie
-    let response = client
+    let response = CLIENT
         .post("https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/LoginAction.action")
         .header("content-type", "application/x-www-form-urlencoded")
         .header("upgrade-insecure-requests", "1")
@@ -223,7 +228,7 @@ pub async fn get_refresh_account(session_id: &str, via_vpn: bool) -> Result<Opti
     } else {
         "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/refreshaccount"
     };
-    let mut req = Client::new().get(url);
+    let mut req = CLIENT.get(url);
     if !via_vpn {
         req = req.header("Cookie", format!("JSESSIONID={}", session_id));
     } else {
@@ -251,7 +256,7 @@ pub async fn get_month_pay(
     } else {
         "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/MonthPayAction.action"
     };
-    let mut req = Client::new().post(url);
+    let mut req = CLIENT.post(url);
     if !via_vpn {
         req = req.header("Cookie", format!("JSESSIONID={}", session_id));
     } else {
@@ -346,7 +351,7 @@ pub async fn get_user_login_log(
         }
     }
 
-    let mut req = Client::new().post(url);
+    let mut req = CLIENT.post(url);
     if !via_vpn {
         req = req.header("Cookie", format!("JSESSIONID={}", session_id));
     } else {
@@ -481,7 +486,7 @@ pub async fn get_mac_address(
     } else {
         "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/nav_unBandMacJsp"
     };
-    let mut req = Client::new().get(url);
+    let mut req = CLIENT.get(url);
     if !via_vpn {
         req = req.header("Cookie", format!("JSESSIONID={}", session_id));
     } else {
@@ -548,7 +553,7 @@ pub async fn unbind_macs(
     }
     let _ = mac_str.pop(); // 删末尾分号
     dbg!(&mac_str);
-    let mut req = Client::new().post(url);
+    let mut req = CLIENT.post(url);
     if !via_vpn {
         req = req.header("Cookie", format!("JSESSIONID={}", session_id));
     } else {
@@ -572,11 +577,11 @@ pub async fn unbind_macs(
 }
 
 pub async fn get_address() -> Result<Vec<String>> {
-    let v4_resp = match Client::new().get("https://4.ipw.cn/").send().await {
+    let v4_resp = match CLIENT.get("https://4.ipw.cn/").send().await {
         Ok(resp) => resp.text().await?,
         Err(_) => "".into(),
     };
-    let v6_resp = match Client::new().get("https://6.ipw.cn/").send().await {
+    let v6_resp = match CLIENT.get("https://6.ipw.cn/").send().await {
         Ok(resp) => resp.text().await?,
         Err(_) => "".into(),
     };
@@ -584,7 +589,7 @@ pub async fn get_address() -> Result<Vec<String>> {
 }
 
 pub async fn get_ammeter(num: u32) -> Result<Option<i32>> {
-    let response = Client::new()
+    let response = CLIENT
         .post("http://fspapp.ustb.edu.cn/app.GouDian/index.jsp?m=alipay&c=AliPay&a=getDbYe")
         .header("Content-Type", "application/x-www-form-urlencoded")
         .body(format!("DBNum={}", num))

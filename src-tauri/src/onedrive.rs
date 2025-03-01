@@ -1,7 +1,6 @@
-use crate::{entities::AppState, setting::Setting};
+use crate::{entities::AppState, requests::CLIENT, setting::Setting};
 use base64::{engine::general_purpose::URL_SAFE, Engine as _};
 use rand::Rng;
-use reqwest::Client;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use tauri::{Manager, WebviewWindow};
@@ -84,7 +83,7 @@ async fn code_to_access_token(app_handle: tauri::AppHandle, code: String) -> Res
         .clone()
         .ok_or("?".to_string())?;
 
-    let response = match Client::new()
+    let response = match CLIENT
         .post("https://login.microsoftonline.com/common/oauth2/v2.0/token")
         .header("Content-Type", "application/x-www-form-urlencoded")
         // .header("Origin", "https://login.microsoftonline.com/common/oauth2/nativeclient")
@@ -151,7 +150,7 @@ async fn upload_setting_to_onedrive(app_handle: &tauri::AppHandle, token_respons
         .clone();
     let s = serde_json::json!(&state).to_string();
     let s = URL_SAFE.encode(&s);
-    let response = Client::new()
+    let response = CLIENT
         .put("https://graph.microsoft.com/v1.0/drive/special/approot:/setting.txt:/content")
         .bearer_auth(token_response.access_token.unwrap())
         .header("Content-Type", "text/plain")
@@ -174,7 +173,7 @@ async fn download_setting_to_onedrive(
     app_handle: &tauri::AppHandle,
     token_response: TokenResponse,
 ) {
-    let response = Client::new()
+    let response = CLIENT
         .get("https://graph.microsoft.com/v1.0/drive/special/approot:/setting.txt:/content")
         .bearer_auth(token_response.access_token.unwrap())
         .send()
