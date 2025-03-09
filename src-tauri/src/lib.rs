@@ -8,7 +8,7 @@ pub mod utils;
 use crate::commands::*;
 use crate::entities::AppState;
 use onedrive::open_microsoft_login;
-use tauri::Manager;
+use tauri::{TitleBarStyle, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -57,9 +57,26 @@ pub fn run() {
             set_current_user_name
         ])
         .setup(|app| {
+            // {
+            //     "label": "main",
+            //     "title": "USTB Wifi Tools",
+            //     "width": 800,
+            //     "height": 600,
+            //     "minHeight": 600,
+            //     "minWidth": 800,
+            //     "transparent": true
+            // }
+            let win_builder = WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
+                .title("USTB Wifi Tools")
+                .inner_size(800.0, 600.0)
+                .min_inner_size(800.0, 600.0)
+                .transparent(true);
+            #[cfg(target_os = "macos")]
+            let win_builder = win_builder.title_bar_style(TitleBarStyle::Visible);
+            let window = win_builder.build().unwrap();
             #[cfg(not(any(target_os = "android", target_os = "linux")))]
             {
-                background_init(app)?;
+                background_init(&window)?;
             }
             Ok(())
         })
@@ -68,17 +85,31 @@ pub fn run() {
 }
 
 #[cfg(not(any(target_os = "android", target_os = "linux")))]
-fn background_init(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-    let win = app.get_webview_window("main").unwrap();
-
+fn background_init(win: &WebviewWindow) -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(target_os = "macos")]
-    window_vibrancy::apply_vibrancy(
-        &win,
-        window_vibrancy::NSVisualEffectMaterial::Sidebar,
-        Some(window_vibrancy::NSVisualEffectState::Active),
-        None,
-    )
-    .map_err(|err| format!("启动错误: {}", err))?;
+    {
+        // use cocoa::appkit::{NSColor, NSWindow};
+        // use cocoa::base::{id, nil};
+
+        // let ns_window = win.ns_window().unwrap() as id;
+        // unsafe {
+        //     let bg_color = NSColor::colorWithRed_green_blue_alpha_(
+        //         nil,
+        //         50.0 / 255.0,
+        //         158.0 / 255.0,
+        //         163.5 / 255.0,
+        //         0.0,
+        //     );
+        //     ns_window.setBackgroundColor_(bg_color);
+        // }
+        window_vibrancy::apply_vibrancy(
+            &win,
+            window_vibrancy::NSVisualEffectMaterial::Sidebar,
+            Some(window_vibrancy::NSVisualEffectState::Active),
+            None,
+        )
+        .map_err(|err| format!("启动错误: {}", err))?;
+    }
 
     #[cfg(target_os = "windows")]
     {

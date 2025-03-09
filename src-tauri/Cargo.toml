@@ -15,7 +15,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [ "protocol-asset", "macos-private-api"] }
+tauri = { version = "2.3", features = [ "protocol-asset", "macos-private-api"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
@@ -27,19 +27,22 @@ chrono = "0.4.38"
 mac_address = "1.1.7"
 if-addrs = "0.13.3"
 # tauri plugin
-window-vibrancy = "0.5.2"
+window-vibrancy = "0.6.0"
 tauri-plugin-dialog = "2"
+tauri-plugin-clipboard-manager = "2.2.0"
 tauri-plugin-shell = "2"
 # others
 anyhow = "1"
-rand = "0.8.5"
+rand = "0.9.0"
 md5 = "0.7.0"
 regex = "1.10.4"
 windows-version = "0.1"
 sha2 = "0.10.8"
 base64 = "0.22.1"
 zip = "2.2.1"
-tauri-plugin-clipboard-manager = "2.2.0"
+
+[target."cfg(target_os = \"macos\")".dependencies]
+cocoa = "0.26.0"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

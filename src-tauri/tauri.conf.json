@@ -11,17 +11,7 @@
   },
   "app": {
     "macOSPrivateApi": true,
-    "windows": [
-      {
-        "label": "main",
-        "title": "USTB Wifi Tools",
-        "width": 800,
-        "height": 600,
-        "minHeight": 600,
-        "minWidth": 800,
-        "transparent": true
-      }
-    ],
+    "windows": [],
     "security": {
       "csp": "default-src 'self' ipc: http://ipc.localhost; img-src 'self' asset: http://asset.localhost; style-src 'self' 'unsafe-inline';",
       "assetProtocol": {
@@ -55,7 +45,7 @@
       ]
     },
     "shell": {
-      "open": false 
+      "open": false
     }
   }
 }

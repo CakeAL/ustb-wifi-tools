@@ -76,7 +76,7 @@ pub async fn simulate_login(account: &str, password: &str) -> Result<Option<Stri
     CLIENT
         .get(format!(
             "http://202.204.60.7:8080/RandomCodeAction.action?randomNum={}",
-            rand::thread_rng().gen_range(0.0..1.0)
+            rand::rng().random_range(0.0..1.0)
         ))
         .header(
             "accept",
@@ -180,7 +180,7 @@ pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Opt
     CLIENT
         .get(format!(
             "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/RandomCodeAction.action?vpn-1&randomNum={}",
-            rand::thread_rng().gen_range(0.0..1.0)
+            rand::rng().random_range(0.0..1.0)
         ))
         .header(
             "accept",
