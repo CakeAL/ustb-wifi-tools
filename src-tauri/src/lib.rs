@@ -15,6 +15,7 @@ pub fn run() {
     let mut builder = tauri::Builder::new()
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init());
     #[cfg(not(any(target_os = "android", target_os = "linux")))]
     {
@@ -72,7 +73,7 @@ pub fn run() {
                 .min_inner_size(800.0, 600.0)
                 .transparent(true);
             #[cfg(target_os = "macos")]
-            let win_builder = win_builder.title_bar_style(TitleBarStyle::Visible);
+            let win_builder = win_builder.title_bar_style(TitleBarStyle::Overlay);
             let window = win_builder.build().unwrap();
             #[cfg(not(any(target_os = "android", target_os = "linux")))]
             {
@@ -102,6 +103,7 @@ fn background_init(win: &WebviewWindow) -> Result<(), Box<dyn std::error::Error>
         //     );
         //     ns_window.setBackgroundColor_(bg_color);
         // }
+        let _ = win.set_title("");
         window_vibrancy::apply_vibrancy(
             &win,
             window_vibrancy::NSVisualEffectMaterial::Sidebar,

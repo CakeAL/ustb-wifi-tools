@@ -217,9 +217,9 @@ pub async fn load_month_pay(
             month_pay_info.year_cost += data.cost;
             month_pay_info.year_used_flow += data.used_flow;
         }
-    } 
+    }
     // 如果是 2022 年，手动获取 6 ～ 11 月数据（前面12月已经获取完了）
-    else if year == 2022 { 
+    else if year == 2022 {
         month_pay_info.monthly_data.drain(5..11);
         let mut handles = vec![];
         for i in 5..11 {
@@ -700,7 +700,7 @@ async fn update(
     on_event: Channel<DownloadEvent>,
 ) -> Result<(), String> {
     use tauri_plugin_dialog::DialogExt;
-    use tauri_plugin_shell::ShellExt;
+    use tauri_plugin_opener::OpenerExt;
     #[cfg(not(any(target_os = "android", target_os = "linux")))]
     use tauri_plugin_updater::UpdaterExt;
 
@@ -760,9 +760,9 @@ async fn update(
                 .blocking_show();
 
             if answer {
-                let _ = app.shell().open(
+                let _ = app.opener().open_url(
                     "https://github.com/CakeAL/ustb-wifi-tools/blob/main/CHANGELOG.md",
-                    None,
+                    None::<&str>,
                 );
             }
             app.restart();

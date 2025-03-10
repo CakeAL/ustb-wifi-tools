@@ -1,9 +1,15 @@
 <template>
-  <n-menu :collapsed="collapsed" :collapsed-width="64" :collapsed-icon-size="22" :options="menuOptions"
+  <div v-if="os_type === 3" class="title-bar"></div>
+  <n-menu data-tauri-drag-region :collapsed="collapsed" :collapsed-width="64" :collapsed-icon-size="22" :options="menuOptions"
     class="my-menu" />
 </template>
 
 <style scoped>
+.title-bar {
+  height: 28px;
+  width: 100%;
+}
+
 .my-menu {
   overflow: auto;
 }
@@ -27,6 +33,7 @@ import {
 
 defineProps<{
   collapsed: boolean;
+  os_type: number;
 }>();
 
 function renderIcon(icon: Component) {

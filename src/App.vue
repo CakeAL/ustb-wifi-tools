@@ -147,7 +147,7 @@ const collapse = async (value: boolean) => {
           <n-layout has-sider>
             <n-layout-sider bordered collapse-mode="width" :collapsed-width="64" :width="200" :collapsed="collapsed"
               show-trigger @collapse="collapse(true)" @expand="collapse(false)">
-              <Menu :collapsed="collapsed"></Menu>
+              <Menu :collapsed="collapsed" :os_type="os_type"></Menu>
             </n-layout-sider>
             <n-layout>
               <n-scrollbar style="max-height: 100vh">
@@ -163,9 +163,20 @@ const collapse = async (value: boolean) => {
   </n-modal-provider>
   <n-progress type="line" :percentage="download_percent" status="success" indicator-placement="inside" processing
     class="download-progress" v-if="is_download" />
+  <div v-if="os_type === 3" data-tauri-drag-region class="title-bar"></div>
 </template>
 
 <style scoped>
+.title-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 28px;
+  width: 100%;
+  /* box-shadow: inset 0px -0.5px 0px rgba(255, 255, 255, 0.5); */
+  z-index: 10000;
+}
+
 .download-progress {
   position: fixed;
   bottom: 0;

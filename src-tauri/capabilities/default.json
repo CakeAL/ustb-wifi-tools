@@ -24,6 +24,7 @@
     "updater:default",
     "dialog:default",
     "shell:default",
-    "clipboard-manager:allow-write-text"
+    "clipboard-manager:allow-write-text",
+    "opener:default"
   ]
 }
