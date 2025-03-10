@@ -8,7 +8,9 @@ pub mod utils;
 use crate::commands::*;
 use crate::entities::AppState;
 use onedrive::open_microsoft_login;
-use tauri::{TitleBarStyle, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
+#[cfg(target_os = "macos")]
+use tauri::TitleBarStyle;
+use tauri::{WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
