@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { useMessage } from "naive-ui";
+import { computed, onMounted, ref } from "vue";
 import { mb2gb } from "../helper";
 import { store } from "../store";
 
@@ -75,13 +75,13 @@ const if_online = computed(() => {
 
 const remain_flow = computed(() => {
   if (
-    account_info.value?.note.leftFlow !== undefined &&
-    account_flow.value?.data.v4 !== undefined
+    account_info.value?.note.leftFlow !== undefined
+    && account_flow.value?.data.v4 !== undefined
   ) {
     let remain = Math.max(
-      parseFloat(account_info.value?.note.leftFlow) -
-      account_flow.value?.data.v4,
-      0
+      parseFloat(account_info.value?.note.leftFlow)
+        - account_flow.value?.data.v4,
+      0,
     );
     return parseFloat((remain / 1024).toFixed(2));
   }
@@ -89,14 +89,14 @@ const remain_flow = computed(() => {
 
 const remain_percentage = computed(() => {
   if (
-    account_info.value?.note.leftFlow !== undefined &&
-    account_flow.value?.data.v4 !== undefined
+    account_info.value?.note.leftFlow !== undefined
+    && account_flow.value?.data.v4 !== undefined
   ) {
     let per = Math.max(
-      (parseFloat(account_info.value?.note.leftFlow) -
-        account_flow.value?.data.v4) /
-      parseFloat(account_info.value?.note.leftFlow),
-      0
+      (parseFloat(account_info.value?.note.leftFlow)
+        - account_flow.value?.data.v4)
+        / parseFloat(account_info.value?.note.leftFlow),
+      0,
     );
     return parseFloat((per * 100).toFixed(2));
   }
@@ -123,7 +123,10 @@ const progress_color = computed(() => {
     </n-h2>
     <n-list hoverable class="my-list">
       <n-list-item>
-        <n-thing :title="store.userName + ' 基本信息'" content-style="margin-top: 10px;">
+        <n-thing
+          :title="store.userName + ' 基本信息'"
+          content-style="margin-top: 10px;"
+        >
           <template #description>
             <n-grid x-gap="12" :cols="4">
               <n-gi>
@@ -156,8 +159,14 @@ const progress_color = computed(() => {
         </n-thing>
       </n-list-item>
       <n-list-item>
-        <n-progress :color="progress_color" :percentage="remain_percentage" :indicator-text-color="progress_color"
-          type="dashboard" gap-position="bottom" class="my-progress" />
+        <n-progress
+          :color="progress_color"
+          :percentage="remain_percentage"
+          :indicator-text-color="progress_color"
+          type="dashboard"
+          gap-position="bottom"
+          class="my-progress"
+        />
         <n-thing title="当月流量使用情况" content-style="margin-top: 10px;">
           <template #description>
             <n-grid x-gap="12" :cols="2">

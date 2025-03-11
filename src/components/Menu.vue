@@ -1,7 +1,13 @@
 <template>
   <div v-if="os_type === 3" class="title-bar"></div>
-  <n-menu data-tauri-drag-region :collapsed="collapsed" :collapsed-width="64" :collapsed-icon-size="22" :options="menuOptions"
-    class="my-menu" />
+  <n-menu
+    data-tauri-drag-region
+    :collapsed="collapsed"
+    :collapsed-width="64"
+    :collapsed-icon-size="22"
+    :options="menuOptions"
+    class="my-menu"
+  />
 </template>
 
 <style scoped>
@@ -16,20 +22,20 @@
 </style>
 
 <script setup lang="ts">
-import { h, Component } from "vue";
-import { NIcon } from "naive-ui";
-import type { MenuOption } from "naive-ui";
 import {
-  LogInOutline,
-  InformationCircleOutline,
-  ListOutline,
-  CashOutline,
   BookOutline,
   BrowsersOutline,
-  SpeedometerOutline,
-  CalendarOutline,
   BuildOutline,
+  CalendarOutline,
+  CashOutline,
+  InformationCircleOutline,
+  ListOutline,
+  LogInOutline,
+  SpeedometerOutline,
 } from "@vicons/ionicons5";
+import { NIcon } from "naive-ui";
+import type { MenuOption } from "naive-ui";
+import { Component, h } from "vue";
 
 defineProps<{
   collapsed: boolean;
@@ -48,7 +54,7 @@ const menuOptions: MenuOption[] = [
         {
           href: "#/",
         },
-        "账号管理"
+        "账号管理",
       ),
     key: "login",
     icon: renderIcon(LogInOutline),
@@ -60,7 +66,7 @@ const menuOptions: MenuOption[] = [
         {
           href: "#/userinfo",
         },
-        "当前账号使用详情"
+        "当前账号使用详情",
       ),
     key: "userinfo",
     icon: renderIcon(ListOutline),
@@ -72,7 +78,7 @@ const menuOptions: MenuOption[] = [
         {
           href: "#/monthpay",
         },
-        "年度扣费账单"
+        "年度扣费账单",
       ),
     key: "monthpay",
     icon: renderIcon(CashOutline),
@@ -84,7 +90,7 @@ const menuOptions: MenuOption[] = [
         {
           href: "#/userloginlog",
         },
-        "每日使用详情"
+        "每日使用详情",
       ),
     key: "userloginlog",
     icon: renderIcon(BookOutline),
@@ -96,7 +102,7 @@ const menuOptions: MenuOption[] = [
         {
           href: "#/monthly_user_log",
         },
-        "月度使用概览"
+        "月度使用概览",
       ),
     key: "monthly_user_log",
     icon: renderIcon(CalendarOutline),
@@ -108,7 +114,7 @@ const menuOptions: MenuOption[] = [
         {
           href: "#/unbindmacs",
         },
-        "解绑 MAC 地址"
+        "解绑 MAC 地址",
       ),
     key: "unbindmacs",
     icon: renderIcon(BrowsersOutline),
@@ -120,7 +126,7 @@ const menuOptions: MenuOption[] = [
         {
           href: "#/speedtest",
         },
-        "测个速"
+        "测个速",
       ),
     key: "speedtest",
     icon: renderIcon(SpeedometerOutline),
@@ -132,7 +138,7 @@ const menuOptions: MenuOption[] = [
         {
           href: "#/other_tools",
         },
-        "其他小工具"
+        "其他小工具",
       ),
     key: "other_tools",
     icon: renderIcon(BuildOutline),
@@ -144,7 +150,7 @@ const menuOptions: MenuOption[] = [
         {
           href: "#/about",
         },
-        "关于作者以及 Tips"
+        "关于作者以及 Tips",
       ),
     key: "about",
     icon: renderIcon(InformationCircleOutline),

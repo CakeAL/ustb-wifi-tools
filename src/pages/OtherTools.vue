@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/core";
-import { onMounted, ref } from "vue";
-import { Flow } from "./UserInfo.vue";
+import { open } from "@tauri-apps/plugin-shell";
 import { useMessage } from "naive-ui";
 import { useLoadingBar } from "naive-ui";
-import { open } from "@tauri-apps/plugin-shell";
+import { onMounted, ref } from "vue";
+import { Flow } from "./UserInfo.vue";
 
 const loadingBar = useLoadingBar();
 const user_name = ref("");
@@ -18,9 +18,10 @@ onMounted(() => {
 });
 
 const load_ammeter_number = async () => {
-  let res = (await invoke("load_setting").catch((err) =>
-    pop_message.error(err)
-  )) as string;
+  let res =
+    (await invoke("load_setting").catch((err) =>
+      pop_message.error(err)
+    )) as string;
   if (res.length > 0) {
     let settings = JSON.parse(res);
     ammeter_number.value = settings.ammeter_number;
@@ -31,7 +32,7 @@ const load_user_flow = async () => {
   if (user_name.value.length == 0) return;
   loadingBar.start();
   let res = await invoke("load_user_flow", { account: user_name.value }).catch(
-    (err) => pop_message.error(err)
+    (err) => pop_message.error(err),
   );
   //   console.log(res as string);
   account_flow.value = JSON.parse(res as string);
@@ -64,7 +65,13 @@ const open_webvpn = async () => {
     </n-h2>
     <n-card title="查一下别人当月流量" hoverable class="my-card">
       <p>如果你不在校园网，应先登录为“我不在校园网”模式。</p>
-      <n-input v-model:value="user_name" type="text" placeholder="学号/工号" @blur="load_user_flow" round />
+      <n-input
+        v-model:value="user_name"
+        type="text"
+        placeholder="学号/工号"
+        @blur="load_user_flow"
+        round
+      />
       <template #footer v-if="account_flow">
         这个人 ipv4 用了
         {{ (account_flow.data.v4 / 1024).toFixed(2) }} GB，ipv6 用了
@@ -72,7 +79,13 @@ const open_webvpn = async () => {
       </template>
     </n-card>
     <n-card title="查一下电费" hoverable class="my-card">
-      <n-input v-model:value="ammeter_number" type="text" placeholder="电表号" @blur="load_ammeter" round />
+      <n-input
+        v-model:value="ammeter_number"
+        type="text"
+        placeholder="电表号"
+        @blur="load_ammeter"
+        round
+      />
       <template #footer v-if="ammeter_data">
         还剩 {{ ammeter_data }} kW·h
       </template>

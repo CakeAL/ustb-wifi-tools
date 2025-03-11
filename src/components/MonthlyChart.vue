@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { onMounted, watch } from "vue";
-import { EveryLoginData } from "../pages/UserLoginLog.vue";
 import { echarts, EChartsOption } from "../main";
+import { EveryLoginData } from "../pages/UserLoginLog.vue";
 
 const props = defineProps({
   monthly_user_log: Array<EveryLoginData>,
 });
 
 const label = {
-  formatter: function (params: any) {
+  formatter: function(params: any) {
     return Math.round(params.value).toString();
   },
 };
@@ -28,18 +28,18 @@ watch(
       renderChart(props.monthly_user_log);
     }
   },
-  { deep: true }
+  { deep: true },
 );
 
 function renderChart(monthly_user_log: Array<EveryLoginData>) {
   var end = 0;
   for (var i = monthly_user_log.length; i > 0; i--) {
     if (
-      monthly_user_log[i - 1].ipv4_down +
-      monthly_user_log[i - 1].ipv4_up +
-      monthly_user_log[i - 1].ipv6_down +
-      monthly_user_log[i - 1].ipv6_up ===
-      0
+      monthly_user_log[i - 1].ipv4_down
+          + monthly_user_log[i - 1].ipv4_up
+          + monthly_user_log[i - 1].ipv6_down
+          + monthly_user_log[i - 1].ipv6_up
+        === 0
     ) {
       end++;
     } else {
@@ -48,7 +48,7 @@ function renderChart(monthly_user_log: Array<EveryLoginData>) {
   }
   var monthly_user_log = monthly_user_log.slice(
     0,
-    monthly_user_log.length - end
+    monthly_user_log.length - end,
   );
   var chartDom = document.getElementById("chart")!;
   var myChart = echarts.init(chartDom, "macarons");
@@ -97,7 +97,7 @@ function renderChart(monthly_user_log: Array<EveryLoginData>) {
           focus: "series",
           label: {
             show: true,
-            formatter: function (params) {
+            formatter: function(params) {
               let value = params.value as number;
               return value.toFixed(0) + " MB";
             },
@@ -144,7 +144,7 @@ function renderChart(monthly_user_log: Array<EveryLoginData>) {
         label: {
           show: true,
           position: "top",
-          formatter: function (params: any) {
+          formatter: function(params: any) {
             return Math.round(params.value).toString();
           },
         },
@@ -162,7 +162,7 @@ function renderChart(monthly_user_log: Array<EveryLoginData>) {
 
   myChart.setOption(option);
 
-  window.addEventListener("resize", function () {
+  window.addEventListener("resize", function() {
     myChart.resize();
   });
 }

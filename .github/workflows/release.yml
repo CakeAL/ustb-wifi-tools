@@ -56,10 +56,10 @@ jobs:
         with:
           target: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || matrix.platform == 'windows-latest' && 'aarch64-pc-windows-msvc,x86_64-pc-windows-msvc' }}
 
-      - name: install pnpm
-        uses: pnpm/action-setup@v4
+      - name: install deno
+        uses: denoland/setup-deno@v2
         with:
-          version: 9
+          deno-version: v2.x
 
       - name: install frontend dependencies
         run: pnpm install

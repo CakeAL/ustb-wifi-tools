@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { ref, computed, Ref, DefineComponent, onMounted } from "vue";
+import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { darkTheme } from "naive-ui";
-import { invoke, convertFileSrc } from "@tauri-apps/api/core";
-import { check_update, is_download, download_percent } from "./update";
+import { computed, DefineComponent, onMounted, Ref, ref } from "vue";
+import { check_update, download_percent, is_download } from "./update";
 
 // routers
-import Login from "./pages/Login.vue";
 import About from "./pages/About.vue";
-import NotFound from "./pages/NotFound.vue";
-import UserInfo from "./pages/UserInfo.vue";
-import MonthPay from "./pages/MonthPay.vue";
-import UserLoginLog from "./pages/UserLoginLog.vue";
-import UnbindMacs from "./pages/UnbindMacs.vue";
-import SpeedTest from "./pages/SpeedTest.vue";
+import Login from "./pages/Login.vue";
 import MonthlyUserLog from "./pages/MonthlyUserLog.vue";
+import MonthPay from "./pages/MonthPay.vue";
+import NotFound from "./pages/NotFound.vue";
 import OtherTools from "./pages/OtherTools.vue";
+import SpeedTest from "./pages/SpeedTest.vue";
+import UnbindMacs from "./pages/UnbindMacs.vue";
+import UserInfo from "./pages/UserInfo.vue";
+import UserLoginLog from "./pages/UserLoginLog.vue";
 import { store } from "./store";
 
 type RouteComponent = DefineComponent<{}, {}, any>;
@@ -76,9 +76,8 @@ const get_os_type = async () => {
 };
 
 const apply_background = async () => {
-  let res = (await invoke("load_setting").catch((err) =>
-    console.log(err)
-  )) as string;
+  let res =
+    (await invoke("load_setting").catch((err) => console.log(err))) as string;
   if (res.length > 0) {
     let settings = JSON.parse(res);
     // 如果存在 background 路径的情况下
@@ -97,9 +96,11 @@ const apply_background = async () => {
             left: 0; 
             right: 0; 
             bottom: 0; 
-            background-image: url("${convertFileSrc(
-          settings.background_image_path
-        )}"); 
+            background-image: url("${
+          convertFileSrc(
+            settings.background_image_path,
+          )
+        }"); 
             background-size: cover; 
             background-position: center; 
             filter: blur(${settings.background_blur}px);
@@ -145,14 +146,25 @@ const collapse = async (value: boolean) => {
       <n-loading-bar-provider>
         <n-config-provider :theme="theme">
           <n-layout has-sider>
-            <n-layout-sider bordered collapse-mode="width" :collapsed-width="64" :width="200" :collapsed="collapsed"
-              show-trigger @collapse="collapse(true)" @expand="collapse(false)">
+            <n-layout-sider
+              bordered
+              collapse-mode="width"
+              :collapsed-width="64"
+              :width="200"
+              :collapsed="collapsed"
+              show-trigger
+              @collapse="collapse(true)"
+              @expand="collapse(false)"
+            >
               <Menu :collapsed="collapsed" :os_type="os_type"></Menu>
             </n-layout-sider>
             <n-layout>
               <n-scrollbar style="max-height: 100vh">
                 <Transition name="slide-up" mode="out-in">
-                  <component :is="currentView" style="padding: 10px; scrollbar-width: 0" />
+                  <component
+                    :is="currentView"
+                    style="padding: 10px; scrollbar-width: 0"
+                  />
                 </Transition>
               </n-scrollbar>
             </n-layout>
@@ -161,8 +173,15 @@ const collapse = async (value: boolean) => {
       </n-loading-bar-provider>
     </n-message-provider>
   </n-modal-provider>
-  <n-progress type="line" :percentage="download_percent" status="success" indicator-placement="inside" processing
-    class="download-progress" v-if="is_download" />
+  <n-progress
+    type="line"
+    :percentage="download_percent"
+    status="success"
+    indicator-placement="inside"
+    processing
+    class="download-progress"
+    v-if="is_download"
+  />
   <div v-if="os_type === 3" data-tauri-drag-region class="title-bar"></div>
 </template>
 

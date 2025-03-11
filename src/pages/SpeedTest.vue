@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/core";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
-import { useMessage } from "naive-ui";
-import { ref, onMounted } from "vue";
 import { open } from "@tauri-apps/plugin-shell";
+import { useMessage } from "naive-ui";
+import { onMounted, ref } from "vue";
 
 const pop_message = useMessage();
 const site_num = ref<number>(1);
@@ -30,9 +30,10 @@ const open_speed_test = async () => {
 };
 
 const load_ip_address = async () => {
-  let res = (await invoke("load_ip_address").catch((err) =>
-    pop_message.error(err)
-  )) as string;
+  let res =
+    (await invoke("load_ip_address").catch((err) =>
+      pop_message.error(err)
+    )) as string;
   let resp: [string, string] = JSON.parse(res);
   if (resp[0] === "") {
     ipv4_address.value = "当前无公网 ipv4 地址，但貌似仍可使用北科内网测速。";
@@ -85,7 +86,7 @@ const ip_str = ref("");
 const ip_info = ref<IpResult | null>(null);
 const get_ip_location = async () => {
   let res = await invoke<string>("get_ip_location", { ip: ip_str.value }).catch(
-    (err) => pop_message.error(err)
+    (err) => pop_message.error(err),
   );
   ip_info.value = JSON.parse(res as string);
   if (ip_info.value?.code === -1) {
@@ -104,23 +105,50 @@ const get_ip_location = async () => {
       <n-text type="success"> 测个速，不费校园网流量的 </n-text>
     </n-h2>
     <n-select v-model:value="site_num" :options="options" />
-    <n-button strong secondary type="primary" @click="open_speed_test" style="width: 100%; margin-top: 10px">
+    <n-button
+      strong
+      secondary
+      type="primary"
+      @click="open_speed_test"
+      style="width: 100%; margin-top: 10px"
+    >
       点我
     </n-button>
     <n-spin :show="show">
-      <n-card title="当前您的公网地址是（点击可复制）" hoverable class="my-card">
-        <n-h6 @click="copyToClipboard(ipv4_address)" style="cursor: pointer">IPv4: {{ ipv4_address }}</n-h6>
-        <n-h6 @click="copyToClipboard(ipv6_address)" style="cursor: pointer">IPv6: {{ ipv6_address }}</n-h6>
+      <n-card
+        title="当前您的公网地址是（点击可复制）"
+        hoverable
+        class="my-card"
+      >
+        <n-h6
+          @click="copyToClipboard(ipv4_address)"
+          style="cursor: pointer"
+        >IPv4: {{ ipv4_address }}</n-h6>
+        <n-h6
+          @click="copyToClipboard(ipv6_address)"
+          style="cursor: pointer"
+        >IPv6: {{ ipv6_address }}</n-h6>
       </n-card>
     </n-spin>
     <n-card title="查询 IP 归属地" hoverable class="my-card">
-      <n-p>服务来自：<a @click="open('https://api.mir6.com')" style="
-            text-underline-offset: 5px;
-            text-decoration: underline;
-            cursor: pointer;
-          ">https://api.mir6.com</a></n-p>
-      <n-input v-model:value="ip_str" type="text" placeholder="IPv4 或 IPv6 地址" @blur="get_ip_location" round />
-      <n-grid x-gap="12" y-gap="4" :cols="4" v-if="ip_info" style="margin-top: 10px">
+      <n-p>服务来自：<a
+          @click="open('https://api.mir6.com')"
+          style="text-underline-offset: 5px; text-decoration: underline; cursor: pointer"
+        >https://api.mir6.com</a></n-p>
+      <n-input
+        v-model:value="ip_str"
+        type="text"
+        placeholder="IPv4 或 IPv6 地址"
+        @blur="get_ip_location"
+        round
+      />
+      <n-grid
+        x-gap="12"
+        y-gap="4"
+        :cols="4"
+        v-if="ip_info"
+        style="margin-top: 10px"
+      >
         <n-gi class="my-gi"><n-text type="success"> IP地址</n-text></n-gi>
         <n-gi class="my-gi">{{ ip_info.data.ip }}</n-gi>
         <n-gi class="my-gi"><n-text type="success">国家</n-text></n-gi>
@@ -147,7 +175,8 @@ const get_ip_location = async () => {
         <n-gi class="my-gi">{{ ip_info.data.protocol }}</n-gi>
         <n-gi class="my-gi"><n-text type="success">归属地</n-text></n-gi>
         <n-gi class="my-gi">{{ ip_info.data.location }}</n-gi>
-        <n-gi class="my-gi"><n-text type="success">此条数据更新时间</n-text></n-gi>
+        <n-gi class="my-gi"><n-text type="success"
+          >此条数据更新时间</n-text></n-gi>
         <n-gi class="my-gi">{{ ip_info.data.time }}</n-gi>
       </n-grid>
     </n-card>

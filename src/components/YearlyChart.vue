@@ -8,7 +8,7 @@ const props = defineProps({
 });
 
 const label = {
-  formatter: function (params: any) {
+  formatter: function(params: any) {
     return Math.round(params.value).toString();
   },
 };
@@ -32,7 +32,7 @@ watch(
       renderChart(month, data);
     }
   },
-  { deep: true }
+  { deep: true },
 );
 
 function renderChart(month: Array<number>, data: Array<number>) {
@@ -75,7 +75,7 @@ function renderChart(month: Array<number>, data: Array<number>) {
 
   myChart.setOption(option);
 
-  window.addEventListener("resize", function () {
+  window.addEventListener("resize", function() {
     myChart.resize();
   });
 }

@@ -2,9 +2,9 @@
 
 ## 简介
 
-使用 Tauri 构建的跨平台 APP，前端使用 Vue + NaiveUI，后端使用 Rust。 \
+使用 Tauri 构建的跨平台 APP，前端使用 Vue + NaiveUI，后端使用 Rust。\
 通过
-旨在可以让大家更方便的获取 USTB 校园网每日使用情况，查询流量，解绑 MAC 地址等。 \
+旨在可以让大家更方便的获取 USTB 校园网每日使用情况，查询流量，解绑 MAC 地址等。\
 通过调用校园网的 API，并且数据都在本地进行存储。
 
 [关于校园网 V6 网络的相关解答和讨论](https://github.com/CakeAL/ustb-wifi-tools/discussions/6)
@@ -23,13 +23,13 @@
 - [x] 关于页面：一些作者的废话以及我的捐赠打钱二维码，还有一些小 Tips
 - [x] 查别人流量，和查电表
 - [x] 通过 Onedrive 进行同步配置文件
-- [x] 账号管理，以及一键切换校园网账号的功能 
+- [x] 账号管理，以及一键切换校园网账号的功能
 
 ## TODO
 
 - [x] 通过校园网 VPN 转换校园网内网相关链接，在校外也可以使用这个 APP
 - [x] 迁移框架版本至 Tauri 2
-- [x] 更新提醒 
+- [x] 更新提醒
 - [x] 前端页面美化
 - [x] 前端加入图表展示，更加直观
 - [x] 设计应用图标，现在的图标是 Tauri 默认的
@@ -44,7 +44,7 @@
 4. macOS 由于没有应用签名，需要使用 `xattr -d com.apple.quarantine '/Applications/USTB Wifi Tools.app/'` 来绕过签名认证。
 5. Linux 用户请自行编译，并按照 Tauri 的要求安装 webkit2gtk
 
-> [!NOTE]  
+> [!NOTE]\
 > 这里有一个使用教程：[如何使用 USTB Wifi Tools](https://github.com/CakeAL/ustb-wifi-tools/blob/main/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8%20USTB%20Wifi%20Tools%EF%BC%88%E5%90%AB%E5%A6%82%E4%BD%95%E6%96%B9%E4%BE%BF%E6%B3%A8%E9%94%80%E8%B4%A6%E5%8F%B7%EF%BC%89.pdf)
 
 [点我跳转到 Release](https://github.com/CakeAL/ustb-wifi-tools/releases/)
@@ -61,11 +61,11 @@
 
 ## 开发
 
-目前支持 Windows 7 以上 x86 64 设备或 macOS，需要电脑安装 WebView2（Windows 10 和 11 默认安装）。 \
+目前支持 Windows 7 以上 x86 64 设备或 macOS，需要电脑安装 WebView2（Windows 10 和 11 默认安装）。\
 Linux 可以自行编译，详见[官方文档](https://tauri.app/start/prerequisites/#linux)。\
 Android 可以自行编译，或者管我要个包装着玩，不保证功能全都能用。build 详见[准备](https://tauri.app/start/prerequisites/#android)，[签名](https://tauri.app/distribute/sign/android/)，[指令](https://tauri.app/distribute/google-play/#architecture-selection)。\
 iOS 可以自行编译，详见官方文档，需要自行签名（苹果收你 99 美元/年）。\
-首先确保你已经安装了[`Node.js`](https://nodejs.cn/download/)，[`pnpm`](https://www.pnpm.cn/)以及[`Rust环境`](https://www.rust-lang.org/zh-CN/tools/install)
+首先确保你已经安装了[`Deno`](https://deno.com)，以及[`Rust环境`](https://www.rust-lang.org/zh-CN/tools/install)
 
 ```bash
 # 安装 create-tauri-app
@@ -78,8 +78,8 @@ just d
 # 或者
 cargo tauri dev
 # 或者
-pnpm i
-pnpm tauri dev
+deno install
+deno task tauri dev
 ```
 
 ## 构建
@@ -90,5 +90,5 @@ just b
 # 或者
 cargo tauri build
 # 或者
-pnpm tauri build
+deno task tauri build
 ```

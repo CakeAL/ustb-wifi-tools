@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
-import { EveryLoginData } from "./UserLoginLog.vue";
-import { useLoadingBar, useMessage } from "naive-ui";
-import { railStyle, mb2gb, min2hour } from "../helper";
 import dayjs from "dayjs";
+import { useLoadingBar, useMessage } from "naive-ui";
+import { onMounted, ref } from "vue";
 import MonthlyChart from "../components/MonthlyChart.vue";
+import { mb2gb, min2hour, railStyle } from "../helper";
+import { EveryLoginData } from "./UserLoginLog.vue";
 
 const pop_message = useMessage();
 const monthly_user_log = ref<Array<EveryLoginData>>([]);
 // 把 start_date 设置为当前月第一天0点
 const start_date = ref<number>(
-  dayjs().startOf("month").startOf("day").valueOf()
+  dayjs().startOf("month").startOf("day").valueOf(),
 );
 const the_week_of_first_day = ref<Array<number>>([]);
 const refresh = ref(true);
@@ -135,7 +135,7 @@ const select_to_data = (item: EveryLoginData): string => {
   };
   return (
     fieldMap[select_show_value.value].toFixed(
-      select_show_value.value == "cost" ? 2 : 0
+      select_show_value.value == "cost" ? 2 : 0,
     ) || "0"
   );
 };
@@ -154,9 +154,9 @@ const data_type = (): string => {
 
 const select_mb_or_gb = (value: string) => {
   if (
-    select_show_value.value === "used_duration" ||
-    select_show_value.value === "cost" ||
-    mb_gb_select.value === true
+    select_show_value.value === "used_duration"
+    || select_show_value.value === "cost"
+    || mb_gb_select.value === true
   ) {
     return value;
   } else {
@@ -170,7 +170,12 @@ const select_mb_or_gb = (value: string) => {
     <n-h2 prefix="bar" type="success" style="margin-top: 15px">
       <n-text type="success"> 月度使用概览 </n-text>
     </n-h2>
-    <n-date-picker v-model:value="start_date" type="month" clearable @update:value="get_monthly_user_log" />
+    <n-date-picker
+      v-model:value="start_date"
+      type="month"
+      clearable
+      @update:value="get_monthly_user_log"
+    />
     <n-tabs type="segment" animated style="margin-top: 5px">
       <n-tab-pane name="calender" tab="日历" style="padding-top: 8px">
         <n-grid :x-gap="12" :y-gap="8" :cols="7" :key="refresh">
@@ -195,14 +200,28 @@ const select_mb_or_gb = (value: string) => {
           <n-grid-item class="gray">
             <p>六</p>
           </n-grid-item>
-          <n-grid-item v-for="(, index) in the_week_of_first_day" :key="index" class="gray">
+          <n-grid-item
+            v-for="(_, index) in the_week_of_first_day"
+            :key="index"
+            class="gray"
+          >
           </n-grid-item>
-          <n-grid-item v-for="(item, index) in monthly_user_log" :key="index" class="day" :style="{
-            backgroundColor: getBackgroundColor(select_to_data(item)),
-          }"><n-popover trigger="hover">
+          <n-grid-item
+            v-for="(item, index) in monthly_user_log"
+            :key="index"
+            class="day"
+            :style="
+              {
+                backgroundColor: getBackgroundColor(
+                  select_to_data(item),
+                ),
+              }
+            "
+          ><n-popover trigger="hover">
               <template #trigger>
                 <p style="margin: 3px; line-height: 1.5em; white-space: nowrap">
-                  <b>{{ index + 1 }}日</b><br />
+                  <b>{{ index + 1 }}日</b>
+                  <br />
                   {{ select_mb_or_gb(select_to_data(item)) }}
                   {{ data_type() }}
                 </p>
@@ -235,11 +254,19 @@ const select_mb_or_gb = (value: string) => {
           </n-grid-item>
         </n-grid>
         <n-grid x-gap="12" :cols="4" style="margin-top: 8px">
-          <n-gi><n-p style="line-height: 34px">选择显示在日历上的内容：</n-p></n-gi>
-          <n-gi span="2"><n-select v-model:value="select_show_value" :options="select_show_options" /></n-gi>
+          <n-gi><n-p style="line-height: 34px"
+            >选择显示在日历上的内容：</n-p></n-gi>
+          <n-gi span="2"><n-select
+              v-model:value="select_show_value"
+              :options="select_show_options"
+            /></n-gi>
           <n-gi>
-            <n-switch v-model:value="mb_gb_select" :rail-style="railStyle" class="my-switch"
-              style="margin-top: calc((34px - 22px) / 2)">
+            <n-switch
+              v-model:value="mb_gb_select"
+              :rail-style="railStyle"
+              class="my-switch"
+              style="margin-top: calc((34px - 22px) / 2)"
+            >
               <template #checked> MB </template>
               <template #unchecked> GB </template>
             </n-switch>
@@ -277,9 +304,13 @@ const select_mb_or_gb = (value: string) => {
 }
 
 .day:hover {
-  box-shadow: rgba(127, 231, 196, 0.4) 0 3px, rgba(127, 231, 196, 0.3) 0 6px,
-    rgba(127, 231, 196, 0.2) 0 9px, rgba(127, 231, 196, 0.1) 0 12px,
-    rgba(127, 231, 196, 0.05) 0 15px, rgba(127, 231, 196, 0.4) 0px 0px 50px 1px;
+  box-shadow:
+    rgba(127, 231, 196, 0.4) 0 3px,
+    rgba(127, 231, 196, 0.3) 0 6px,
+    rgba(127, 231, 196, 0.2) 0 9px,
+    rgba(127, 231, 196, 0.1) 0 12px,
+    rgba(127, 231, 196, 0.05) 0 15px,
+    rgba(127, 231, 196, 0.4) 0px 0px 50px 1px;
 }
 
 .my-card {

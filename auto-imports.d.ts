@@ -1,3 +1,4 @@
+// deno-lint-ignore-file ban-ts-comment
 /* eslint-disable */
 /* prettier-ignore */
 // @ts-nocheck

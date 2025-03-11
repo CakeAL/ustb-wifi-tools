@@ -30,13 +30,5 @@
     "unplugin-vue-components": "^0.27.4",
     "vite": "^5.4.12",
     "vue-tsc": "2.1.6"
-  },
-  "pnpm": {
-    "ignoredBuiltDependencies": [
-      "esbuild"
-    ],
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
   }
 }

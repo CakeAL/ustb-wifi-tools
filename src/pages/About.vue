@@ -16,11 +16,10 @@ const show1 = ref(false);
       <p>通过调用校园网的 API，并且数据都在本地进行存储。</p>
       <p>
         源代码可以在
-        <a @click="open('https://github.com/CakeAL/ustb-wifi-tools/')" style="
-            text-decoration: underline;
-            text-underline-offset: 5px;
-            cursor: pointer;
-          ">github.com/CakeAL/ustb-wifi-tools/</a>
+        <a
+          @click="open('https://github.com/CakeAL/ustb-wifi-tools/')"
+          style="text-decoration: underline; text-underline-offset: 5px; cursor: pointer"
+        >github.com/CakeAL/ustb-wifi-tools/</a>
         查看，欢迎Star，Folk并提交PR
       </p>
       <p>对此软件有任何问题可以在 Github 项目提交 issues 。</p>
@@ -46,18 +45,20 @@ const show1 = ref(false);
         <template #unchecked> 展开 </template>
       </n-switch>
       <n-collapse-transition :show="show1">
-        <n-image width="500" src="/A250E7A1CDCE4161894E703B177AC0C6_频繁掉线.jpg" />
+        <n-image
+          width="500"
+          src="/A250E7A1CDCE4161894E703B177AC0C6_频繁掉线.jpg"
+        />
         <p>参考本软件“解绑 MAC 地址” 页。</p>
       </n-collapse-transition>
-      <p style="
-          text-decoration: underline;
-          text-underline-offset: 5px;
-          cursor: pointer;
-        " @click="
+      <p
+        style="text-decoration: underline; text-underline-offset: 5px; cursor: pointer"
+        @click="
           open(
-            'http://cipp.ustb.edu.cn/app.IAManage/index.jsp?m=iamanage&c=Notice&a=noticeInfo&id=22'
+            'http://cipp.ustb.edu.cn/app.IAManage/index.jsp?m=iamanage&c=Notice&a=noticeInfo&id=22',
           )
-          ">
+        "
+      >
         USTB-V6接入说明
       </p>
       <p>
@@ -76,21 +77,23 @@ const show1 = ref(false);
       <p>2. 关掉代理，再重新进行上述操作。</p>
       <p>3. 重启电脑。</p>
       <p>
-        注销页和登录页网址：<a @click="open('http://202.204.48.66/')" style="
-            text-decoration: underline;
-            text-underline-offset: 5px;
-            cursor: pointer;
-          ">http://202.204.48.66/</a>
+        注销页和登录页网址：<a
+          @click="open('http://202.204.48.66/')"
+          style="text-decoration: underline; text-underline-offset: 5px; cursor: pointer"
+        >http://202.204.48.66/</a>
         或者
-        <a @click="open('http://login.ustb.edu.cn/')" style="
-            text-decoration: underline;
-            text-underline-offset: 5px;
-            cursor: pointer;
-          ">http://login.ustb.edu.cn/</a>
+        <a
+          @click="open('http://login.ustb.edu.cn/')"
+          style="text-decoration: underline; text-underline-offset: 5px; cursor: pointer"
+        >http://login.ustb.edu.cn/</a>
         (你知道么，学号是可以点击的)
       </p>
     </n-card>
-    <n-card title="给校园网省流方法（偏向使用 ipv6 的方法）" hoverable class="my-card">
+    <n-card
+      title="给校园网省流方法（偏向使用 ipv6 的方法）"
+      hoverable
+      class="my-card"
+    >
       <p>
         1. 设置 ipv6 DNS服务器，保证 ipv6-test
         能全部通过。一般浏览器都是默认优先 ipv6 的
@@ -106,11 +109,15 @@ const show1 = ref(false);
     <n-card title="软件版本信息" hoverable class="my-card">
       <n-p>
         当前 version = "1.1.4" |
-        <a @click="open('https://github.com/CakeAL/ustb-wifi-tools/blob/main/CHANGELOG.md')" style="
-            text-decoration: underline;
-            text-underline-offset: 5px;
-            cursor: pointer;
-          ">历史更新记录</a> </n-p><n-p> Copyright © 2025 CakeAL All Rights Reserved </n-p>
+        <a
+          @click="
+            open(
+              'https://github.com/CakeAL/ustb-wifi-tools/blob/main/CHANGELOG.md',
+            )
+          "
+          style="text-decoration: underline; text-underline-offset: 5px; cursor: pointer"
+        >历史更新记录</a>
+      </n-p><n-p> Copyright © 2025 CakeAL All Rights Reserved </n-p>
     </n-card>
   </div>
 </template>

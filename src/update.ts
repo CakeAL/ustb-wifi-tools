@@ -6,34 +6,33 @@ export const download_percent = ref(0);
 
 type DownloadEvent =
   | {
-      event: "started";
-      data: {
-        newVersion: boolean;
-      };
-    }
-  | {
-      event: "progress";
-      data: {
-        downloaded: number;
-        contentLength: number;
-      };
-    }
-  | {
-      event: "finished";
-      data: {
-        finished: boolean;
-      };
+    event: "started";
+    data: {
+      newVersion: boolean;
     };
+  }
+  | {
+    event: "progress";
+    data: {
+      downloaded: number;
+      contentLength: number;
+    };
+  }
+  | {
+    event: "finished";
+    data: {
+      finished: boolean;
+    };
+  };
 
 const onEvent = new Channel<DownloadEvent>();
 onEvent.onmessage = (message) => {
   if (message.event === "started") {
     is_download.value = message.data.newVersion; // 这没有意义
   } else if (message.event === "progress") {
-    download_percent.value =
-      parseFloat(
-        (message.data.downloaded / message.data.contentLength).toFixed(2)
-      ) * 100;
+    download_percent.value = parseFloat(
+      (message.data.downloaded / message.data.contentLength).toFixed(2),
+    ) * 100;
   }
 };
 
