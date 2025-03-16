@@ -1,6 +1,5 @@
-use std::sync::RwLock;
-
 use serde::{Deserialize, Serialize};
+use tokio::sync::RwLock;
 
 use crate::setting::Setting;
 

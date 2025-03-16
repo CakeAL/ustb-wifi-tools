@@ -1,13 +1,14 @@
 use std::{
     collections::HashMap,
-    fs::{self, create_dir, File, OpenOptions},
+    fs::{self, File, OpenOptions},
     io::{Read, Write},
     path::PathBuf,
 };
 
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
-use tauri::Manager;
+
+use crate::utils::get_config_path;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Setting {
@@ -123,21 +124,4 @@ impl Setting {
     pub fn set_collapsed(&mut self, collapsed: bool) {
         self.collapsed = Some(collapsed);
     }
-}
-
-fn get_config_path(app: &tauri::AppHandle) -> Result<PathBuf> {
-    let path = match app.path().data_dir().ok() {
-        Some(mut p) => {
-            p.push("ustb-wifi-tools");
-            if !p.exists() {
-                // 如果不存在这个文件夹先创建
-                create_dir(&p)?
-            }
-            p.push("config.json");
-            p
-        }
-        None => return Err(anyhow!("There is no such app data dir!")),
-    };
-    dbg!(&path);
-    Ok(path)
 }

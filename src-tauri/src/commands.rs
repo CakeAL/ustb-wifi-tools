@@ -8,7 +8,7 @@ use tauri::{ipc::Channel, utils::config::WindowConfig, Manager};
 use crate::{
     entities::{AppState, DownloadEvent, EveryLoginData, MonthlyData, UserLoginLog},
     requests::*,
-    setting::Setting,
+    setting::Setting, utils::get_session_id,
 };
 
 #[tauri::command(async)]
@@ -16,13 +16,10 @@ pub async fn load_user_flow(
     account: String,
     app_state: tauri::State<'_, AppState>,
 ) -> Result<String, String> {
-    let via_vpn = *app_state.login_via_vpn.read().unwrap();
+    let via_vpn = *app_state.login_via_vpn.read().await;
     let mut session_id = String::new();
     if via_vpn {
-        session_id = match app_state.jsessionid.read().unwrap().clone() {
-            Some(s) => s,
-            None => return Err("是否已经点击登录校园网后台按钮？".to_string()),
-        };
+        session_id = get_session_id(&app_state).await?;
     }
     get_load_user_flow(&account, &session_id, via_vpn)
         .await
@@ -42,11 +39,11 @@ pub async fn get_cookie(
     match res {
         Some(cookie) => {
             dbg!(&cookie);
-            *app_state.jsessionid.write().unwrap() = Some(cookie.clone());
+            *app_state.jsessionid.write().await = Some(cookie.clone());
             app_state
                 .setting
                 .write()
-                .unwrap()
+                .await
                 .set_account(user_name, password);
         }
         None => return Err("用户名或密码错误！".into()),
@@ -54,7 +51,7 @@ pub async fn get_cookie(
     Ok(app_state
         .jsessionid
         .read()
-        .unwrap()
+        .await
         .clone()
         .unwrap_or_default())
 }
@@ -72,12 +69,12 @@ pub async fn get_cookie_vpn(
     match res {
         Some(cookie) => {
             dbg!(&cookie);
-            *app_state.jsessionid.write().unwrap() = Some(cookie.clone());
-            *app_state.login_via_vpn.write().unwrap() = true;
+            *app_state.jsessionid.write().await = Some(cookie.clone());
+            *app_state.login_via_vpn.write().await = true;
             app_state
                 .setting
                 .write()
-                .unwrap()
+                .await
                 .set_account(user_name, password);
         }
         None => return Err("用户名或密码错误！".into()),
@@ -86,21 +83,21 @@ pub async fn get_cookie_vpn(
     Ok(app_state
         .jsessionid
         .read()
-        .unwrap()
+        .await
         .clone()
         .unwrap_or_default())
 }
 
 #[tauri::command(async)]
-pub fn logout(
+pub async fn logout(
     app_state: tauri::State<'_, AppState>,
     window: tauri::Webview,
 ) -> Result<String, String> {
-    if app_state.jsessionid.read().unwrap().is_none() {
+    if app_state.jsessionid.read().await.is_none() {
         return Err("没登录之前不许登出😠".into());
     }
-    *app_state.jsessionid.write().unwrap() = None;
-    *app_state.login_via_vpn.write().unwrap() = false; // 这之前有个bug一直没人发现，说明没人用我的 app 😭
+    *app_state.jsessionid.write().await = None;
+    *app_state.login_via_vpn.write().await = false; // 这之前有个bug一直没人发现，说明没人用我的 app 😭
     window
         .eval("window.location.reload();")
         .map_err(|err| format!("刷新网页错误：{}", err))?;
@@ -109,11 +106,8 @@ pub fn logout(
 
 #[tauri::command(async)]
 pub async fn load_refresh_account(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
-    let session_id = match app_state.jsessionid.read().unwrap().clone() {
-        Some(s) => s,
-        None => return Err("是否已经点击登录校园网后台按钮？".to_string()),
-    };
-    let via_vpn = *app_state.login_via_vpn.read().unwrap();
+    let session_id = get_session_id(&app_state).await?;
+    let via_vpn = *app_state.login_via_vpn.read().await;
     match get_refresh_account(&session_id, via_vpn).await {
         Ok(Some(str)) => Ok(str),
         Ok(None) => Err("请确认是否已经登录".to_string()),
@@ -126,11 +120,8 @@ pub async fn load_user_flow_by_state(
     app_state: tauri::State<'_, AppState>,
     user_name: String,
 ) -> Result<String, String> {
-    let via_vpn = *app_state.login_via_vpn.read().unwrap();
-    let session_id = match app_state.jsessionid.read().unwrap().clone() {
-        Some(s) => s,
-        None => return Err("是否已经点击登录校园网后台按钮？".to_string()),
-    };
+    let via_vpn = *app_state.login_via_vpn.read().await;
+    let session_id = get_session_id(&app_state).await?;
 
     get_load_user_flow(&user_name, &session_id, via_vpn)
         .await
@@ -143,11 +134,8 @@ pub async fn load_month_pay(
     app_state: tauri::State<'_, AppState>,
     year: u16,
 ) -> Result<String, String> {
-    let session_id = match app_state.jsessionid.read().unwrap().clone() {
-        Some(s) => s,
-        None => return Err("是否已经点击登录校园网后台按钮？".to_string()),
-    };
-    let via_vpn = *app_state.login_via_vpn.read().unwrap();
+    let session_id = get_session_id(&app_state).await?;
+    let via_vpn = *app_state.login_via_vpn.read().await;
 
     let mut month_pay_info = match get_month_pay(&session_id, year, via_vpn).await {
         Ok(Some(v)) => Ok(v),
@@ -267,10 +255,7 @@ pub async fn load_user_login_log(
     if start_date > end_date {
         return Err("起始日期比结束日期更大。。。".to_string());
     }
-    let session_id = match app_state.jsessionid.read().unwrap().clone() {
-        Some(s) => s,
-        None => return Err("是否已经点击登录校园网后台按钮？".to_string()),
-    };
+    let session_id = get_session_id(&app_state).await?;
     let start_date = DateTime::from_timestamp(start_date, 0)
         .unwrap()
         .format("%Y-%m-%d")
@@ -279,7 +264,7 @@ pub async fn load_user_login_log(
         .unwrap()
         .format("%Y-%m-%d")
         .to_string();
-    let via_vpn = *app_state.login_via_vpn.read().unwrap();
+    let via_vpn = *app_state.login_via_vpn.read().await;
 
     match get_user_login_log(&session_id, &start_date, &end_date, via_vpn).await {
         Ok(Some(value)) => Ok(serde_json::json!(value).to_string()),
@@ -300,10 +285,7 @@ pub async fn load_monthly_login_log(
     start_date: i64,
     days: i64,
 ) -> Result<String, String> {
-    let session_id = match app_state.jsessionid.read().unwrap().clone() {
-        Some(s) => s,
-        None => return Err("是否已经点击登录校园网后台按钮？".to_string()),
-    };
+    let session_id = get_session_id(&app_state).await?;
     let end_date = start_date + 3600 * 24 * days;
     let start_date_string = DateTime::from_timestamp(start_date, 0)
         .unwrap()
@@ -313,7 +295,7 @@ pub async fn load_monthly_login_log(
         .unwrap()
         .format("%Y-%m-%d")
         .to_string();
-    let via_vpn = *app_state.login_via_vpn.read().unwrap();
+    let via_vpn = *app_state.login_via_vpn.read().await;
 
     match get_user_login_log(&session_id, &start_date_string, &end_date_string, via_vpn).await {
         Ok(Some(value)) => {
@@ -356,12 +338,9 @@ pub async fn load_monthly_login_log(
 
 #[tauri::command(async)]
 pub async fn load_mac_address(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
-    let session_id = match app_state.jsessionid.read().unwrap().clone() {
-        Some(s) => s,
-        None => return Err("是否已经点击登录校园网后台按钮？".to_string()),
-    };
-    let via_vpn = *app_state.login_via_vpn.read().unwrap();
-    let mac_custom_address = app_state.setting.read().unwrap().mac_custom_name.clone();
+    let session_id = get_session_id(&app_state).await?;
+    let via_vpn = *app_state.login_via_vpn.read().await;
+    let mac_custom_address = app_state.setting.read().await.mac_custom_name.clone();
 
     match get_mac_address(&session_id, via_vpn, &mac_custom_address).await {
         Ok(Some(v)) => Ok(serde_json::json!(v).to_string()),
@@ -380,12 +359,12 @@ pub async fn set_mac_custom_name(
     app_state
         .setting
         .write()
-        .unwrap()
+        .await
         .set_mac_custom_name(mac, name);
     app_state
         .setting
         .write()
-        .unwrap()
+        .await
         .write_setting(&app_handle)
         .map_err(|e| e.to_string())
 }
@@ -428,11 +407,8 @@ pub async fn do_unbind_macs(
     app_state: tauri::State<'_, AppState>,
     macs: Vec<String>,
 ) -> Result<(), String> {
-    let session_id = match app_state.jsessionid.read().unwrap().clone() {
-        Some(s) => s,
-        None => return Err("是否已经点击登录校园网后台按钮？".to_string()),
-    };
-    let via_vpn = *app_state.login_via_vpn.read().unwrap();
+    let session_id = get_session_id(&app_state).await?;
+    let via_vpn = *app_state.login_via_vpn.read().await;
 
     match unbind_macs(&session_id, &macs, via_vpn).await {
         Ok(Some(())) => Ok(()),
@@ -482,36 +458,36 @@ pub async fn load_ip_address() -> Result<String, String> {
 }
 
 #[tauri::command(async)]
-pub fn get_jsessionid(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
+pub async fn get_jsessionid(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
     Ok(app_state
         .jsessionid
         .read()
-        .unwrap()
+        .await
         .clone()
         .unwrap_or_default())
 }
 
 #[tauri::command(async)]
-pub fn set_setting(
+pub async fn set_setting(
     app: tauri::AppHandle,
     app_state: tauri::State<'_, AppState>,
 ) -> Result<(), String> {
     app_state
         .setting
         .read()
-        .unwrap()
+        .await
         .write_setting(&app)
         .map_err(|err| format!("{}", err))
 }
 
 #[tauri::command(async)]
-pub fn load_setting(
+pub async fn load_setting(
     app: tauri::AppHandle,
     app_state: tauri::State<'_, AppState>,
 ) -> Result<String, String> {
     match Setting::load_setting(&app) {
         Ok(setting) => {
-            *app_state.setting.write().unwrap() = setting.clone();
+            *app_state.setting.write().await = setting.clone();
             Ok(serde_json::to_string(&setting).unwrap())
         }
         Err(err) => Err(format!("{err}")),
@@ -519,7 +495,7 @@ pub fn load_setting(
 }
 
 #[tauri::command(async)]
-pub fn set_background_image(
+pub async fn set_background_image(
     app: tauri::AppHandle,
     app_state: tauri::State<'_, AppState>,
 ) -> Result<(), String> {
@@ -534,13 +510,13 @@ pub fn set_background_image(
         app_state
             .setting
             .write()
-            .unwrap()
+            .await
             .set_background_image_path(&app, &path.into_path().map_err(|err| err.to_string())?)
             .map_err(|err| err.to_string())?;
         app_state
             .setting
             .read()
-            .unwrap()
+            .await
             .write_setting(&app)
             .map_err(|err| err.to_string())?;
         Ok(())
@@ -550,22 +526,22 @@ pub fn set_background_image(
 }
 
 #[tauri::command(async)]
-pub fn reset_background_image(
+pub async fn reset_background_image(
     app: tauri::AppHandle,
     app_state: tauri::State<'_, AppState>,
 ) -> Result<(), String> {
-    app_state.setting.write().unwrap().reset_background_image();
+    app_state.setting.write().await.reset_background_image();
     app_state
         .setting
         .read()
-        .unwrap()
+        .await
         .write_setting(&app)
         .map_err(|err| err.to_string())?;
     Ok(())
 }
 
 #[tauri::command(async)]
-pub fn set_background_transparence(
+pub async fn set_background_transparence(
     app: tauri::AppHandle,
     app_state: tauri::State<'_, AppState>,
     transparence: u32,
@@ -573,28 +549,28 @@ pub fn set_background_transparence(
     app_state
         .setting
         .write()
-        .unwrap()
+        .await
         .set_background_transparence(transparence);
     app_state
         .setting
         .read()
-        .unwrap()
+        .await
         .write_setting(&app)
         .map_err(|err| err.to_string())?;
     Ok(())
 }
 
 #[tauri::command(async)]
-pub fn set_background_blur(
+pub async fn set_background_blur(
     app: tauri::AppHandle,
     app_state: tauri::State<'_, AppState>,
     blur: u32,
 ) -> Result<(), String> {
-    app_state.setting.write().unwrap().set_background_blur(blur);
+    app_state.setting.write().await.set_background_blur(blur);
     app_state
         .setting
         .read()
-        .unwrap()
+        .await
         .write_setting(&app)
         .map_err(|err| err.to_string())?;
     Ok(())
@@ -641,12 +617,12 @@ pub async fn load_ammeter(
             app_state
                 .setting
                 .write()
-                .unwrap()
+                .await
                 .set_ammeter_number(ammeter_number);
             app_state
                 .setting
                 .read()
-                .unwrap()
+                .await
                 .write_setting(&app)
                 .map_err(|err| err.to_string())?;
             Ok(format!("{}", kwh))
@@ -780,9 +756,14 @@ async fn update(
 }
 
 #[tauri::command(async)]
-pub fn collapse(app_state: tauri::State<'_, AppState>, app: tauri::AppHandle, value: bool) {
-    app_state.setting.write().unwrap().set_collapsed(value);
-    let _ = app_state.setting.write().unwrap().write_setting(&app);
+pub async fn collapse(
+    app_state: tauri::State<'_, AppState>,
+    app: tauri::AppHandle,
+    value: bool,
+) -> Result<(), String> {
+    app_state.setting.write().await.set_collapsed(value);
+    let _ = app_state.setting.write().await.write_setting(&app);
+    Ok(())
 }
 
 #[tauri::command(async)]
@@ -831,15 +812,12 @@ pub async fn switch_login_ustb_wifi(
         .collect();
 
     // 获取该账号校园网记住的 mac 地址
-    let session_id = match app_state.jsessionid.read().unwrap().clone() {
-        Some(s) => s,
-        None => return Err("是否已经点击登录校园网后台按钮？".to_string()),
-    };
-    let via_vpn = *app_state.login_via_vpn.read().unwrap();
+    let session_id = get_session_id(&app_state).await?;
+    let via_vpn = *app_state.login_via_vpn.read().await;
     if via_vpn {
         return Err("请在校园网内使用本功能".to_string());
     }
-    let mac_custom_address = app_state.setting.read().unwrap().mac_custom_name.clone();
+    let mac_custom_address = app_state.setting.read().await.mac_custom_name.clone();
 
     let macs = match get_mac_address(&session_id, via_vpn, &mac_custom_address).await {
         Ok(Some(value)) => Ok(value),
@@ -874,7 +852,7 @@ pub async fn switch_login_ustb_wifi(
 pub async fn get_current_user_name(
     app_state: tauri::State<'_, AppState>,
 ) -> Result<String, String> {
-    Ok(app_state.cur_account.read().unwrap().clone())
+    Ok(app_state.cur_account.read().await.clone())
 }
 
 #[tauri::command(async)]
@@ -882,6 +860,6 @@ pub async fn set_current_user_name(
     app_state: tauri::State<'_, AppState>,
     user_name: String,
 ) -> Result<(), String> {
-    *app_state.cur_account.write().unwrap() = user_name;
+    *app_state.cur_account.write().await = user_name;
     Ok(())
 }

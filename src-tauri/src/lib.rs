@@ -4,6 +4,7 @@ pub mod onedrive;
 mod requests;
 pub mod setting;
 pub mod utils;
+pub mod localuser;
 
 use crate::commands::*;
 use crate::entities::AppState;

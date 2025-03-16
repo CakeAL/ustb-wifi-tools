@@ -1,5 +1,20 @@
 {
   "lint": {
     "exclude": ["auto-imports.d.ts", "components.d.ts"]
-  }
+  },
+  "compilerOptions": {
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "jsx": "preserve",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "unstable": [
+    "sloppy-imports"
+  ]
 }

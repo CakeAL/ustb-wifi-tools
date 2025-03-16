@@ -16,7 +16,7 @@ pub async fn open_microsoft_login(app_handle: tauri::AppHandle) -> Result<(), St
         .state::<AppState>()
         .onedrive_code_verifier
         .write()
-        .unwrap() = Some(code_verifier);
+        .await = Some(code_verifier);
 
     let url = format!(
         "{}&code_challenge={}&code_challenge_method=S256&redirect_uri=https%3A%2F%2Flogin.microsoftonline.com%2Fcommon%2Foauth2%2Fnativeclient",
@@ -79,7 +79,7 @@ async fn code_to_access_token(app_handle: tauri::AppHandle, code: String) -> Res
         .state::<AppState>()
         .onedrive_code_verifier
         .read()
-        .unwrap()
+        .await
         .clone()
         .ok_or("?".to_string())?;
 
@@ -146,7 +146,7 @@ async fn upload_setting_to_onedrive(app_handle: &tauri::AppHandle, token_respons
         .state::<AppState>()
         .setting
         .read()
-        .unwrap()
+        .await
         .clone();
     let s = serde_json::json!(&state).to_string();
     let s = URL_SAFE.encode(&s);
@@ -208,8 +208,8 @@ async fn download_setting_to_onedrive(
         };
         // dbg!(&setting);
         let state = app_handle.state::<AppState>();
-        *state.setting.write().unwrap() = setting;
-        let _ = state.setting.write().unwrap().write_setting(app_handle);
+        *state.setting.write().await = setting;
+        let _ = state.setting.write().await.write_setting(app_handle);
         app_handle.dialog().message("下载成功！").blocking_show();
         // dbg!(response.unwrap().text().await);
     }
