@@ -108,7 +108,7 @@ fn background_init(win: &WebviewWindow) -> Result<(), Box<dyn std::error::Error>
         // }
         let _ = win.set_title("");
         window_vibrancy::apply_vibrancy(
-            &win,
+            win,
             window_vibrancy::NSVisualEffectMaterial::Sidebar,
             Some(window_vibrancy::NSVisualEffectState::Active),
             None,

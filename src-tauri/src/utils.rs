@@ -1,5 +1,5 @@
-use std::{fs::create_dir, path::PathBuf};
 use anyhow::{anyhow, Result};
+use std::{fs::create_dir, path::PathBuf};
 use tauri::Manager;
 
 use crate::entities::AppState;
@@ -12,24 +12,32 @@ pub fn get_windows_build_number() -> u32 {
 }
 
 pub fn get_config_path(app: &tauri::AppHandle) -> Result<PathBuf> {
-    let path = match app.path().data_dir().ok() {
-        Some(mut p) => {
+    let mut path = get_store_path(app)?;
+    path.push("config.json");
+    Ok(path)
+}
+
+pub fn get_store_path(app: &tauri::AppHandle) -> Result<PathBuf> {
+    match app.path().data_dir() {
+        Ok(mut p) => {
             p.push("ustb-wifi-tools");
             if !p.exists() {
                 // 如果不存在这个文件夹先创建
                 create_dir(&p)?
             }
-            p.push("config.json");
-            p
+            Ok(p)
         }
-        None => return Err(anyhow!("There is no such app data dir!")),
-    };
-    dbg!(&path);
-    Ok(path)
+        Err(e) => Err(anyhow!("There is no such app data dir: {e}")),
+    }
 }
 
 pub async fn get_session_id(app_state: &tauri::State<'_, AppState>) -> Result<String, String> {
-    app_state.jsessionid.read().await.clone().ok_or("是否已经点击登录校园网后台按钮？".to_string()) 
+    app_state
+        .jsessionid
+        .read()
+        .await
+        .clone()
+        .ok_or("是否已经点击登录校园网后台按钮？".to_string())
 }
 
 #[cfg(test)]

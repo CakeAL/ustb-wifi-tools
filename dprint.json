@@ -15,7 +15,9 @@
   },
   "excludes": [
     "**/node_modules",
-    "**/*-lock.json"
+    "**/*-lock.json",
+    "auto-imports.d.ts",
+    "components.d.ts"
   ],
   "plugins": [
     "https://plugins.dprint.dev/typescript-0.94.0.wasm",
