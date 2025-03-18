@@ -79,12 +79,20 @@ pub struct MacAddress {
 }
 
 #[derive(Default)]
+pub enum UserType {
+    #[default]
+    Normal,
+    ViaVpn,
+    LocalUser,
+}
+
+#[derive(Default)]
 pub struct AppState {
     pub jsessionid: RwLock<Option<String>>,
     pub cur_account: RwLock<String>,
     pub setting: RwLock<Setting>,
-    pub login_via_vpn: RwLock<bool>,
-    pub onedrive_code_verifier: RwLock<Option<String>>,
+    pub user_type: RwLock<UserType>,
+    pub onedrive_code_verifier: RwLock<Option<String>>, 
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
