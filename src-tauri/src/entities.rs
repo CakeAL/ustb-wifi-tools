@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
 
-use crate::setting::Setting;
+use crate::{localuser::CurrentUser, setting::Setting};
 
 // #[derive(Debug, Serialize, Deserialize)]
 // pub struct Flow {
@@ -78,7 +78,7 @@ pub struct MacAddress {
     pub custom_name: String,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub enum UserType {
     #[default]
     Normal,
@@ -89,7 +89,7 @@ pub enum UserType {
 #[derive(Default)]
 pub struct AppState {
     pub jsessionid: RwLock<Option<String>>,
-    pub cur_account: RwLock<String>,
+    pub cur_account: RwLock<CurrentUser>,
     pub setting: RwLock<Setting>,
     pub user_type: RwLock<UserType>,
     pub onedrive_code_verifier: RwLock<Option<String>>, 

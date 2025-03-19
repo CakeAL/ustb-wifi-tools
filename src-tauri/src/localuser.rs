@@ -9,18 +9,30 @@ use tauri::Manager;
 use tokio::fs::OpenOptions;
 use tokio::io::AsyncWriteExt;
 
-use crate::entities::{AppState, UserLoginLog};
+use crate::entities::{AppState, UserLoginLog, UserType};
 use crate::requests::get_user_login_log;
 use crate::utils::{get_session_id, get_store_path};
 
-pub struct Localuser {
-    pub username: String,
+#[derive(Debug, Clone)]
+pub enum CurrentUser {
+    OnlineUser(String),
+    LocalUser(String),
 }
 
-impl Localuser {
+impl Default for CurrentUser {
+    fn default() -> Self {
+        CurrentUser::OnlineUser("".to_string())
+    }
+}
+
+impl CurrentUser {
     fn get_local_data_path(&self, app: &tauri::AppHandle) -> Result<PathBuf> {
         let mut path = get_store_path(app)?;
-        path.push(format!("local_{}", self.username));
+        if let CurrentUser::LocalUser(username) = self {
+            path.push(format!("{}", username));
+        } else {
+            return Err(anyhow!("当前用户不是本地用户"));
+        }
         if !path.exists() {
             create_dir(&path)?;
         }
@@ -39,7 +51,10 @@ impl Localuser {
                 .await
                 .map_err(|err| anyhow!(err))?,
         );
-        let via_vpn = *app_state.login_via_vpn.read().await;
+        let user_type = *app_state.user_type.read().await;
+        if let UserType::LocalUser = user_type {
+            return Err(anyhow!("本地存储不适用此功能"));
+        }
 
         let current_date = Utc::now().date_naive();
         let mut start_date = DateTime::from_timestamp(start_date, 0)
@@ -56,9 +71,13 @@ impl Localuser {
             let session_id = session_id.clone();
             let path = path.clone();
             tokio::spawn(async move {
-                let res =
-                    get_user_login_log(&session_id, &start_date_string, &end_date_string, via_vpn)
-                        .await;
+                let res = get_user_login_log(
+                    &session_id,
+                    &start_date_string,
+                    &end_date_string,
+                    user_type,
+                )
+                .await;
                 if let Ok(Some(data)) = res {
                     let mut file_path = (*path).clone();
                     file_path.push(format!("{}.json", start_date.format("%Y-%m")));

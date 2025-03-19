@@ -12,25 +12,25 @@ use scraper::{Html, Selector};
 use serde_json::Value;
 
 use crate::entities::{
-    AmmeterData, EveryLoginData, MacAddress, MonthPayInfo, MonthlyData, UserLoginLog,
+    AmmeterData, EveryLoginData, MacAddress, MonthPayInfo, MonthlyData, UserLoginLog, UserType,
 };
 
-pub static CLIENT: LazyLock<Client> = LazyLock::new(|| {
-    Client::builder()
-        .no_proxy()
-        .build()
-        .unwrap_or_default()
-});
+pub static CLIENT: LazyLock<Client> =
+    LazyLock::new(|| Client::builder().no_proxy().build().unwrap_or_default());
 
 // Ciallo～(∠・ω< )⌒☆
-pub async fn get_load_user_flow(account: &str, session_id: &str, via_vpn: bool) -> Result<Value> {
-    let url = if !via_vpn {
+pub async fn get_load_user_flow(
+    account: &str,
+    session_id: &str,
+    user_type: UserType,
+) -> Result<Value> {
+    let url = if !matches!(user_type, UserType::ViaVpn) {
         format!("http://202.204.48.66:801/eportal/portal/visitor/loadUserFlow?account={account}")
     } else {
         format!("https://elib.ustb.edu.cn/http-801/77726476706e69737468656265737421a2a713d275603c1e2a50c7face/eportal/portal/visitor/loadUserFlow?account={account}")
     };
     let mut req = CLIENT.get(url);
-    if via_vpn {
+    if matches!(user_type, UserType::ViaVpn) {
         req = req.header(
             "Cookie",
             format!("wengine_vpn_ticketelib_ustb_edu_cn={}", session_id),
@@ -222,14 +222,14 @@ pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Opt
     Ok(Some(wengine_vpn_ticketelib_ustb_edu_cn.into()))
 }
 
-pub async fn get_refresh_account(session_id: &str, via_vpn: bool) -> Result<Option<String>> {
-    let url = if !via_vpn {
+pub async fn get_refresh_account(session_id: &str, user_type: UserType) -> Result<Option<String>> {
+    let url = if !matches!(user_type, UserType::ViaVpn) {
         "http://202.204.60.7:8080/refreshaccount"
     } else {
         "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/refreshaccount"
     };
     let mut req = CLIENT.get(url);
-    if !via_vpn {
+    if !matches!(user_type, UserType::ViaVpn) {
         req = req.header("Cookie", format!("JSESSIONID={}", session_id));
     } else {
         req = req.header(
@@ -249,15 +249,15 @@ pub async fn get_refresh_account(session_id: &str, via_vpn: bool) -> Result<Opti
 pub async fn get_month_pay(
     session_id: &str,
     year: u16,
-    via_vpn: bool,
+    user_type: UserType,
 ) -> Result<Option<MonthPayInfo>> {
-    let url = if !via_vpn {
+    let url = if !matches!(user_type, UserType::ViaVpn) {
         "http://202.204.60.7:8080/MonthPayAction.action"
     } else {
         "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/MonthPayAction.action"
     };
     let mut req = CLIENT.post(url);
-    if !via_vpn {
+    if !matches!(user_type, UserType::ViaVpn) {
         req = req.header("Cookie", format!("JSESSIONID={}", session_id));
     } else {
         req = req.header(
@@ -330,9 +330,9 @@ pub async fn get_user_login_log(
     session_id: &str,
     start_date: &str,
     end_date: &str,
-    via_vpn: bool,
+    user_type: UserType,
 ) -> Result<Option<UserLoginLog>> {
-    let url = if !via_vpn {
+    let url = if !matches!(user_type, UserType::ViaVpn) {
         "http://202.204.60.7:8080/UserLoginLogAction.action"
     } else {
         "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/UserLoginLogAction.action"
@@ -352,7 +352,7 @@ pub async fn get_user_login_log(
     }
 
     let mut req = CLIENT.post(url);
-    if !via_vpn {
+    if !matches!(user_type, UserType::ViaVpn) {
         req = req.header("Cookie", format!("JSESSIONID={}", session_id));
     } else {
         req = req.header(
@@ -478,16 +478,16 @@ pub async fn get_user_login_log(
 
 pub async fn get_mac_address(
     session_id: &str,
-    via_vpn: bool,
+    user_type: UserType,
     mac_custom_name: &HashMap<String, String>,
 ) -> Result<Option<Vec<MacAddress>>> {
-    let url = if !via_vpn {
+    let url = if !matches!(user_type, UserType::ViaVpn) {
         "http://202.204.60.7:8080/nav_unBandMacJsp"
     } else {
         "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/nav_unBandMacJsp"
     };
     let mut req = CLIENT.get(url);
-    if !via_vpn {
+    if !matches!(user_type, UserType::ViaVpn) {
         req = req.header("Cookie", format!("JSESSIONID={}", session_id));
     } else {
         req = req.header(
@@ -540,9 +540,9 @@ pub async fn get_mac_address(
 pub async fn unbind_macs(
     session_id: &str,
     macs: &Vec<String>,
-    via_vpn: bool,
+    user_type: UserType,
 ) -> Result<Option<()>> {
-    let url = if !via_vpn {
+    let url = if !matches!(user_type, UserType::ViaVpn) {
         "http://202.204.60.7:8080/nav_unbindMACAction.action"
     } else {
         "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/nav_unbindMACAction.action"
@@ -554,7 +554,7 @@ pub async fn unbind_macs(
     let _ = mac_str.pop(); // 删末尾分号
     dbg!(&mac_str);
     let mut req = CLIENT.post(url);
-    if !via_vpn {
+    if !matches!(user_type, UserType::ViaVpn) {
         req = req.header("Cookie", format!("JSESSIONID={}", session_id));
     } else {
         req = req.header(
@@ -767,7 +767,7 @@ mod tests {
     async fn test_get_load_user_flow() {
         let account = "U202141234".to_string();
         let session_id = "session_id";
-        let res = get_load_user_flow(&account, &session_id, false)
+        let res = get_load_user_flow(&account, &session_id, UserType::Normal)
             .await
             .unwrap();
         println!("{:?}", res);
@@ -799,7 +799,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_refresh_account() {
         let session_id = "session_id";
-        let res = get_refresh_account(session_id, false).await;
+        let res = get_refresh_account(session_id, UserType::Normal).await;
         println!("{:?}", res);
     }
 
@@ -807,7 +807,7 @@ mod tests {
     async fn test_get_month_pay() {
         let session_id = "session_id";
         let year = 2024u16;
-        let res = get_month_pay(session_id, year, false).await;
+        let res = get_month_pay(session_id, year, UserType::Normal).await;
         dbg!(res.unwrap());
     }
 
@@ -817,14 +817,14 @@ mod tests {
         // let year_month = "202405";
         let start_date = "2024-05-01";
         let end_date = "2024-05-31";
-        let res = get_user_login_log(session_id, start_date, end_date, false).await;
+        let res = get_user_login_log(session_id, start_date, end_date, UserType::Normal).await;
         dbg!(res.unwrap());
     }
 
     #[tokio::test]
     async fn test_get_mac_address() {
         let session_id = "session_id";
-        let res = get_mac_address(session_id, false, &mut HashMap::new()).await;
+        let res = get_mac_address(session_id, UserType::Normal, &mut HashMap::new()).await;
         dbg!(res.unwrap());
     }
 
@@ -833,7 +833,7 @@ mod tests {
         let session_id = "session_id";
         let macs = vec![]; // such as "ABCD12345678".to_string()
                            // macs 为空执行此 test 会导致退出全部你的校园网账号
-        let res = unbind_macs(&session_id, &macs, false).await;
+        let res = unbind_macs(&session_id, &macs, UserType::Normal).await;
         dbg!(res.unwrap());
     }
 

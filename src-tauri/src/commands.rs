@@ -6,9 +6,11 @@ use serde::Serialize;
 use tauri::{ipc::Channel, utils::config::WindowConfig, Manager};
 
 use crate::{
-    entities::{AppState, DownloadEvent, EveryLoginData, MonthlyData, UserLoginLog},
+    entities::{AppState, DownloadEvent, EveryLoginData, MonthlyData, UserLoginLog, UserType},
+    localuser::CurrentUser,
     requests::*,
-    setting::Setting, utils::get_session_id,
+    setting::Setting,
+    utils::get_session_id,
 };
 
 #[tauri::command(async)]
@@ -16,15 +18,17 @@ pub async fn load_user_flow(
     account: String,
     app_state: tauri::State<'_, AppState>,
 ) -> Result<String, String> {
-    let via_vpn = *app_state.login_via_vpn.read().await;
-    let mut session_id = String::new();
-    if via_vpn {
-        session_id = get_session_id(&app_state).await?;
+    let user_type = *app_state.user_type.read().await;
+    match user_type {
+        UserType::Normal | UserType::ViaVpn => {
+            let session_id = get_session_id(&app_state).await?;
+            get_load_user_flow(&account, &session_id, user_type)
+                .await
+                .map_err(|e| format!("Error while loading user flow: {}", e))
+                .map(|res| res.to_string())
+        }
+        UserType::LocalUser => Err("本地存储不适用此功能".to_string()),
     }
-    get_load_user_flow(&account, &session_id, via_vpn)
-        .await
-        .map_err(|e| format!("Error while loading user flow: {}", e))
-        .map(|res| res.to_string())
 }
 
 #[tauri::command(async)]
@@ -33,6 +37,16 @@ pub async fn get_cookie(
     user_name: String,
     password: String,
 ) -> Result<String, String> {
+    if user_name.starts_with("local") {
+        app_state
+            .setting
+            .write()
+            .await
+            .set_account(user_name.clone(), "123456".to_string());
+        *app_state.user_type.write().await = UserType::LocalUser;
+        return Ok("local".to_string());
+    }
+
     let res = simulate_login(&user_name, &password)
         .await
         .map_err(|err| err.to_string())?;
@@ -62,6 +76,16 @@ pub async fn get_cookie_vpn(
     user_name: String,
     password: String,
 ) -> Result<String, String> {
+    if user_name.starts_with("local") {
+        app_state
+            .setting
+            .write()
+            .await
+            .set_account(user_name.clone(), "123456".to_string());
+        *app_state.user_type.write().await = UserType::LocalUser;
+        return Ok("local".to_string());
+    }
+
     let res = simulate_login_via_vpn(&user_name, &password)
         .await
         .map_err(|err| err.to_string())?;
@@ -70,7 +94,7 @@ pub async fn get_cookie_vpn(
         Some(cookie) => {
             dbg!(&cookie);
             *app_state.jsessionid.write().await = Some(cookie.clone());
-            *app_state.login_via_vpn.write().await = true;
+            *app_state.user_type.write().await = UserType::ViaVpn;
             app_state
                 .setting
                 .write()
@@ -97,7 +121,7 @@ pub async fn logout(
         return Err("没登录之前不许登出😠".into());
     }
     *app_state.jsessionid.write().await = None;
-    *app_state.login_via_vpn.write().await = false; // 这之前有个bug一直没人发现，说明没人用我的 app 😭
+    *app_state.user_type.write().await = UserType::default(); // 这之前有个bug一直没人发现，说明没人用我的 app 😭
     window
         .eval("window.location.reload();")
         .map_err(|err| format!("刷新网页错误：{}", err))?;
@@ -107,8 +131,11 @@ pub async fn logout(
 #[tauri::command(async)]
 pub async fn load_refresh_account(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
     let session_id = get_session_id(&app_state).await?;
-    let via_vpn = *app_state.login_via_vpn.read().await;
-    match get_refresh_account(&session_id, via_vpn).await {
+    let user_type = *app_state.user_type.read().await;
+    if let UserType::LocalUser = user_type {
+        return Err("本地存储不适用此功能".to_string());
+    }
+    match get_refresh_account(&session_id, user_type).await {
         Ok(Some(str)) => Ok(str),
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
@@ -120,10 +147,12 @@ pub async fn load_user_flow_by_state(
     app_state: tauri::State<'_, AppState>,
     user_name: String,
 ) -> Result<String, String> {
-    let via_vpn = *app_state.login_via_vpn.read().await;
+    let user_type = *app_state.user_type.read().await;
     let session_id = get_session_id(&app_state).await?;
-
-    get_load_user_flow(&user_name, &session_id, via_vpn)
+    if let UserType::LocalUser = user_type {
+        return Err("本地存储不适用此功能".to_string());
+    }
+    get_load_user_flow(&user_name, &session_id, user_type)
         .await
         .map_err(|e| format!("Error while loading user flow: {}", e))
         .map(|res| res.to_string())
@@ -135,9 +164,12 @@ pub async fn load_month_pay(
     year: u16,
 ) -> Result<String, String> {
     let session_id = get_session_id(&app_state).await?;
-    let via_vpn = *app_state.login_via_vpn.read().await;
+    let user_type = *app_state.user_type.read().await;
+    if let UserType::LocalUser = user_type {
+        return Err("本地存储不适用此功能".to_string());
+    }
 
-    let mut month_pay_info = match get_month_pay(&session_id, year, via_vpn).await {
+    let mut month_pay_info = match get_month_pay(&session_id, year, user_type).await {
         Ok(Some(v)) => Ok(v),
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
@@ -153,11 +185,11 @@ pub async fn load_month_pay(
     if this_year > year {
         let start_date = format!("{}-12-01", year);
         let end_date = format!("{}-12-31", year);
-        let dec_data = match get_user_login_log(&session_id, &start_date, &end_date, via_vpn).await
-        {
-            Ok(Some(v)) => v,
-            _ => UserLoginLog::default(),
-        };
+        let dec_data =
+            match get_user_login_log(&session_id, &start_date, &end_date, user_type).await {
+                Ok(Some(v)) => v,
+                _ => UserLoginLog::default(),
+            };
         month_pay_info.year_cost += dec_data.cost;
         month_pay_info.year_used_duration += dec_data.used_duration;
         month_pay_info.year_used_flow += dec_data.used_flow;
@@ -182,7 +214,7 @@ pub async fn load_month_pay(
                 let end_date = format!("2023-{:02}-31", month);
                 (
                     month,
-                    get_user_login_log(&session_id, &start_date, &end_date, via_vpn).await,
+                    get_user_login_log(&session_id, &start_date, &end_date, user_type).await,
                 )
             });
             handles.push(handle);
@@ -218,7 +250,7 @@ pub async fn load_month_pay(
                 let end_date = format!("2022-{:02}-31", month);
                 (
                     month,
-                    get_user_login_log(&session_id, &start_date, &end_date, via_vpn).await,
+                    get_user_login_log(&session_id, &start_date, &end_date, user_type).await,
                 )
             });
             handles.push(handle);
@@ -264,9 +296,12 @@ pub async fn load_user_login_log(
         .unwrap()
         .format("%Y-%m-%d")
         .to_string();
-    let via_vpn = *app_state.login_via_vpn.read().await;
+    let user_type = *app_state.user_type.read().await;
+    if let UserType::LocalUser = user_type {
+        return Err("本地存储不适用此功能".to_string());
+    }
 
-    match get_user_login_log(&session_id, &start_date, &end_date, via_vpn).await {
+    match get_user_login_log(&session_id, &start_date, &end_date, user_type).await {
         Ok(Some(value)) => Ok(serde_json::json!(value).to_string()),
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => {
@@ -281,10 +316,11 @@ pub async fn load_user_login_log(
 
 #[tauri::command(async)]
 pub async fn load_monthly_login_log(
-    app_state: tauri::State<'_, AppState>,
+    app: tauri::AppHandle,
     start_date: i64,
     days: i64,
 ) -> Result<String, String> {
+    let app_state = app.state::<AppState>();
     let session_id = get_session_id(&app_state).await?;
     let end_date = start_date + 3600 * 24 * days;
     let start_date_string = DateTime::from_timestamp(start_date, 0)
@@ -295,9 +331,18 @@ pub async fn load_monthly_login_log(
         .unwrap()
         .format("%Y-%m-%d")
         .to_string();
-    let via_vpn = *app_state.login_via_vpn.read().await;
-
-    match get_user_login_log(&session_id, &start_date_string, &end_date_string, via_vpn).await {
+    let user_type = *app_state.user_type.read().await;
+    let res = match user_type {
+        UserType::Normal | UserType::ViaVpn => {
+            get_user_login_log(&session_id, &start_date_string, &end_date_string, user_type).await
+        }
+        UserType::LocalUser => app_state
+            .cur_account
+            .read()
+            .await
+            .get_local_data(&app, start_date),
+    };
+    match res {
         Ok(Some(value)) => {
             let mut flow_every_day: Vec<EveryLoginData> = vec![];
             for i in 0..days {
@@ -339,10 +384,13 @@ pub async fn load_monthly_login_log(
 #[tauri::command(async)]
 pub async fn load_mac_address(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
     let session_id = get_session_id(&app_state).await?;
-    let via_vpn = *app_state.login_via_vpn.read().await;
+    let user_type = *app_state.user_type.read().await;
+    if let UserType::LocalUser = user_type {
+        return Err("本地存储不适用此功能".to_string());
+    }
     let mac_custom_address = app_state.setting.read().await.mac_custom_name.clone();
 
-    match get_mac_address(&session_id, via_vpn, &mac_custom_address).await {
+    match get_mac_address(&session_id, user_type, &mac_custom_address).await {
         Ok(Some(v)) => Ok(serde_json::json!(v).to_string()),
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
@@ -408,9 +456,11 @@ pub async fn do_unbind_macs(
     macs: Vec<String>,
 ) -> Result<(), String> {
     let session_id = get_session_id(&app_state).await?;
-    let via_vpn = *app_state.login_via_vpn.read().await;
-
-    match unbind_macs(&session_id, &macs, via_vpn).await {
+    let user_type = *app_state.user_type.read().await;
+    if let UserType::LocalUser = user_type {
+        return Err("本地存储不适用此功能".to_string());
+    }
+    match unbind_macs(&session_id, &macs, user_type).await {
         Ok(Some(())) => Ok(()),
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
@@ -813,13 +863,13 @@ pub async fn switch_login_ustb_wifi(
 
     // 获取该账号校园网记住的 mac 地址
     let session_id = get_session_id(&app_state).await?;
-    let via_vpn = *app_state.login_via_vpn.read().await;
-    if via_vpn {
-        return Err("请在校园网内使用本功能".to_string());
+    let user_type = *app_state.user_type.read().await;
+    if let UserType::LocalUser | UserType::ViaVpn = user_type {
+        return Err("无法使用当前功能".to_string());
     }
     let mac_custom_address = app_state.setting.read().await.mac_custom_name.clone();
 
-    let macs = match get_mac_address(&session_id, via_vpn, &mac_custom_address).await {
+    let macs = match get_mac_address(&session_id, user_type, &mac_custom_address).await {
         Ok(Some(value)) => Ok(value),
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
@@ -837,7 +887,7 @@ pub async fn switch_login_ustb_wifi(
     if diff_macs.len() == macs.len() {
         return Err("无法匹配 MAC 地址，请确认当前账号是否已经在这台设备登录了。".to_string());
     }
-    match unbind_macs(&session_id, &diff_macs, via_vpn).await {
+    match unbind_macs(&session_id, &diff_macs, user_type).await {
         Ok(Some(())) => Ok(()),
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
@@ -852,7 +902,10 @@ pub async fn switch_login_ustb_wifi(
 pub async fn get_current_user_name(
     app_state: tauri::State<'_, AppState>,
 ) -> Result<String, String> {
-    Ok(app_state.cur_account.read().await.clone())
+    match app_state.cur_account.read().await.clone() {
+        CurrentUser::LocalUser(user_name) => Ok(user_name),
+        CurrentUser::OnlineUser(user_name) => Ok(user_name),
+    }
 }
 
 #[tauri::command(async)]
@@ -860,6 +913,13 @@ pub async fn set_current_user_name(
     app_state: tauri::State<'_, AppState>,
     user_name: String,
 ) -> Result<(), String> {
-    *app_state.cur_account.write().await = user_name;
+    match *app_state.user_type.read().await {
+        UserType::ViaVpn | UserType::Normal => {
+            *app_state.cur_account.write().await = CurrentUser::OnlineUser(user_name);
+        }
+        UserType::LocalUser => {
+            *app_state.cur_account.write().await = CurrentUser::LocalUser(user_name);
+        }
+    }
     Ok(())
 }
