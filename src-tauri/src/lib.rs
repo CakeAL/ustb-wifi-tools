@@ -58,7 +58,9 @@ pub fn run() {
             get_ip_location,
             switch_login_ustb_wifi,
             get_current_user_name,
-            set_current_user_name
+            set_current_user_name,
+            create_local_user,
+            down_historical_data
         ])
         .setup(|app| {
             // {

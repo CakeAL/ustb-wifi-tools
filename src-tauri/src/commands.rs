@@ -10,7 +10,7 @@ use crate::{
     localuser::CurrentUser,
     requests::*,
     setting::Setting,
-    utils::get_session_id,
+    utils::{get_session_id, update},
 };
 
 #[tauri::command(async)]
@@ -38,11 +38,9 @@ pub async fn get_cookie(
     password: String,
 ) -> Result<String, String> {
     if user_name.starts_with("local") {
-        app_state
-            .setting
-            .write()
-            .await
-            .set_account(user_name.clone(), "123456".to_string());
+        if !app_state.setting.read().await.has_local_account(&user_name) {
+            return Err("本地账号不存在".to_string());
+        }
         *app_state.user_type.write().await = UserType::LocalUser;
         return Ok("local".to_string());
     }
@@ -77,11 +75,9 @@ pub async fn get_cookie_vpn(
     password: String,
 ) -> Result<String, String> {
     if user_name.starts_with("local") {
-        app_state
-            .setting
-            .write()
-            .await
-            .set_account(user_name.clone(), "123456".to_string());
+        if !app_state.setting.read().await.has_local_account(&user_name) {
+            return Err("本地账号不存在".to_string());
+        }
         *app_state.user_type.write().await = UserType::LocalUser;
         return Ok("local".to_string());
     }
@@ -719,92 +715,6 @@ pub async fn return_os_type() -> i32 {
     res
 }
 
-#[cfg(not(any(target_os = "android", target_os = "linux")))]
-async fn update(
-    app: tauri::AppHandle,
-    manually: bool,
-    on_event: Channel<DownloadEvent>,
-) -> Result<(), String> {
-    use tauri_plugin_dialog::DialogExt;
-    use tauri_plugin_opener::OpenerExt;
-    #[cfg(not(any(target_os = "android", target_os = "linux")))]
-    use tauri_plugin_updater::UpdaterExt;
-
-    if let Some(update) = app
-        .updater()
-        .map_err(|e| e.to_string())?
-        .check()
-        .await
-        .map_err(|e| e.to_string())?
-    {
-        // 对话框
-        let answer: bool = app
-            .dialog()
-            .message(format!(
-                "{}->{}\n更新内容：{}",
-                update.current_version,
-                update.version,
-                update.body.clone().unwrap_or_default()
-            ))
-            .title("有新版本！")
-            .buttons(tauri_plugin_dialog::MessageDialogButtons::OkCancel)
-            .blocking_show();
-
-        if answer {
-            on_event
-                .send(DownloadEvent::Started { new_version: true })
-                .unwrap();
-
-            let mut downloaded = 0;
-            update
-                .download_and_install(
-                    |chunk_length, content_length| {
-                        downloaded += chunk_length;
-                        // println!("downloaded {downloaded} from {content_length:?}");
-                        on_event
-                            .send(DownloadEvent::Progress {
-                                downloaded,
-                                content_length: content_length.unwrap_or_default(),
-                            })
-                            .unwrap();
-                    },
-                    || {
-                        // println!("download finished");
-                        on_event
-                            .send(DownloadEvent::Finished { finished: true })
-                            .unwrap();
-                    },
-                )
-                .await
-                .map_err(|e| e.to_string())?;
-            // 添加查看 CHANGELOG
-            let answer = app
-                .dialog()
-                .message("是否查看更新记录")
-                .title("更新完成")
-                .buttons(tauri_plugin_dialog::MessageDialogButtons::YesNo)
-                .blocking_show();
-
-            if answer {
-                let _ = app.opener().open_url(
-                    "https://github.com/CakeAL/ustb-wifi-tools/blob/main/CHANGELOG.md",
-                    None::<&str>,
-                );
-            }
-            app.restart();
-        }
-    } else if manually {
-        app.dialog()
-            .message("没有更新😭")
-            .kind(tauri_plugin_dialog::MessageDialogKind::Info)
-            .title("这是个提示框")
-            .buttons(tauri_plugin_dialog::MessageDialogButtons::Ok)
-            .blocking_show();
-    }
-
-    Ok(())
-}
-
 #[tauri::command(async)]
 pub async fn collapse(
     app_state: tauri::State<'_, AppState>,
@@ -922,4 +832,31 @@ pub async fn set_current_user_name(
         }
     }
     Ok(())
+}
+
+#[tauri::command(async)]
+pub async fn create_local_user(app: tauri::AppHandle) -> Result<String, String> {
+    CurrentUser::new_local_user(&app)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command(async)]
+pub async fn down_historical_data(
+    app: tauri::AppHandle,
+    start_date: i64,
+) -> Result<String, String> {
+    let app_state = app.state::<AppState>();
+    let user_type = *app_state.user_type.read().await;
+    if let UserType::LocalUser = user_type {
+        return Err("本地存储不适用此功能".to_string());
+    }
+    let res = app_state
+        .cur_account
+        .read()
+        .await
+        .get_historical_data(&app, start_date)
+        .await
+        .map_err(|e| e.to_string());
+    res
 }

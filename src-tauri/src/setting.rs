@@ -70,6 +70,10 @@ impl Setting {
         self.account.insert(0, (username, password));
     }
 
+    pub fn has_local_account(&self, username: &str) -> bool {
+        self.account.iter().any(|(saved_username, _)| saved_username == username)
+    }
+
     pub fn set_ammeter_number(&mut self, ammeter_number: u32) {
         self.ammeter_number = Some(ammeter_number);
     }

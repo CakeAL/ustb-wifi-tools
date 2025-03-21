@@ -26,12 +26,35 @@ impl Default for CurrentUser {
 }
 
 impl CurrentUser {
+    pub async fn new_local_user(app: &tauri::AppHandle) -> Result<String> {
+        let app_state = app.state::<AppState>();
+        let cur_account = match app_state.cur_account.read().await.clone() {
+            CurrentUser::OnlineUser(username) => username,
+            CurrentUser::LocalUser(_) => return Err(anyhow!("请登陆在线账户再创建本地账户")),
+        };
+        let local_username = format!("local_{cur_account}");
+        if app_state
+            .setting
+            .read()
+            .await
+            .has_local_account(&local_username)
+        {
+            return Err(anyhow!("该本地账户已存在"));
+        }
+        app_state
+            .setting
+            .write()
+            .await
+            .set_account(local_username, "".to_string());
+        let _ = app_state.setting.write().await.write_setting(app);
+        Ok("创建本地账户成功".to_string())
+    }
+
     fn get_local_data_path(&self, app: &tauri::AppHandle) -> Result<PathBuf> {
         let mut path = get_store_path(app)?;
-        if let CurrentUser::LocalUser(username) = self {
-            path.push(format!("{}", username));
-        } else {
-            return Err(anyhow!("当前用户不是本地用户"));
+        match self {
+            CurrentUser::LocalUser(username) => path.push(format!("{}", username)),
+            CurrentUser::OnlineUser(username) => path.push(format!("local_{username}")),
         }
         if !path.exists() {
             create_dir(&path)?;
