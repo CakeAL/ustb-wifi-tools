@@ -8,7 +8,7 @@ import {
   ColorPaletteOutline,
 } from "@vicons/ionicons5";
 import { useLoadingBar, useMessage } from "naive-ui";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { railStyle } from "../helper";
 import { store } from "../store";
 import { check_update } from "../update";
@@ -69,7 +69,10 @@ const check_login_state = async () => {
 };
 
 const get_cookies = async () => {
-  if (user_name.value.length === 0 || password.value.length === 0) {
+  if (
+    !user_name.value.startsWith("local")
+    && (user_name.value.length === 0 || password.value.length === 0)
+  ) {
     pop_message.error("请先输入学号和密码");
     return;
   }
@@ -214,6 +217,31 @@ const switchLoginUstbWifi = async () => {
   loadingBar.finish();
   pop_message.success("切换成功");
 };
+
+const start_date = ref<number>(Date.now());
+watch(store, () => {
+  if (store.userName !== "") {
+    let year = parseInt(store.userName.slice(1, 5));
+    if (isNaN(year)) {
+      console.warn("Invalid year extracted from userName:", store.userName);
+      start_date.value = Date.now();
+    } else {
+      start_date.value = new Date(year, 7, 1).getTime();
+    }
+  }
+});
+const get_historial_data = async () => {
+  let res1 = await invoke("create_local_user").catch((e) =>
+    pop_message.warning(e)
+  );
+  if (res1 === "创建本地账户成功") {
+    pop_message.success(res1);
+  }
+  let res2 = await invoke("down_historical_data", {
+    startDate: Math.floor(start_date.value / 1000) + 8 * 3600,
+  }).catch((e) => pop_message.error(e));
+  pop_message.create(res2 as string);
+};
 </script>
 
 <template>
@@ -280,6 +308,38 @@ const switchLoginUstbWifi = async () => {
         <n-h3 prefix="bar" type="success" style="margin-top: 15px"
         >您已登录 {{ store.userName }}<br
           />如果其他页面不能获取到信息，请点击登出再重新登录。</n-h3>
+        <n-card
+          title="建立本地账号"
+          style="background-color: rgba(255, 255, 255, 0.1)"
+          v-if="store.userName.slice(0, 5) !== 'local'"
+        >
+          <n-p
+          >可以用来从校园网后台下载从入学之后的每个月数据，并在使用创建的本地账号浏览。这确实没有什么用，但是对大四的学生来说，毕业之后也可以看自己以前用了多少🤔，但是确实没有什么用。</n-p>
+          <n-p>使用方法：<br>1.
+            在下方选择自己的想要从何时（入学年月）开始下载数据，然后点击右侧按钮。<br
+            >2. 登出当前账号并使用生成的带 <i>local</i>
+            前缀的账号登陆（当然也可以点击下方的“打开配置文件夹”来查看本地存储内容）。</n-p>
+          <n-grid x-gap="12" :cols="6">
+            <n-gi span="5">
+              <n-date-picker
+                v-model:value="start_date"
+                type="month"
+                clearable
+              />
+            </n-gi>
+            <n-gi>
+              <n-button
+                strong
+                secondary
+                type="primary"
+                @click="get_historial_data"
+                :disabled="button_disabled"
+              >
+                我是按钮
+              </n-button>
+            </n-gi>
+          </n-grid>
+        </n-card>
       </div>
       <n-grid :x-gap="12" :y-gap="8" :cols="2" style="margin-top: 10px">
         <n-grid-item>
@@ -445,7 +505,7 @@ const switchLoginUstbWifi = async () => {
 }
 
 .my-card {
-  background-color: rgba(255, 255, 255, 0);
+  background-color: rgba(255, 255, 255, 0.1);
   cursor: pointer;
 }
 

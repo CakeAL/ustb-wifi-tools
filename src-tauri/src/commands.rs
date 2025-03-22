@@ -42,6 +42,7 @@ pub async fn get_cookie(
             return Err("本地账号不存在".to_string());
         }
         *app_state.user_type.write().await = UserType::LocalUser;
+        *app_state.jsessionid.write().await = Some("local".to_string());
         return Ok("local".to_string());
     }
 
@@ -79,6 +80,7 @@ pub async fn get_cookie_vpn(
             return Err("本地账号不存在".to_string());
         }
         *app_state.user_type.write().await = UserType::LocalUser;
+        *app_state.jsessionid.write().await = Some("local".to_string());
         return Ok("local".to_string());
     }
 
@@ -367,13 +369,7 @@ pub async fn load_monthly_login_log(
             Ok(serde_json::json!(flow_every_day).to_string())
         }
         Ok(None) => Err("请确认是否已经登录".to_string()),
-        Err(e) => {
-            if e.to_string() == "NO DATA" {
-                Err("目前暂时没有该数据".to_string())
-            } else {
-                Err(format!("请检查网络情况: {}", e))
-            }
-        }
+        Err(e) => Err(e.to_string()),
     }
 }
 
