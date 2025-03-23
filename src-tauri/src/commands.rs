@@ -841,7 +841,7 @@ pub async fn create_local_user(app: tauri::AppHandle) -> Result<String, String> 
 pub async fn down_historical_data(
     app: tauri::AppHandle,
     start_date: i64,
-) -> Result<String, String> {
+) -> Result<Vec<String>, String> {
     let app_state = app.state::<AppState>();
     let user_type = *app_state.user_type.read().await;
     if let UserType::LocalUser = user_type {

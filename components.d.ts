@@ -11,6 +11,7 @@ declare module 'vue' {
     Greet: typeof import('./src/components/Greet.vue')['default']
     Menu: typeof import('./src/components/Menu.vue')['default']
     MonthlyChart: typeof import('./src/components/MonthlyChart.vue')['default']
+    NAlert: typeof import('naive-ui')['NAlert']
     NButton: typeof import('naive-ui')['NButton']
     NCard: typeof import('naive-ui')['NCard']
     NCheckbox: typeof import('naive-ui')['NCheckbox']

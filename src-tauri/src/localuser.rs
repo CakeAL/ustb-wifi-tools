@@ -67,7 +67,7 @@ impl CurrentUser {
         &self,
         app: &tauri::AppHandle,
         start_date: i64,
-    ) -> Result<String> {
+    ) -> Result<Vec<String>> {
         let app_state = app.state::<AppState>();
         let session_id = Arc::new(
             get_session_id(&app_state)
@@ -84,16 +84,17 @@ impl CurrentUser {
             .unwrap()
             .date_naive();
         let path = Arc::new(self.get_local_data_path(app)?);
+        let mut tasks = vec![];
 
         while start_date <= current_date {
             let start_date_string = start_date.format("%Y-%m-%d").to_string();
             let end_date_string = get_last_day_of_month(&start_date)
                 .format("%Y-%m-%d")
                 .to_string();
-            println!("{start_date_string} -> {end_date_string}");
+            // println!("{start_date_string} -> {end_date_string}");
             let session_id = session_id.clone();
             let path = path.clone();
-            tokio::spawn(async move {
+            let task = tokio::spawn(async move {
                 let res = get_user_login_log(
                     &session_id,
                     &start_date_string,
@@ -101,24 +102,44 @@ impl CurrentUser {
                     user_type,
                 )
                 .await;
-                if let Ok(Some(data)) = res {
-                    let mut file_path = (*path).clone();
-                    file_path.push(format!("{}.json", start_date.format("%Y-%m")));
-                    let json_str = serde_json::to_string(&data).unwrap_or_default();
-                    let file = OpenOptions::new()
-                        .create(true)
-                        .write(true)
-                        .truncate(true)
-                        .open(file_path)
-                        .await;
-                    if let Ok(mut file) = file {
-                        let _ = file.write_all(json_str.as_bytes()).await;
+
+                match res {
+                    Ok(Some(data)) => {
+                        let mut file_path = (*path).clone();
+                        file_path.push(format!("{}.json", start_date.format("%Y-%m")));
+                        let json_str = serde_json::to_string(&data).unwrap_or_default();
+                        let file = OpenOptions::new()
+                            .create(true)
+                            .write(true)
+                            .truncate(true)
+                            .open(file_path)
+                            .await;
+                        if let Ok(mut file) = file {
+                            let _ = file.write_all(json_str.as_bytes()).await;
+                        }
+                        Ok(())
                     }
+                    Ok(None) => Ok(()),
+                    Err(e) => Err(anyhow!(
+                        "{} 获取失败，原因：{}",
+                        start_date.format("%Y-%m"),
+                        e.to_string()
+                    )),
                 }
             });
+            tasks.push(task);
             start_date = get_first_day_next_month(&start_date);
         }
-        Ok(path.to_string_lossy().to_string())
+        let mut res = vec![];
+        res.push(format!("存储于：{}", path.to_string_lossy().to_string()));
+        for task in tasks {
+            if let Err(e) = task.await?{
+                println!("{}", e.to_string());
+                res.push(e.to_string());
+            }
+        }
+        println!("finished");
+        Ok(res)
     }
 
     pub fn get_local_data(
