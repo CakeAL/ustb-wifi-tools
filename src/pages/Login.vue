@@ -344,9 +344,9 @@ const get_historial_data = async () => {
               </n-button>
             </n-gi>
           </n-grid>
-          <n-spin :show="show_res" style="margin-top: 10px;">
+          <n-spin :show="show_res" style="margin-top: 10px">
             <n-alert title="获取结果" type="warning">
-              <span v-for="(item, index) in get_data_result" :key="index"> 
+              <span v-for="(item, index) in get_data_result" :key="index">
                 {{ item }}<br>
               </span>
             </n-alert>

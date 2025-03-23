@@ -18,3 +18,16 @@ body {
   background-color: transparent;
   height: 100vh;
 }
+
+.n-table {
+  background-color: transparent;
+  border-radius: 5px;
+}
+
+.n-table th, .n-table :nth-of-type(even) td {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.n-table td, .n-data-table-td {
+  background-color: rgba(255, 255, 255, 0.1);
+}

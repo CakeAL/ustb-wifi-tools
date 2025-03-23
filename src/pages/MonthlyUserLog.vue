@@ -5,10 +5,11 @@ import { useLoadingBar, useMessage } from "naive-ui";
 import { onMounted, ref } from "vue";
 import MonthlyChart from "../components/MonthlyChart.vue";
 import { mb2gb, min2hour, railStyle } from "../helper";
-import { EveryLoginData } from "./UserLoginLog.vue";
+import { EveryLoginData, UserLoginLog } from "./UserLoginLog.vue";
 
 const pop_message = useMessage();
 const monthly_user_log = ref<Array<EveryLoginData>>([]);
+const sum_user_log = ref<UserLoginLog | null>(null);
 // 把 start_date 设置为当前月第一天0点
 const start_date = ref<number>(
   dayjs().startOf("month").startOf("day").valueOf(),
@@ -72,7 +73,39 @@ const get_monthly_user_log = async () => {
     loadingBar.error();
   });
   monthly_user_log.value = JSON.parse(res as string);
-  // // 找出当月使用流量最大的
+  // 算出合计
+  sum_user_log.value = {
+    ipv4_down: monthly_user_log.value.reduce(
+      (acc, cur) => acc + cur.ipv4_down,
+      0,
+    ),
+    ipv4_up: monthly_user_log.value.reduce(
+      (acc, cur) => acc + cur.ipv4_up,
+      0,
+    ),
+    ipv6_down: monthly_user_log.value.reduce(
+      (acc, cur) => acc + cur.ipv6_down,
+      0,
+    ),
+    ipv6_up: monthly_user_log.value.reduce(
+      (acc, cur) => acc + cur.ipv6_up,
+      0,
+    ),
+    cost: monthly_user_log.value.reduce(
+      (acc, cur) => acc + cur.cost,
+      0,
+    ),
+    used_duration: monthly_user_log.value.reduce(
+      (acc, cur) => acc + cur.used_duration,
+      0,
+    ),
+    used_flow: monthly_user_log.value.reduce(
+      (acc, cur) => acc + cur.used_flow,
+      0,
+    ),
+    every_login_data: [],
+  };
+  // 找出当月使用流量最大的
   // flow_max = -1;
   // monthly_user_log.value.forEach((value) => {
   //   if (value.ipv4_down > flow_max) {
@@ -253,6 +286,50 @@ const select_mb_or_gb = (value: string) => {
             </n-popover>
           </n-grid-item>
         </n-grid>
+        <n-thing content-style="margin-top: 10px;" style="margin-top: 10px">
+          <template #description>
+            <n-table
+              :bordered="false"
+              :single-line="false"
+              striped
+            >
+              <thead>
+                <tr>
+                  <th>ipv4 ⬇</th>
+                  <th>ipv4 ⬆</th>
+                  <th>ipv6 ⬇</th>
+                  <th>ipv6 ⬆</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{{ mb2gb(sum_user_log?.ipv4_down) }} GB</td>
+                  <td>{{ mb2gb(sum_user_log?.ipv4_up) }} GB</td>
+                  <td>{{ mb2gb(sum_user_log?.ipv6_down) }} GB</td>
+                  <td>{{ mb2gb(sum_user_log?.ipv6_up) }} GB</td>
+                </tr>
+                <tr>
+                  <td>💰 花费:</td>
+                  <td>🕙 使用时长:</td>
+                  <td>🛜 消耗流量:</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>{{ sum_user_log?.cost.toFixed(2) }} 元</td>
+                  <td>
+                    {{
+                      min2hour(
+                        sum_user_log?.used_duration,
+                      )
+                    }} h
+                  </td>
+                  <td>{{ sum_user_log?.used_flow }} MB</td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </n-table>
+          </template>
+        </n-thing>
         <n-grid x-gap="12" :cols="4" style="margin-top: 8px">
           <n-gi><n-p style="line-height: 34px"
             >选择显示在日历上的内容：</n-p></n-gi>
@@ -309,8 +386,7 @@ const select_mb_or_gb = (value: string) => {
     rgba(127, 231, 196, 0.3) 0 6px,
     rgba(127, 231, 196, 0.2) 0 9px,
     rgba(127, 231, 196, 0.1) 0 12px,
-    rgba(127, 231, 196, 0.05) 0 15px,
-    rgba(127, 231, 196, 0.4) 0px 0px 50px 1px;
+    rgba(127, 231, 196, 0.05) 0 15px;
 }
 
 .my-card {

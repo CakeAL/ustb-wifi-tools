@@ -5,7 +5,7 @@ import { useLoadingBar, useMessage } from "naive-ui";
 import { onMounted, ref } from "vue";
 import { min2hour, railStyle } from "../helper";
 
-interface UserLoginLog {
+export interface UserLoginLog {
   ipv4_up: number;
   ipv4_down: number;
   ipv6_up: number;
@@ -178,7 +178,6 @@ const mb2gb = (mb: number | undefined) => {
             :bordered="false"
             :single-line="false"
             striped
-            class="thistime"
           >
             <thead>
               <tr>
