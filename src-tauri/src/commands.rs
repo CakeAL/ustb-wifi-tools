@@ -1,16 +1,16 @@
 use std::{collections::HashSet, net::IpAddr, time::Duration};
 
-use chrono::{DateTime, Datelike, Local};
+use chrono::DateTime;
 use reqwest::Client;
 use serde::Serialize;
 use tauri::{ipc::Channel, utils::config::WindowConfig, Manager};
 
 use crate::{
-    entities::{AppState, DownloadEvent, EveryLoginData, MonthlyData, UserLoginLog, UserType},
+    entities::{AppState, DownloadEvent, EveryLoginData, UserType},
     localuser::CurrentUser,
     requests::*,
     setting::Setting,
-    utils::{get_session_id, update},
+    utils::{complete_month_pay_data, get_session_id, update},
 };
 
 #[tauri::command(async)]
@@ -114,14 +114,18 @@ pub async fn load_refresh_account(app_state: tauri::State<'_, AppState>) -> Resu
 }
 
 #[tauri::command(async)]
-pub async fn load_month_pay(
-    app_state: tauri::State<'_, AppState>,
-    year: u16,
-) -> Result<String, String> {
+pub async fn load_month_pay(app: tauri::AppHandle, year: u16) -> Result<String, String> {
+    let app_state = app.state::<AppState>();
     let session_id = get_session_id(&app_state).await?;
     let user_type = *app_state.user_type.read().await;
     if let UserType::LocalUser = user_type {
-        return Err("本地存储不适用此功能".to_string());
+        let month_pay_info = app_state
+            .cur_account
+            .read()
+            .await
+            .get_local_month_pay(&app, year)
+            .map_err(|e| e.to_string())?;
+        return Ok(serde_json::json!(month_pay_info).to_string());
     }
 
     let mut month_pay_info = match get_month_pay(&session_id, year, user_type).await {
@@ -135,100 +139,7 @@ pub async fn load_month_pay(
         return Ok(serde_json::json!(month_pay_info).to_string());
     }
 
-    // 如果 year 大于 今年，手动加载去年 12 月的数据进来
-    let this_year = Local::now().year() as u16;
-    if this_year > year {
-        let start_date = format!("{}-12-01", year);
-        let end_date = format!("{}-12-31", year);
-        let dec_data =
-            match get_user_login_log(&session_id, &start_date, &end_date, user_type).await {
-                Ok(Some(v)) => v,
-                _ => UserLoginLog::default(),
-            };
-        month_pay_info.year_cost += dec_data.cost;
-        month_pay_info.year_used_duration += dec_data.used_duration;
-        month_pay_info.year_used_flow += dec_data.used_flow;
-        month_pay_info.monthly_data.push(MonthlyData {
-            month: 12,
-            month_cost: dec_data.cost,
-            month_used_flow: dec_data.used_flow,
-            month_used_duration: dec_data.used_duration,
-        });
-        // 前端应该改成，超过当年 1 月之后，才显示今年数据，否则是去年数据
-    }
-
-    // 如果是2023年，手动获取前8个月的数据
-    if year == 2023 {
-        month_pay_info.monthly_data.drain(0..8);
-        let mut handles = vec![];
-        for i in 0..8 {
-            let session_id = session_id.clone();
-            let month = i + 1;
-            let handle = tokio::spawn(async move {
-                let start_date = format!("2023-{:02}-01", month);
-                let end_date = format!("2023-{:02}-31", month);
-                (
-                    month,
-                    get_user_login_log(&session_id, &start_date, &end_date, user_type).await,
-                )
-            });
-            handles.push(handle);
-        }
-        for handle in handles {
-            let (month, data) = handle.await.unwrap();
-            let data = match data {
-                Ok(Some(v)) => v,
-                _ => UserLoginLog::default(),
-            };
-            month_pay_info.monthly_data.insert(
-                month - 1,
-                MonthlyData {
-                    month: month as u8,
-                    month_cost: data.cost,
-                    month_used_flow: data.used_flow,
-                    month_used_duration: data.used_duration,
-                },
-            );
-            month_pay_info.year_cost += data.cost;
-            month_pay_info.year_used_flow += data.used_flow;
-        }
-    }
-    // 如果是 2022 年，手动获取 6 ～ 11 月数据（前面12月已经获取完了）
-    else if year == 2022 {
-        month_pay_info.monthly_data.drain(5..11);
-        let mut handles = vec![];
-        for i in 5..11 {
-            let session_id = session_id.clone();
-            let month = i + 1;
-            let handle = tokio::spawn(async move {
-                let start_date = format!("2022-{:02}-01", month);
-                let end_date = format!("2022-{:02}-31", month);
-                (
-                    month,
-                    get_user_login_log(&session_id, &start_date, &end_date, user_type).await,
-                )
-            });
-            handles.push(handle);
-        }
-        for handle in handles {
-            let (month, data) = handle.await.unwrap();
-            let data = match data {
-                Ok(Some(v)) => v,
-                _ => UserLoginLog::default(),
-            };
-            month_pay_info.monthly_data.insert(
-                month - 1,
-                MonthlyData {
-                    month: month as u8,
-                    month_cost: data.cost,
-                    month_used_flow: data.used_flow,
-                    month_used_duration: data.used_duration,
-                },
-            );
-            month_pay_info.year_cost += data.cost;
-            month_pay_info.year_used_flow += data.used_flow;
-        }
-    }
+    complete_month_pay_data(&mut month_pay_info, year, &session_id, user_type).await;
 
     Ok(serde_json::json!(month_pay_info).to_string())
 }

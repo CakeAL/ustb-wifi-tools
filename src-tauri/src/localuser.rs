@@ -9,9 +9,9 @@ use tauri::Manager;
 use tokio::fs::OpenOptions;
 use tokio::io::AsyncWriteExt;
 
-use crate::entities::{AppState, UserLoginLog, UserType};
-use crate::requests::get_user_login_log;
-use crate::utils::{get_session_id, get_store_path};
+use crate::entities::{AppState, MonthPayInfo, UserLoginLog, UserType};
+use crate::requests::{get_month_pay, get_user_login_log};
+use crate::utils::{complete_month_pay_data, get_session_id, get_store_path};
 
 #[derive(Debug, Clone)]
 pub enum CurrentUser {
@@ -83,9 +83,12 @@ impl CurrentUser {
         let mut start_date = DateTime::from_timestamp(start_date, 0)
             .unwrap()
             .date_naive();
+        let start_year = start_date.year() as u16;
+        let current_year = current_date.year() as u16;
         let path = Arc::new(self.get_local_data_path(app)?);
         let mut tasks = vec![];
 
+        // 获取每月数据
         while start_date <= current_date {
             let start_date_string = start_date.format("%Y-%m-%d").to_string();
             let end_date_string = get_last_day_of_month(&start_date)
@@ -94,42 +97,76 @@ impl CurrentUser {
             // println!("{start_date_string} -> {end_date_string}");
             let session_id = session_id.clone();
             let path = path.clone();
-            let task = tokio::spawn(async move {
-                let res = get_user_login_log(
-                    &session_id,
-                    &start_date_string,
-                    &end_date_string,
-                    user_type,
-                )
-                .await;
+            let task: tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>> =
+                tokio::spawn(async move {
+                    let res = get_user_login_log(
+                        &session_id,
+                        &start_date_string,
+                        &end_date_string,
+                        user_type,
+                    )
+                    .await;
 
-                match res {
-                    Ok(Some(data)) => {
-                        let mut file_path = (*path).clone();
-                        file_path.push(format!("{}.json", start_date.format("%Y-%m")));
-                        let json_str = serde_json::to_string(&data).unwrap_or_default();
-                        let file = OpenOptions::new()
-                            .create(true)
-                            .write(true)
-                            .truncate(true)
-                            .open(file_path)
-                            .await;
-                        if let Ok(mut file) = file {
-                            let _ = file.write_all(json_str.as_bytes()).await;
+                    match res {
+                        Ok(Some(data)) => {
+                            let mut file_path = (*path).clone();
+                            file_path.push(format!("{}.json", start_date.format("%Y-%m")));
+                            let json_str = serde_json::to_string(&data).unwrap_or_default();
+                            let file = OpenOptions::new()
+                                .create(true)
+                                .write(true)
+                                .truncate(true)
+                                .open(file_path)
+                                .await;
+                            if let Ok(mut file) = file {
+                                let _ = file.write_all(json_str.as_bytes()).await;
+                            }
+                            Ok(())
                         }
-                        Ok(())
+                        Ok(None) => Ok(()),
+                        Err(e) => Err(anyhow!(
+                            "{} 获取失败，原因：{}",
+                            start_date.format("%Y-%m"),
+                            e.to_string()
+                        )),
                     }
-                    Ok(None) => Ok(()),
-                    Err(e) => Err(anyhow!(
-                        "{} 获取失败，原因：{}",
-                        start_date.format("%Y-%m"),
-                        e.to_string()
-                    )),
-                }
-            });
+                });
             tasks.push(task);
             start_date = get_first_day_next_month(&start_date);
         }
+
+        // 获取年度数据
+        for year in start_year..=current_year {
+            // 使用异步可能造成校园网服务器来不及反应🤭
+            // let session_id = session_id.clone();
+            // let path = path.clone();
+            // let task: tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>> =
+            //     tokio::spawn(async move {
+            let mut month_pay_info = match get_month_pay(&session_id, year, user_type).await {
+                Ok(Some(v)) => Ok(v),
+                Ok(None) => Err(anyhow!("请确认是否已经登录")),
+                Err(e) => Err(anyhow!("Request Error，检查是否在校园网内: {}", e)),
+            }?;
+            // 翻转一下，因为后台给的数据是倒叙的
+            month_pay_info.monthly_data.reverse();
+            complete_month_pay_data(&mut month_pay_info, year, &session_id, user_type).await;
+            let mut file_path = (*path).clone();
+            file_path.push(format!("{}.json", year));
+            let json_str = serde_json::to_string(&month_pay_info).unwrap_or_default();
+            let file = OpenOptions::new()
+                .create(true)
+                .write(true)
+                .truncate(true)
+                .open(file_path)
+                .await;
+            if let Ok(mut file) = file {
+                let _ = file.write_all(json_str.as_bytes()).await;
+            }
+            // Ok(())
+            //     });
+            // tasks.push(task);
+        }
+
         let mut res = vec![];
         res.push(format!("存储于：{}", path.to_string_lossy()));
         for task in tasks {
@@ -138,7 +175,7 @@ impl CurrentUser {
                 res.push(e.to_string());
             }
         }
-        println!("finished");
+        // println!("finished");
         Ok(res)
     }
 
@@ -207,6 +244,16 @@ impl CurrentUser {
         } else {
             Ok(Some(value))
         }
+    }
+
+    pub fn get_local_month_pay(&self, app: &tauri::AppHandle, year: u16) -> Result<MonthPayInfo> {
+        let mut path = self.get_local_data_path(app)?;
+        path.push(format!("{}.json", year));
+        let mut json_file = File::open(path)?;
+        let mut buf = String::new();
+        json_file.read_to_string(&mut buf)?;
+        let value = serde_json::from_str::<MonthPayInfo>(&buf)?;
+        Ok(value)
     }
 }
 
