@@ -8,7 +8,6 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    Greet: typeof import('./src/components/Greet.vue')['default']
     Menu: typeof import('./src/components/Menu.vue')['default']
     MonthlyChart: typeof import('./src/components/MonthlyChart.vue')['default']
     NAlert: typeof import('naive-ui')['NAlert']
@@ -59,6 +58,7 @@ declare module 'vue' {
     NTag: typeof import('naive-ui')['NTag']
     NText: typeof import('naive-ui')['NText']
     NThing: typeof import('naive-ui')['NThing']
+    SummaryTable: typeof import('./src/components/SummaryTable.vue')['default']
     YearlyChart: typeof import('./src/components/YearlyChart.vue')['default']
   }
 }

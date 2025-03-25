@@ -33,10 +33,12 @@ pub async fn load_user_flow(
 
 #[tauri::command(async)]
 pub async fn get_cookie(
-    app_state: tauri::State<'_, AppState>,
+    app: tauri::AppHandle,
     user_name: String,
     password: String,
+    via_vpn: bool,
 ) -> Result<String, String> {
+    let app_state = app.state::<AppState>();
     if user_name.starts_with("local") {
         if !app_state.setting.read().await.has_local_account(&user_name) {
             return Err("本地账号不存在".to_string());
@@ -45,69 +47,40 @@ pub async fn get_cookie(
         *app_state.jsessionid.write().await = Some("local".to_string());
         return Ok("local".to_string());
     }
-
-    let res = simulate_login(&user_name, &password)
-        .await
-        .map_err(|err| err.to_string())?;
-    match res {
+    let res = if !via_vpn {
+        simulate_login(&user_name, &password)
+            .await
+            .map_err(|err| err.to_string())?
+    } else {
+        simulate_login_via_vpn(&user_name, &password)
+            .await
+            .map_err(|err| err.to_string())?
+    };
+    let session_id = match res {
         Some(cookie) => {
             dbg!(&cookie);
             *app_state.jsessionid.write().await = Some(cookie.clone());
+            *app_state.user_type.write().await = if via_vpn {
+                UserType::ViaVpn
+            } else {
+                UserType::Normal
+            };
             app_state
                 .setting
                 .write()
                 .await
                 .set_account(user_name, password);
-        }
-        None => return Err("用户名或密码错误！".into()),
-    }
-    Ok(app_state
-        .jsessionid
-        .read()
-        .await
-        .clone()
-        .unwrap_or_default())
-}
-
-#[tauri::command(async)]
-pub async fn get_cookie_vpn(
-    app_state: tauri::State<'_, AppState>,
-    user_name: String,
-    password: String,
-) -> Result<String, String> {
-    if user_name.starts_with("local") {
-        if !app_state.setting.read().await.has_local_account(&user_name) {
-            return Err("本地账号不存在".to_string());
-        }
-        *app_state.user_type.write().await = UserType::LocalUser;
-        *app_state.jsessionid.write().await = Some("local".to_string());
-        return Ok("local".to_string());
-    }
-
-    let res = simulate_login_via_vpn(&user_name, &password)
-        .await
-        .map_err(|err| err.to_string())?;
-
-    match res {
-        Some(cookie) => {
-            dbg!(&cookie);
-            *app_state.jsessionid.write().await = Some(cookie.clone());
-            *app_state.user_type.write().await = UserType::ViaVpn;
             app_state
                 .setting
-                .write()
+                .read()
                 .await
-                .set_account(user_name, password);
+                .write_setting(&app)
+                .map_err(|e| e.to_string())?;
+            cookie
         }
         None => return Err("用户名或密码错误！".into()),
-    }
-
-    Ok(app_state
-        .jsessionid
-        .read()
-        .await
-        .clone()
-        .unwrap_or_default())
+    };
+    Ok(session_id)
 }
 
 #[tauri::command(async)]
@@ -518,19 +491,6 @@ pub async fn get_jsessionid(app_state: tauri::State<'_, AppState>) -> Result<Str
         .await
         .clone()
         .unwrap_or_default())
-}
-
-#[tauri::command(async)]
-pub async fn set_setting(
-    app: tauri::AppHandle,
-    app_state: tauri::State<'_, AppState>,
-) -> Result<(), String> {
-    app_state
-        .setting
-        .read()
-        .await
-        .write_setting(&app)
-        .map_err(|err| format!("{}", err))
 }
 
 #[tauri::command(async)]

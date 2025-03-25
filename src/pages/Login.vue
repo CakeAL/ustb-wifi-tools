@@ -79,14 +79,11 @@ const get_cookies = async () => {
   loadingBar.start();
   button_disabled.value = true;
   let has_error = false;
-  // 判断当前是否通过校园网 vpn 登陆
-  let get_cookie_func = "get_cookie";
-  if (login_via_vpn.value === true) {
-    get_cookie_func = "get_cookie_vpn";
-  }
-  sessionid.value = (await invoke(get_cookie_func, {
+
+  sessionid.value = (await invoke("get_cookie", {
     userName: user_name.value,
     password: password.value,
+    viaVpn: login_via_vpn.value,
   })
     .catch((err) => {
       pop_message.error(err);
@@ -101,7 +98,6 @@ const get_cookies = async () => {
         // 登录成功
         loadingBar.finish();
         login_state.value = true;
-        set_setting();
         store.setUserName(user_name.value);
       } else {
         // 失败
@@ -120,10 +116,6 @@ const logout = async () => {
     store.clearUserName();
     pop_message.success(res as string);
   }
-};
-
-const set_setting = async () => {
-  await invoke("set_setting").catch((err) => pop_message.error(err));
 };
 
 const manually_check_update = async () => {

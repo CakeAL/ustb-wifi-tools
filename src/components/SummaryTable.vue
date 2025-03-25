@@ -50,7 +50,7 @@ const props = defineProps<{
                 )
               }} h
             </td>
-            <td>{{ user_log?.used_flow }} MB</td>
+            <td>{{ user_log?.used_flow.toFixed(2) }} MB</td>
             <td></td>
           </tr>
         </tbody>
