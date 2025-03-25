@@ -105,6 +105,13 @@ pub struct AmmeterData {
     pub status_code: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RemainingElectricity {
+    pub date: i64,
+    pub remain: i32,
+    pub average: f64,
+}
+
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase", tag = "event", content = "data")]
 pub enum DownloadEvent {

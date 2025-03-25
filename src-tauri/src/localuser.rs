@@ -111,16 +111,13 @@ impl CurrentUser {
                         Ok(Some(data)) => {
                             let mut file_path = (*path).clone();
                             file_path.push(format!("{}.json", start_date.format("%Y-%m")));
-                            let json_str = serde_json::to_string(&data).unwrap_or_default();
-                            let file = OpenOptions::new()
+                            let mut file = OpenOptions::new()
                                 .create(true)
                                 .write(true)
                                 .truncate(true)
                                 .open(file_path)
-                                .await;
-                            if let Ok(mut file) = file {
-                                let _ = file.write_all(json_str.as_bytes()).await;
-                            }
+                                .await?;
+                            let _ = file.write_all(&serde_json::to_vec(&data)?).await;
                             Ok(())
                         }
                         Ok(None) => Ok(()),
@@ -152,16 +149,13 @@ impl CurrentUser {
             complete_month_pay_data(&mut month_pay_info, year, &session_id, user_type).await;
             let mut file_path = (*path).clone();
             file_path.push(format!("{}.json", year));
-            let json_str = serde_json::to_string(&month_pay_info).unwrap_or_default();
-            let file = OpenOptions::new()
+            let mut file = OpenOptions::new()
                 .create(true)
                 .write(true)
                 .truncate(true)
                 .open(file_path)
-                .await;
-            if let Ok(mut file) = file {
-                let _ = file.write_all(json_str.as_bytes()).await;
-            }
+                .await?;
+                let _ = file.write_all(&serde_json::to_vec(&month_pay_info)?).await;
             // Ok(())
             //     });
             // tasks.push(task);

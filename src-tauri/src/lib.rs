@@ -5,6 +5,7 @@ mod requests;
 pub mod setting;
 pub mod utils;
 pub mod localuser;
+pub mod electric_bill;
 
 use crate::commands::*;
 use crate::entities::AppState;
