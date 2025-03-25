@@ -114,22 +114,6 @@ pub async fn load_refresh_account(app_state: tauri::State<'_, AppState>) -> Resu
 }
 
 #[tauri::command(async)]
-pub async fn load_user_flow_by_state(
-    app_state: tauri::State<'_, AppState>,
-    user_name: String,
-) -> Result<String, String> {
-    let user_type = *app_state.user_type.read().await;
-    let session_id = get_session_id(&app_state).await?;
-    if let UserType::LocalUser = user_type {
-        return Err("本地存储不适用此功能".to_string());
-    }
-    get_load_user_flow(&user_name, &session_id, user_type)
-        .await
-        .map_err(|e| format!("Error while loading user flow: {}", e))
-        .map(|res| res.to_string())
-}
-
-#[tauri::command(async)]
 pub async fn load_month_pay(
     app_state: tauri::State<'_, AppState>,
     year: u16,

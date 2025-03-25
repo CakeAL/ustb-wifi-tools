@@ -31,6 +31,7 @@ pub fn get_store_path(app: &tauri::AppHandle) -> Result<PathBuf> {
     }
 }
 
+#[inline]
 pub async fn get_session_id(app_state: &tauri::State<'_, AppState>) -> Result<String, String> {
     app_state
         .jsessionid

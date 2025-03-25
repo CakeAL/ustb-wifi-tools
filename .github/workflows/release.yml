@@ -62,7 +62,7 @@ jobs:
           deno-version: v2.x
 
       - name: install frontend dependencies
-        run: pnpm install
+        run: deno install
 
       - uses: tauri-apps/tauri-action@v0
         env:

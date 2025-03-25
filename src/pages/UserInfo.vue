@@ -56,10 +56,9 @@ const load_refresh_account = async () => {
 };
 
 const load_user_flow = async () => {
-  console.log(store.userName);
-
-  let res = await invoke("load_user_flow_by_state", {
-    userName: store.userName,
+  // console.log(store.userName);
+  let res = await invoke("load_user_flow", {
+    account: store.userName,
   }).catch((err) => pop_message.error(err));
   //   console.log(res as string);
   account_flow.value = JSON.parse(res as string);
