@@ -3,9 +3,9 @@ import { onMounted, watch } from "vue";
 import { echarts, EChartsOption } from "../main";
 import { EveryLoginData } from "../pages/UserLoginLog.vue";
 
-const props = defineProps({
-  monthly_user_log: Array<EveryLoginData>,
-});
+const props = defineProps<{
+  monthly_user_log: Array<EveryLoginData>;
+}>();
 
 const label = {
   formatter: function(params: any) {

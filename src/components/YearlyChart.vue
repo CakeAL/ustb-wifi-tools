@@ -2,10 +2,10 @@
 import { onMounted, watch } from "vue";
 import { echarts, EChartsOption } from "../main";
 
-const props = defineProps({
-  month: Array<number>,
-  data: Array<number>,
-});
+const props = defineProps<{
+  month: Array<number>;
+  data: Array<number>;
+}>();
 
 const label = {
   formatter: function(params: any) {

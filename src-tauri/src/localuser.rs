@@ -53,7 +53,7 @@ impl CurrentUser {
     fn get_local_data_path(&self, app: &tauri::AppHandle) -> Result<PathBuf> {
         let mut path = get_store_path(app)?;
         match self {
-            CurrentUser::LocalUser(username) => path.push(format!("{}", username)),
+            CurrentUser::LocalUser(username) => path.push(username),
             CurrentUser::OnlineUser(username) => path.push(format!("local_{username}")),
         }
         if !path.exists() {
@@ -131,10 +131,10 @@ impl CurrentUser {
             start_date = get_first_day_next_month(&start_date);
         }
         let mut res = vec![];
-        res.push(format!("存储于：{}", path.to_string_lossy().to_string()));
+        res.push(format!("存储于：{}", path.to_string_lossy()));
         for task in tasks {
-            if let Err(e) = task.await?{
-                println!("{}", e.to_string());
+            if let Err(e) = task.await? {
+                // println!("{}", e);
                 res.push(e.to_string());
             }
         }
@@ -146,6 +146,7 @@ impl CurrentUser {
         &self,
         app: &tauri::AppHandle,
         start_date: i64,
+        end_date: Option<i64>,
     ) -> Result<Option<UserLoginLog>> {
         let start_date_string = DateTime::from_timestamp(start_date, 0)
             .unwrap()
@@ -156,7 +157,56 @@ impl CurrentUser {
         let mut json_file = File::open(path)?;
         let mut buf = String::new();
         json_file.read_to_string(&mut buf)?;
-        Ok(serde_json::from_str(&buf)?)
+        let value = serde_json::from_str::<UserLoginLog>(&buf)?;
+        if let Some(mut end_date) = end_date {
+            if end_date == start_date {
+                end_date += 24 * 3600;
+            }
+            let (ipv4_up, ipv4_down, ipv6_up, ipv6_down, used_flow, cost, used_duration, every) =
+                value
+                    .every_login_data
+                    .into_iter()
+                    .filter(|data| data.offline_time >= start_date && data.offline_time < end_date)
+                    .fold(
+                        (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, Vec::new()), // 初始值
+                        |(
+                            ipv4_up,
+                            ipv4_down,
+                            ipv6_up,
+                            ipv6_down,
+                            used_flow,
+                            cost,
+                            used_duration,
+                            mut every,
+                        ),
+                         data| {
+                            // 将每个 `data` 累加到对应的变量
+                            every.push(data.clone());
+                            (
+                                ipv4_up + data.ipv4_up,
+                                ipv4_down + data.ipv4_down,
+                                ipv6_up + data.ipv6_up,
+                                ipv6_down + data.ipv6_down,
+                                used_flow + data.used_flow,
+                                cost + data.cost,
+                                used_duration + data.used_duration,
+                                every,
+                            )
+                        },
+                    );
+            Ok(Some(UserLoginLog {
+                ipv4_up,
+                ipv4_down,
+                ipv6_up,
+                ipv6_down,
+                used_flow,
+                cost,
+                used_duration,
+                every_login_data: every,
+            }))
+        } else {
+            Ok(Some(value))
+        }
     }
 }
 

@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { useLoadingBar, useMessage } from "naive-ui";
 import { onMounted, ref } from "vue";
 import MonthlyChart from "../components/MonthlyChart.vue";
+import SummaryTable from "../components/SummaryTable.vue";
 import { mb2gb, min2hour, railStyle } from "../helper";
 import { EveryLoginData, UserLoginLog } from "./UserLoginLog.vue";
 
@@ -286,50 +287,7 @@ const select_mb_or_gb = (value: string) => {
             </n-popover>
           </n-grid-item>
         </n-grid>
-        <n-thing content-style="margin-top: 10px;" style="margin-top: 10px">
-          <template #description>
-            <n-table
-              :bordered="false"
-              :single-line="false"
-              striped
-            >
-              <thead>
-                <tr>
-                  <th>ipv4 ⬇</th>
-                  <th>ipv4 ⬆</th>
-                  <th>ipv6 ⬇</th>
-                  <th>ipv6 ⬆</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>{{ mb2gb(sum_user_log?.ipv4_down) }} GB</td>
-                  <td>{{ mb2gb(sum_user_log?.ipv4_up) }} GB</td>
-                  <td>{{ mb2gb(sum_user_log?.ipv6_down) }} GB</td>
-                  <td>{{ mb2gb(sum_user_log?.ipv6_up) }} GB</td>
-                </tr>
-                <tr>
-                  <td>💰 花费:</td>
-                  <td>🕙 使用时长:</td>
-                  <td>🛜 消耗流量:</td>
-                  <td></td>
-                </tr>
-                <tr>
-                  <td>{{ sum_user_log?.cost.toFixed(2) }} 元</td>
-                  <td>
-                    {{
-                      min2hour(
-                        sum_user_log?.used_duration,
-                      )
-                    }} h
-                  </td>
-                  <td>{{ sum_user_log?.used_flow }} MB</td>
-                  <td></td>
-                </tr>
-              </tbody>
-            </n-table>
-          </template>
-        </n-thing>
+        <SummaryTable :user_log="sum_user_log"></SummaryTable>
         <n-grid x-gap="12" :cols="4" style="margin-top: 8px">
           <n-gi><n-p style="line-height: 34px"
             >选择显示在日历上的内容：</n-p></n-gi>

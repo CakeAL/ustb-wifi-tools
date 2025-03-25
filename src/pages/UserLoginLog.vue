@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import dayjs from "dayjs";
 import { useLoadingBar, useMessage } from "naive-ui";
 import { onMounted, ref } from "vue";
+import SummaryTable from "../components/SummaryTable.vue";
 import { min2hour, railStyle } from "../helper";
 
 export interface UserLoginLog {
@@ -172,50 +173,7 @@ const mb2gb = (mb: number | undefined) => {
       </n-gi>
     </n-grid>
     <div v-if="user_login_log !== null" class="show-data">
-      <n-thing title="该段时间" content-style="margin-top: 10px;">
-        <template #description>
-          <n-table
-            :bordered="false"
-            :single-line="false"
-            striped
-          >
-            <thead>
-              <tr>
-                <th>ipv4 ⬇</th>
-                <th>ipv4 ⬆</th>
-                <th>ipv6 ⬇</th>
-                <th>ipv6 ⬆</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{{ mb2gb(user_login_log?.ipv4_down) }} GB</td>
-                <td>{{ mb2gb(user_login_log?.ipv4_up) }} GB</td>
-                <td>{{ mb2gb(user_login_log?.ipv6_down) }} GB</td>
-                <td>{{ mb2gb(user_login_log?.ipv6_up) }} GB</td>
-              </tr>
-              <tr>
-                <td>💰 花费:</td>
-                <td>🕙 使用时长:</td>
-                <td>🛜 消耗流量:</td>
-                <td></td>
-              </tr>
-              <tr>
-                <td>{{ user_login_log?.cost.toFixed(2) }} 元</td>
-                <td>
-                  {{
-                    min2hour(
-                      user_login_log?.used_duration,
-                    )
-                  }} h
-                </td>
-                <td>{{ user_login_log?.used_flow }} MB</td>
-                <td></td>
-              </tr>
-            </tbody>
-          </n-table>
-        </template>
-      </n-thing>
+      <SummaryTable title="该段时间" :user_log="user_login_log"></SummaryTable>
       <br />
       <n-data-table
         :columns="columns"
@@ -230,6 +188,7 @@ const mb2gb = (mb: number | undefined) => {
         月及之前只能查询当月信息。无法查询某一时段或者某一天的信息。</n-p>
       <n-p>所以如果你选择了 2023-06-25，那么实际上查询的时候 2023 年 6
         月的所有信息。</n-p>
+      <n-p>本地数据不支持跨月选择。</n-p>
     </n-card>
   </div>
 </template>

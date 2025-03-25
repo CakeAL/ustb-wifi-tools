@@ -173,7 +173,7 @@ const handleUpdateValue = (value: string) => {
         </n-tab-pane>
       </n-tabs>
       <YearlyChart
-        :month="month_pay?.monthly_data.map((v) => v.month)"
+        :month="month_pay?.monthly_data.map((v) => v.month) ?? []"
         :data="chartData"
         style="margin-top: 5px"
       >

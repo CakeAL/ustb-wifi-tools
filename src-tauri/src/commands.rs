@@ -278,28 +278,39 @@ pub async fn load_month_pay(
 
 #[tauri::command(async)]
 pub async fn load_user_login_log(
-    app_state: tauri::State<'_, AppState>,
+    app: tauri::AppHandle,
     start_date: i64,
     end_date: i64,
 ) -> Result<String, String> {
+    let app_state = app.state::<AppState>();
     if start_date > end_date {
         return Err("起始日期比结束日期更大。。。".to_string());
     }
     let session_id = get_session_id(&app_state).await?;
-    let start_date = DateTime::from_timestamp(start_date, 0)
-        .unwrap()
-        .format("%Y-%m-%d")
-        .to_string();
-    let end_date = DateTime::from_timestamp(end_date, 0)
-        .unwrap()
-        .format("%Y-%m-%d")
-        .to_string();
     let user_type = *app_state.user_type.read().await;
-    if let UserType::LocalUser = user_type {
-        return Err("本地存储不适用此功能".to_string());
-    }
 
-    match get_user_login_log(&session_id, &start_date, &end_date, user_type).await {
+    let user_login_log = match user_type {
+        UserType::Normal | UserType::ViaVpn => {
+            let start_date = DateTime::from_timestamp(start_date, 0)
+                .unwrap()
+                .format("%Y-%m-%d")
+                .to_string();
+            let end_date = DateTime::from_timestamp(end_date, 0)
+                .unwrap()
+                .format("%Y-%m-%d")
+                .to_string();
+            get_user_login_log(&session_id, &start_date, &end_date, user_type).await
+        }
+        UserType::LocalUser => {
+            app_state
+                .cur_account
+                .read()
+                .await
+                .get_local_data(&app, start_date, Some(end_date))
+        }
+    };
+
+    match user_login_log {
         Ok(Some(value)) => Ok(serde_json::json!(value).to_string()),
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => {
@@ -338,7 +349,7 @@ pub async fn load_monthly_login_log(
             .cur_account
             .read()
             .await
-            .get_local_data(&app, start_date),
+            .get_local_data(&app, start_date, None),
     };
     match res {
         Ok(Some(value)) => {
@@ -847,6 +858,7 @@ pub async fn down_historical_data(
     if let UserType::LocalUser = user_type {
         return Err("本地存储不适用此功能".to_string());
     }
+    #[allow(clippy::let_and_return)]
     let res = app_state
         .cur_account
         .read()
