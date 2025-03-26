@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "rsbuild dev",
-    "build": "vue-tsc --noEmit && rsbuild build",
+    "build": "rsbuild build",
     "preview": "rsbuild preview",
     "tauri": "tauri"
   },
@@ -28,7 +28,6 @@
     "naive-ui": "^2.40.1",
     "typescript": "^5.6.3",
     "unplugin-auto-import": "19.1.1",
-    "unplugin-vue-components": "28.4.1",
-    "vue-tsc": "2.1.6"
+    "unplugin-vue-components": "28.4.1"
   }
 }

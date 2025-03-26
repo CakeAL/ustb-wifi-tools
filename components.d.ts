@@ -8,12 +8,12 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    ElectricChart: typeof import('./src/components/ElectricChart.vue')['default']
     Menu: typeof import('./src/components/Menu.vue')['default']
     MonthlyChart: typeof import('./src/components/MonthlyChart.vue')['default']
     NAlert: typeof import('naive-ui')['NAlert']
     NButton: typeof import('naive-ui')['NButton']
     NCard: typeof import('naive-ui')['NCard']
-    NCardhoverable: typeof import('naive-ui')['NCardhoverable']
     NCheckbox: typeof import('naive-ui')['NCheckbox']
     NCollapse: typeof import('naive-ui')['NCollapse']
     NCollapseItem: typeof import('naive-ui')['NCollapseItem']
