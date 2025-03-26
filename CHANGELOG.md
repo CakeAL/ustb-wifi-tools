@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0] - 2025-03-26
+
+### Added
+
+- 本地账户功能，可以用来添加添加本地账户，并获取历史记录后使用本地账户进行浏览
+- 电费统计功能，根据电费使用情况绘制图表 ![](pics/image8.png)
+
+### Changed
+
+- 发送请求不使用代理
+- macOS title bar 整没了
+
 ## [1.1.4] - 2025-02-04
 
 ### Fixed
@@ -205,6 +217,7 @@
 
 初始发布版本
 
+[1.2.0]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.2.0
 [1.1.4]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.1.4
 [1.1.3]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.1.3
 [1.1.2]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.1.2
