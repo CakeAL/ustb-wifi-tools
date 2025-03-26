@@ -6,11 +6,12 @@ use serde::Serialize;
 use tauri::{ipc::Channel, utils::config::WindowConfig, Manager};
 
 use crate::{
+    electric_bill::update_ammeter,
     entities::{AppState, DownloadEvent, EveryLoginData, UserType},
     localuser::CurrentUser,
     requests::*,
     setting::Setting,
-    utils::{complete_month_pay_data, get_session_id, update},
+    utils::{complete_month_pay_data, get_session_id, get_store_path, update},
 };
 
 #[tauri::command(async)]
@@ -512,11 +513,8 @@ pub async fn manually_check_update(
 }
 
 #[tauri::command(async)]
-pub async fn load_ammeter(
-    app: tauri::AppHandle,
-    app_state: tauri::State<'_, AppState>,
-    ammeter_number: u32,
-) -> Result<String, String> {
+pub async fn load_ammeter(app: tauri::AppHandle, ammeter_number: u32) -> Result<String, String> {
+    let app_state = app.state::<AppState>();
     let kwh = get_ammeter(ammeter_number)
         .await
         .map_err(|err| err.to_string())?;
@@ -533,10 +531,28 @@ pub async fn load_ammeter(
                 .await
                 .write_setting(&app)
                 .map_err(|err| err.to_string())?;
-            Ok(format!("{}", kwh))
+            Ok(kwh.to_string())
         }
         None => Err("获取用电量失败，可能是电表号错误".to_string()),
     }
+}
+
+#[tauri::command(async)]
+pub async fn load_electric_bill(app: tauri::AppHandle) -> Result<String, String> {
+    let app_state = app.state::<AppState>();
+    let ammeter_number = app_state
+        .setting
+        .read()
+        .await
+        .ammeter_number
+        .ok_or("无已存储电表号".to_string())?;
+    let file_path = get_store_path(&app)
+        .map_err(|e| e.to_string())?
+        .join(format!("{}.json", ammeter_number));
+    let res = update_ammeter(ammeter_number, file_path)
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(serde_json::json!(res).to_string())
 }
 
 #[tauri::command(async)]

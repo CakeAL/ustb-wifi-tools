@@ -39,13 +39,12 @@ impl Setting {
     }
 
     pub fn write_setting(&self, app: &tauri::AppHandle) -> Result<()> {
-        let json_str = serde_json::to_string(self)?;
         let mut file = OpenOptions::new()
             .create(true)
             .write(true)
             .truncate(true)
             .open(get_config_path(app)?)?;
-        file.write_all(json_str.as_bytes())?;
+        file.write_all(&serde_json::to_vec(&self)?)?;
         Ok(())
     }
 

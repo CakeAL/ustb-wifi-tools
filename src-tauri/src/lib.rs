@@ -58,7 +58,8 @@ pub fn run() {
             get_current_user_name,
             set_current_user_name,
             create_local_user,
-            down_historical_data
+            down_historical_data,
+            load_electric_bill
         ])
         .setup(|app| {
             // {
