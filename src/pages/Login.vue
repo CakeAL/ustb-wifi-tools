@@ -306,6 +306,7 @@ const get_historial_data = async () => {
           />如果其他页面不能获取到信息，请点击登出再重新登录。</n-h3>
         <n-card
           title="建立本地账号"
+          hoverable
           style="background-color: rgba(255, 255, 255, 0.1)"
           v-if="store.userName.slice(0, 5) !== 'local'"
         >

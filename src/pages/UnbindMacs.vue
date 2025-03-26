@@ -251,12 +251,6 @@ const whether_login_cur_device = computed(() => {
 </template>
 
 <style scoped>
-.my-card {
-  margin: 10px 0;
-  width: 100%;
-  background: rgba(255, 255, 255, 0.1);
-}
-
 .highlight-row > :first-child {
   /* border-left: 1px solid #f2c97d;
   border-top: 1px solid #f2c97d; */

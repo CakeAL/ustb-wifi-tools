@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { CSSProperties } from "vue";
 
 export const railStyle = ({
@@ -32,4 +33,12 @@ export const min2hour = (min: number | undefined) => {
 
 export const min2day = (min: number | undefined) => {
   return parseFloat(((min as number) / 60 / 24).toFixed(2));
+};
+
+export const unix_format = (unix: number) => {
+  return dayjs.unix(unix - 8 * 3600).format("YYYY-MM-DD HH:mm:ss");
+};
+
+export const date_format = (unix: number) => {
+  return dayjs.unix(unix).format("YYYY-MM-DD");
 };

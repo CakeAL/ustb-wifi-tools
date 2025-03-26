@@ -11,7 +11,7 @@ use tokio::{
 pub async fn update_ammeter(
     ammeter_number: u32,
     file_path: PathBuf,
-) -> Result<Vec<RemainingElectricity>> {
+) -> Result<(Vec<RemainingElectricity>, String)> {
     let mut buf = vec![];
     let mut file = OpenOptions::new()
         .create(true)
@@ -23,7 +23,7 @@ pub async fn update_ammeter(
     let mut remain_elec = vec![];
     if !buf.is_empty() {
         remain_elec = serde_json::from_slice::<Vec<RemainingElectricity>>(&buf)?;
-        dbg!(&remain_elec);
+        // dbg!(&remain_elec);
     }
     let now = Local::now();
     let mut last_data_day = now.date_naive().checked_sub_days(Days::new(1)).unwrap();
@@ -38,7 +38,7 @@ pub async fn update_ammeter(
             .unwrap()
             .date_naive();
         if today == last_data_day {
-            return Err(anyhow!("今日已经获取过电表数据，明天再来吧"));
+            return Ok((remain_elec, "今日已经获取过电表数据，明天再来吧".to_string()));
         }
     }
 
@@ -54,7 +54,7 @@ pub async fn update_ammeter(
     // 写回
     file.seek(SeekFrom::Start(0)).await?;
     let _ = file.write_all(&serde_json::to_vec(&remain_elec)?).await;
-    Ok(remain_elec)
+    Ok((remain_elec, "已更新今日数据".to_string()))
 }
 
 #[cfg(test)]

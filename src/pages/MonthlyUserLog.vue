@@ -346,10 +346,4 @@ const select_mb_or_gb = (value: string) => {
     rgba(127, 231, 196, 0.1) 0 12px,
     rgba(127, 231, 196, 0.05) 0 15px;
 }
-
-.my-card {
-  margin: 10px 0;
-  width: 100%;
-  background: rgba(255, 255, 255, 0.1);
-}
 </style>

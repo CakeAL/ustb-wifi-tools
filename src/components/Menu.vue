@@ -28,6 +28,7 @@ import {
   BuildOutline,
   CalendarOutline,
   CashOutline,
+  FlashOutline,
   InformationCircleOutline,
   ListOutline,
   LogInOutline,
@@ -130,6 +131,18 @@ const menuOptions: MenuOption[] = [
       ),
     key: "speedtest",
     icon: renderIcon(SpeedometerOutline),
+  },
+  {
+    label: () =>
+      h(
+        "a",
+        {
+          href: "#/electric_bill",
+        },
+        "电费统计",
+      ),
+    key: "electric_bill",
+    icon: renderIcon(FlashOutline),
   },
   {
     label: () =>

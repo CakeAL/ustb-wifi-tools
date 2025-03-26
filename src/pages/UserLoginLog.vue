@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/core";
-import dayjs from "dayjs";
 import { useLoadingBar, useMessage } from "naive-ui";
 import { onMounted, ref } from "vue";
 import SummaryTable from "../components/SummaryTable.vue";
-import { min2hour, railStyle } from "../helper";
+import { railStyle, unix_format } from "../helper";
 
 export interface UserLoginLog {
   ipv4_up: number;
@@ -128,15 +127,6 @@ const get_user_login_log = async () => {
   }
   loadingBar.finish();
 };
-
-const unix_format = (unix: number) => {
-  return dayjs.unix(unix - 8 * 3600).format("YYYY-MM-DD HH:mm:ss");
-};
-
-const mb2gb = (mb: number | undefined) => {
-  if (mb === undefined) return 0;
-  else return parseFloat((mb / 1024).toFixed(2));
-};
 </script>
 
 <template>
@@ -196,11 +186,5 @@ const mb2gb = (mb: number | undefined) => {
 <style scoped>
 .show-data {
   margin-top: 10px;
-}
-
-.my-card {
-  margin: 5px 0;
-  width: 100%;
-  background: rgba(255, 255, 255, 0.1);
 }
 </style>

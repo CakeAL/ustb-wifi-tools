@@ -14,6 +14,8 @@ import {
   ToolboxComponentOption,
   TooltipComponent,
   TooltipComponentOption,
+  VisualMapComponent,
+  VisualMapComponentOption,
 } from "echarts/components";
 import * as echarts from "echarts/core";
 import { UniversalTransition } from "echarts/features";
@@ -28,6 +30,7 @@ echarts.use([
   LineChart,
   CanvasRenderer,
   UniversalTransition,
+  VisualMapComponent,
 ]);
 
 export type EChartsOption = echarts.ComposeOption<
@@ -37,6 +40,7 @@ export type EChartsOption = echarts.ComposeOption<
   | GridComponentOption
   | LegendComponentOption
   | LineSeriesOption
+  | VisualMapComponentOption
 >;
 
 fetch("/macarons.json")

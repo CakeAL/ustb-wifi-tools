@@ -123,9 +123,4 @@ const show1 = ref(false);
 </template>
 
 <style scoped>
-.my-card {
-  margin-top: 10px;
-  width: 100%;
-  background: rgba(255, 255, 255, 0.1);
-}
 </style>

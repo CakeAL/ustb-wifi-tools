@@ -6,6 +6,7 @@ import { check_update, download_percent, is_download } from "./update";
 
 // routers
 import About from "./pages/About.vue";
+import ElectricBill from "./pages/ElectricBill.vue";
 import Login from "./pages/Login.vue";
 import MonthlyUserLog from "./pages/MonthlyUserLog.vue";
 import MonthPay from "./pages/MonthPay.vue";
@@ -33,6 +34,7 @@ const routes: Routes = {
   "/speedtest": SpeedTest,
   "/monthly_user_log": MonthlyUserLog,
   "/other_tools": OtherTools,
+  "/electric_bill": ElectricBill,
 };
 
 // Ref for current path
