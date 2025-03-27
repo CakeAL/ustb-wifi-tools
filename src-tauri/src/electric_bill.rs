@@ -38,20 +38,28 @@ pub async fn update_ammeter(
             .unwrap()
             .date_naive();
         if today == last_data_day {
-            return Ok((remain_elec, "今日已经获取过电表数据，明天再来吧".to_string()));
+            return Ok((
+                remain_elec,
+                "今日已经获取过电表数据，明天再来吧".to_string(),
+            ));
         }
     }
 
-    let new_data = RemainingElectricity {
-        date: now.timestamp(),
-        remain: get_ammeter(ammeter_number)
+    let new_data = {
+        let remain = get_ammeter(ammeter_number)
             .await?
-            .ok_or(anyhow!("返回数据为 None"))?,
-        average: last_remain as f64 / (now.date_naive() - last_data_day).num_days() as f64,
+            .ok_or(anyhow!("获取今日数据时返回为 None"))?;
+        RemainingElectricity {
+            date: now.timestamp(),
+            remain: remain,
+            average: (last_remain - remain) as f64
+                / (now.date_naive() - last_data_day).num_days() as f64,
+        }
     };
     remain_elec.push(new_data);
 
     // 写回
+    file.set_len(0).await?;
     file.seek(SeekFrom::Start(0)).await?;
     let _ = file.write_all(&serde_json::to_vec(&remain_elec)?).await;
     Ok((remain_elec, "已更新今日数据".to_string()))

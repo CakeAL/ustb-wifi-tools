@@ -1,5 +1,5 @@
 <template>
-  <div v-if="os_type === 3" class="title-bar"></div>
+  <div v-if="currentPlatform === 'macos'" class="title-bar"></div>
   <n-menu
     data-tauri-drag-region
     :collapsed="collapsed"
@@ -40,7 +40,7 @@ import { Component, h } from "vue";
 
 defineProps<{
   collapsed: boolean;
-  os_type: number;
+  currentPlatform: string;
 }>();
 
 function renderIcon(icon: Component) {

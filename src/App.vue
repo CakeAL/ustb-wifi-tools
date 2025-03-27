@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import { platform } from "@tauri-apps/plugin-os";
 import { darkTheme } from "naive-ui";
 import { computed, DefineComponent, onMounted, Ref, ref } from "vue";
 import { check_update, download_percent, is_download } from "./update";
@@ -52,6 +53,7 @@ const currentView = computed((): RouteComponent => {
 const theme = ref<any | undefined>(undefined);
 const themeMedia = window.matchMedia("(prefers-color-scheme: dark)");
 const os_type = ref<number>(0);
+const currentPlatform = platform();
 theme.value = themeMedia.matches ? darkTheme : undefined;
 
 onMounted(() => {
@@ -158,7 +160,10 @@ const collapse = async (value: boolean) => {
               @collapse="collapse(true)"
               @expand="collapse(false)"
             >
-              <Menu :collapsed="collapsed" :os_type="os_type"></Menu>
+              <Menu
+                :collapsed="collapsed"
+                :currentPlatform="currentPlatform"
+              ></Menu>
             </n-layout-sider>
             <n-layout>
               <n-scrollbar style="max-height: 100vh">
@@ -184,7 +189,13 @@ const collapse = async (value: boolean) => {
     class="download-progress"
     v-if="is_download"
   />
-  <div v-if="os_type === 3" data-tauri-drag-region class="title-bar"></div>
+
+  <div
+    v-if="currentPlatform === 'macos'"
+    data-tauri-drag-region
+    class="title-bar"
+  >
+  </div>
 </template>
 
 <style scoped>

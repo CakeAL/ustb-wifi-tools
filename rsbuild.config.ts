@@ -36,9 +36,9 @@ export default defineConfig({
     chunkSplit: {
       strategy: "split-by-experience",
     },
-  },
-  html: {
-    template: "./index.html",
+    preload: {
+      type: "all-chunks",
+    },
   },
   source: {
     define: publicVars,

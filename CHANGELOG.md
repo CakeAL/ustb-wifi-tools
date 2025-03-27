@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.1] - 2025-03-27
+
+### Fixed
+
+- 电费使用统计平均每天使用量计算错误
+
 ## [1.2.0] - 2025-03-26
 
 ### Added
@@ -217,6 +223,7 @@
 
 初始发布版本
 
+[1.2.1]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.2.1
 [1.2.0]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.2.0
 [1.1.4]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.1.4
 [1.1.3]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.1.3

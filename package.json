@@ -1,7 +1,7 @@
 {
   "name": "ustb-wifi-tools",
   "private": true,
-  "version": "1.2.0",
+  "version": "1.2.1",
   "type": "module",
   "scripts": {
     "dev": "rsbuild dev",
@@ -14,6 +14,7 @@
     "@tauri-apps/plugin-clipboard-manager": "^2.2.0",
     "@tauri-apps/plugin-dialog": "~2",
     "@tauri-apps/plugin-opener": "^2.2.6",
+    "@tauri-apps/plugin-os": "~2.2.1",
     "@tauri-apps/plugin-shell": "^2.0.0",
     "@tauri-apps/plugin-updater": "~2",
     "dayjs": "^1.11.13",
@@ -21,13 +22,13 @@
     "vue": "^3.5.12"
   },
   "devDependencies": {
-    "@rsbuild/core": "^1.2.17",
-    "@tauri-apps/cli": "^2.0.3",
+    "@rsbuild/core": "1.2.19",
+    "@tauri-apps/cli": "2.4.0",
     "@vicons/ionicons5": "0.13.0",
     "@rsbuild/plugin-vue": "1.0.7",
-    "naive-ui": "^2.40.1",
-    "typescript": "^5.6.3",
-    "unplugin-auto-import": "19.1.1",
+    "naive-ui": "^2.41.0",
+    "typescript": "5.8.2",
+    "unplugin-auto-import": "19.1.2",
     "unplugin-vue-components": "28.4.1"
   }
 }

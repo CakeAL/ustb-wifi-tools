@@ -1,7 +1,7 @@
 {
   "productName": "USTB Wifi Tools",
   "mainBinaryName": "ustb-wifi-tools",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "identifier": "ustb.wifi.tools",
   "build": {
     "beforeDevCommand": "deno task dev",

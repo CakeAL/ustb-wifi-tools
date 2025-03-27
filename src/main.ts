@@ -51,4 +51,4 @@ fetch("/macarons.json")
 
 export { echarts };
 
-createApp(App).mount("#app");
+createApp(App).mount("#root");

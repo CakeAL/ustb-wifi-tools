@@ -108,7 +108,7 @@ const show1 = ref(false);
     </n-card>
     <n-card title="软件版本信息" hoverable class="my-card">
       <n-p>
-        当前 version = "1.2.0" |
+        当前 version = "1.2.1" |
         <a
           @click="
             open(

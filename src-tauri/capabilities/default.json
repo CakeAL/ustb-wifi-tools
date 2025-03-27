@@ -25,6 +25,7 @@
     "dialog:default",
     "shell:default",
     "clipboard-manager:allow-write-text",
-    "opener:default"
+    "opener:default",
+    "os:default"
   ]
 }
