@@ -11,8 +11,11 @@ use crate::{
     localuser::CurrentUser,
     requests::*,
     setting::Setting,
-    utils::{complete_month_pay_data, get_session_id, get_store_path, update},
+    utils::{complete_month_pay_data, get_session_id, get_store_path},
 };
+
+#[cfg(not(any(target_os = "android", target_os = "linux")))]
+use crate::utils::update;
 
 #[tauri::command(async)]
 pub async fn load_user_flow(
