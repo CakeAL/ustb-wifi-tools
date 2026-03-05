@@ -163,50 +163,55 @@ pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Opt
         return Ok(None); // 账号或密码出现错误！
     }
     // 访问校园网后台登录页
-    let res = CLIENT.get("https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/nav_login")
+    let res = CLIENT.get("https://elib.ustb.edu.cn/https/77726476706e69737468656265737421eafe4789302526456d1c8be29d51367b8ada/Self/login/")
     .header("Cookie", format!("wengine_vpn_ticketelib_ustb_edu_cn={}", wengine_vpn_ticketelib_ustb_edu_cn))
     .send().await?;
     // 获取登录页中的 check_code 用来提交 post 请求使用
-    let res_text = res.text().await?;
-    let check_code = Regex::new(r#"var checkcode="([^"]*)";"#)?
-        .captures(&res_text)
-        .and_then(|cap| cap.get(1))
-        .ok_or(anyhow!("用户名或密码错误！"))?
-        .as_str();
-    // dbg!(check_code);
+    let check_code = {
+        let check_code_selector = Selector::parse("input[name=\"checkcode\"]").unwrap();
+        let res_text = res.text().await?;
+        let document = Html::parse_document(&res_text);
+        document
+            .select(&check_code_selector)
+            .next()
+            .and_then(|ele| ele.value().attr("value"))
+            .ok_or(anyhow!("用户名或密码错误！"))?.to_string()
+    };
+    // dbg!(&check_code);
     tokio::time::sleep(Duration::from_millis(10)).await;
+    // [TODO]
     // 获取用户名/密码错误3次以上的随机验证码（密码输错3次以内是隐藏的），需要带 cookie，这是必要的
     // 这里需要使用 webvpn 的 cookie
-    CLIENT
-        .get(format!(
-            "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/RandomCodeAction.action?vpn-1&randomNum={}",
-            rand::rng().random_range(0.0..1.0)
-        ))
-        .header(
-            "accept",
-            "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-        )
-        .header(
-            "cookie",
-            format!(
-                "wengine_vpn_ticketelib_ustb_edu_cn={}",
-                wengine_vpn_ticketelib_ustb_edu_cn
-            ),
-        )
-        .send()
-        .await?;
+    // CLIENT
+    //     .get(format!(
+    //         "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/RandomCodeAction.action?vpn-1&randomNum={}",
+    //         rand::rng().random_range(0.0..1.0)
+    //     ))
+    //     .header(
+    //         "accept",
+    //         "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+    //     )
+    //     .header(
+    //         "cookie",
+    //         format!(
+    //             "wengine_vpn_ticketelib_ustb_edu_cn={}",
+    //             wengine_vpn_ticketelib_ustb_edu_cn
+    //         ),
+    //     )
+    //     .send()
+    //     .await?;
     //
     tokio::time::sleep(Duration::from_millis(10)).await;
     // 发送登录请求，携带 Cookie 和必要的 header，这样可以激活这个 cookie
     let response = CLIENT
-        .post("https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/LoginAction.action")
+        .post("https://elib.ustb.edu.cn/https/77726476706e69737468656265737421eafe4789302526456d1c8be29d51367b8ada/Self/login/verify")
         .header("content-type", "application/x-www-form-urlencoded")
         .header("upgrade-insecure-requests", "1")
         .header("Cookie", format!("wengine_vpn_ticketelib_ustb_edu_cn={}", wengine_vpn_ticketelib_ustb_edu_cn))
-        .header("Referer", "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/LoginAction.action")
+        .header("Referer", "https://elib.ustb.edu.cn/https/77726476706e69737468656265737421eafe4789302526456d1c8be29d51367b8ada/Self/login/")
         .header("Referrer-Policy", "strict-origin-when-cross-origin")
         .body(format!(
-            "account={}&password={:x}&code=&checkcode={}&Submit=%E7%99%BB+%E5%BD%95",
+            "account={}&password={:x}&code=&checkcode={}",
             account,
             md5::compute(password),
             check_code
