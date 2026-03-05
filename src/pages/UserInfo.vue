@@ -39,7 +39,11 @@ const account_info = ref<Info | null>(null);
 const account_flow = ref<Flow | null>(null);
 
 onMounted(() => {
-  load_refresh_account();
+  // load_refresh_account();
+  // [TODO]
+  load_user_flow();
+  console.log(account_flow.value);
+  
 });
 
 const load_refresh_account = async () => {

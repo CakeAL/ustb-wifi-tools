@@ -19,6 +19,7 @@ pub static CLIENT: LazyLock<Client> =
     LazyLock::new(|| Client::builder().no_proxy().build().unwrap_or_default());
 
 // Ciallo～(∠・ω< )⌒☆
+// 该函数已经需要登录校园网才能获取数据
 pub async fn get_load_user_flow(
     account: &str,
     session_id: &str,
@@ -27,7 +28,7 @@ pub async fn get_load_user_flow(
     let url = if !matches!(user_type, UserType::ViaVpn) {
         format!("http://202.204.48.66:801/eportal/portal/visitor/loadUserFlow?account={account}")
     } else {
-        format!("https://elib.ustb.edu.cn/http-801/77726476706e69737468656265737421a2a713d275603c1e2a50c7face/eportal/portal/visitor/loadUserFlow?account={account}")
+        format!("https://elib.ustb.edu.cn/http-801/77726476706e69737468656265737421a2a713d275603c1e2a50c7face/eportal/portal/visitor/loadUserFlow?callback=dr1003&account={account}")
     };
     let mut req = CLIENT.get(url);
     if matches!(user_type, UserType::ViaVpn) {
@@ -37,18 +38,32 @@ pub async fn get_load_user_flow(
         );
     }
     let response = req.send().await?.text().await?;
-    let re = Regex::new(r"jsonpReturn\((.*)\);")?;
+    dbg!(&response);
+    let re = Regex::new(r"dr1003\((.*)\);")?;
     let json_str = re
         .captures(&response)
         .and_then(|cap| Some(cap.get(1)?.as_str()));
     Ok(serde_json::from_str(json_str.unwrap())?)
 }
 
+// 获取登录页中的 check_code 用来提交 post 请求使用
+async fn get_check_code(res: reqwest::Response) -> Result<String> {
+    let check_code_selector = Selector::parse("input[name=\"checkcode\"]").unwrap();
+    let res_text = res.text().await?;
+    let document = Html::parse_document(&res_text);
+    Ok(document
+        .select(&check_code_selector)
+        .next()
+        .and_then(|ele| ele.value().attr("value"))
+        .ok_or(anyhow!("用户名或密码错误！"))?
+        .to_string())
+}
+
 // 该函数复活了
 pub async fn simulate_login(account: &str, password: &str) -> Result<Option<String>> {
     // 访问登录页
     let res = CLIENT
-        .get("http://202.204.60.7:8080/nav_login")
+        .get("https://zifuwu.ustb.edu.cn/Self/login/")
         .send()
         .await?;
     // 获取登录页中的 header 里面的 cookie
@@ -64,38 +79,35 @@ pub async fn simulate_login(account: &str, password: &str) -> Result<Option<Stri
         return Err(anyhow!("There is no jsessionid cookie in nav_login ?!"));
     };
     // 获取登录页中的 check_code 用来提交 post 请求使用
-    let res_text = res.text().await?;
-    let check_code = Regex::new(r#"var checkcode="([^"]*)";"#)?
-        .captures(&res_text)
-        .and_then(|cap| cap.get(1))
-        .unwrap()
-        .as_str();
+    let check_code = get_check_code(res).await?;
     // dbg!(check_code);
     tokio::time::sleep(Duration::from_millis(10)).await;
+    // [TODO]
     // 获取用户名/密码错误3次以上的随机验证码（密码输错3次以内是隐藏的），需要带 cookie，这是必要的
-    CLIENT
-        .get(format!(
-            "http://202.204.60.7:8080/RandomCodeAction.action?randomNum={}",
-            rand::rng().random_range(0.0..1.0)
-        ))
-        .header(
-            "accept",
-            "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-        )
-        .header("cookie", format!("JSESSIONID={}", jsessionid))
-        .send()
-        .await?;
+    // CLIENT
+    //     .get(format!(
+    //         "http://202.204.60.7:8080/RandomCodeAction.action?randomNum={}",
+    //         rand::rng().random_range(0.0..1.0)
+    //     ))
+    //     .header(
+    //         "accept",
+    //         "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+    //     )
+    //     .header("cookie", format!("JSESSIONID={}", jsessionid))
+    //     .send()
+    //     .await?;
     tokio::time::sleep(Duration::from_millis(10)).await;
     // 发送登录请求，携带 Cookie 和必要的 header，这样可以激活这个 cookie
     let response = CLIENT
-        .post("http://202.204.60.7:8080/LoginAction.action")
+        .post("https://zifuwu.ustb.edu.cn/Self/login/verify")
         .header("content-type", "application/x-www-form-urlencoded")
         .header("upgrade-insecure-requests", "1")
+        .header("origin", "https://zifuwu.ustb.edu.cn")
         .header("Cookie", format!("JSESSIONID={}", jsessionid))
-        .header("Referer", "http://202.204.60.7:8080/LoginAction.action")
+        .header("Referer", "https://zifuwu.ustb.edu.cn/Self/login")
         .header("Referrer-Policy", "strict-origin-when-cross-origin")
         .body(format!(
-            "account={}&password={:x}&code=&checkcode={}&Submit=%E7%99%BB+%E5%BD%95",
+            "account={}&password={:x}&code=&checkcode={}",
             account,
             md5::compute(password),
             check_code
@@ -166,17 +178,7 @@ pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Opt
     let res = CLIENT.get("https://elib.ustb.edu.cn/https/77726476706e69737468656265737421eafe4789302526456d1c8be29d51367b8ada/Self/login/")
     .header("Cookie", format!("wengine_vpn_ticketelib_ustb_edu_cn={}", wengine_vpn_ticketelib_ustb_edu_cn))
     .send().await?;
-    // 获取登录页中的 check_code 用来提交 post 请求使用
-    let check_code = {
-        let check_code_selector = Selector::parse("input[name=\"checkcode\"]").unwrap();
-        let res_text = res.text().await?;
-        let document = Html::parse_document(&res_text);
-        document
-            .select(&check_code_selector)
-            .next()
-            .and_then(|ele| ele.value().attr("value"))
-            .ok_or(anyhow!("用户名或密码错误！"))?.to_string()
-    };
+    let check_code = get_check_code(res).await?;
     // dbg!(&check_code);
     tokio::time::sleep(Duration::from_millis(10)).await;
     // [TODO]
