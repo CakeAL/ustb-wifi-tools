@@ -61,7 +61,7 @@ const handleSelect = (key: number) => {
 };
 
 const check_login_state = async () => {
-  let res = (await invoke("get_jsessionid")) as string;
+  let res = (await invoke("get_stored_cookie_str")) as string;
   if (res.length > 0) {
     sessionid.value = res;
     login_state.value = true;

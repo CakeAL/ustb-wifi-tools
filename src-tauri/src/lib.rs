@@ -38,7 +38,7 @@ pub fn run() {
             do_unbind_macs,
             open_speed_test,
             load_ip_address,
-            get_jsessionid,
+            get_stored_cookie_str,
             load_setting,
             logout,
             load_monthly_login_log,
@@ -59,7 +59,7 @@ pub fn run() {
             get_current_user_name,
             set_current_user_name,
             create_local_user,
-            down_historical_data,
+            // down_historical_data,
             load_electric_bill
         ])
         .setup(|app| {

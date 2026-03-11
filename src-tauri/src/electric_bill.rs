@@ -14,7 +14,7 @@ pub async fn update_ammeter(
 ) -> Result<(Vec<RemainingElectricity>, String)> {
     let mut buf = vec![];
     let mut file = OpenOptions::new()
-        .create(true)
+        .truncate(true)
         .write(true)
         .read(true)
         .open(&file_path)
@@ -51,7 +51,7 @@ pub async fn update_ammeter(
             .ok_or(anyhow!("获取今日数据时返回为 None"))?;
         RemainingElectricity {
             date: now.timestamp(),
-            remain: remain,
+            remain,
             average: (last_remain - remain) as f64
                 / (now.date_naive() - last_data_day).num_days() as f64,
         }

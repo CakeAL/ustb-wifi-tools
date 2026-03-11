@@ -43,7 +43,6 @@ onMounted(() => {
   // [TODO]
   load_user_flow();
   console.log(account_flow.value);
-  
 });
 
 const load_refresh_account = async () => {

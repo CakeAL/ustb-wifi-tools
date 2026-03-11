@@ -1,17 +1,13 @@
 use std::io::Read;
 use std::path::PathBuf;
-use std::sync::Arc;
 
 use anyhow::{anyhow, Result};
-use chrono::{DateTime, Datelike, NaiveDate, Utc};
+use chrono::DateTime;
 use std::fs::{create_dir, File};
 use tauri::Manager;
-use tokio::fs::OpenOptions;
-use tokio::io::AsyncWriteExt;
 
-use crate::entities::{AppState, MonthPayInfo, UserLoginLog, UserType};
-use crate::requests::{get_month_pay, get_user_login_log};
-use crate::utils::{complete_month_pay_data, get_session_id, get_store_path};
+use crate::entities::{AppState, MonthPayInfo, UserLoginLog};
+use crate::utils::get_store_path;
 
 #[derive(Debug, Clone)]
 pub enum CurrentUser {
@@ -62,116 +58,116 @@ impl CurrentUser {
         Ok(path)
     }
 
-    // 获取输入年月至现在的数据
-    pub async fn get_historical_data(
-        &self,
-        app: &tauri::AppHandle,
-        start_date: i64,
-    ) -> Result<Vec<String>> {
-        let app_state = app.state::<AppState>();
-        let session_id = Arc::new(
-            get_session_id(&app_state)
-                .await
-                .map_err(|err| anyhow!(err))?,
-        );
-        let user_type = *app_state.user_type.read().await;
-        if let UserType::LocalUser = user_type {
-            return Err(anyhow!("本地存储不适用此功能"));
-        }
+    // // 获取输入年月至现在的数据
+    // pub async fn get_historical_data(
+    //     &self,
+    //     app: &tauri::AppHandle,
+    //     start_date: i64,
+    // ) -> Result<Vec<String>> {
+    //     let app_state = app.state::<AppState>();
+    //     let session_id = Arc::new(
+    //         get_cookie_str(&app_state)
+    //             .await
+    //             .map_err(|err| anyhow!(err))?,
+    //     );
+    //     let user_type = *app_state.user_type.read().await;
+    //     if let UserType::LocalUser = user_type {
+    //         return Err(anyhow!("本地存储不适用此功能"));
+    //     }
 
-        let current_date = Utc::now().date_naive();
-        let mut start_date = DateTime::from_timestamp(start_date, 0)
-            .unwrap()
-            .date_naive();
-        let start_year = start_date.year() as u16;
-        let current_year = current_date.year() as u16;
-        let path = Arc::new(self.get_local_data_path(app)?);
-        let mut tasks = vec![];
+    //     let current_date = Utc::now().date_naive();
+    //     let mut start_date = DateTime::from_timestamp(start_date, 0)
+    //         .unwrap()
+    //         .date_naive();
+    //     let start_year = start_date.year() as u16;
+    //     let current_year = current_date.year() as u16;
+    //     let path = Arc::new(self.get_local_data_path(app)?);
+    //     let mut tasks = vec![];
 
-        // 获取每月数据
-        while start_date <= current_date {
-            let start_date_string = start_date.format("%Y-%m-%d").to_string();
-            let end_date_string = get_last_day_of_month(&start_date)
-                .format("%Y-%m-%d")
-                .to_string();
-            // println!("{start_date_string} -> {end_date_string}");
-            let session_id = session_id.clone();
-            let path = path.clone();
-            let task: tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>> =
-                tokio::spawn(async move {
-                    let res = get_user_login_log(
-                        &session_id,
-                        &start_date_string,
-                        &end_date_string,
-                        user_type,
-                    )
-                    .await;
+    //     // 获取每月数据
+    //     while start_date <= current_date {
+    //         let start_date_string = start_date.format("%Y-%m-%d").to_string();
+    //         let end_date_string = get_last_day_of_month(&start_date)
+    //             .format("%Y-%m-%d")
+    //             .to_string();
+    //         // println!("{start_date_string} -> {end_date_string}");
+    //         let session_id = session_id.clone();
+    //         let path = path.clone();
+    //         let task: tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>> =
+    //             tokio::spawn(async move {
+    //                 let res = get_user_login_log(
+    //                     &session_id,
+    //                     &start_date_string,
+    //                     &end_date_string,
+    //                     user_type,
+    //                 )
+    //                 .await;
 
-                    match res {
-                        Ok(Some(data)) => {
-                            let mut file_path = (*path).clone();
-                            file_path.push(format!("{}.json", start_date.format("%Y-%m")));
-                            let mut file = OpenOptions::new()
-                                .create(true)
-                                .write(true)
-                                .truncate(true)
-                                .open(file_path)
-                                .await?;
-                            let _ = file.write_all(&serde_json::to_vec(&data)?).await;
-                            Ok(())
-                        }
-                        Ok(None) => Ok(()),
-                        Err(e) => Err(anyhow!(
-                            "{} 获取失败，原因：{}",
-                            start_date.format("%Y-%m"),
-                            e.to_string()
-                        )),
-                    }
-                });
-            tasks.push(task);
-            start_date = get_first_day_next_month(&start_date);
-        }
+    //                 match res {
+    //                     Ok(Some(data)) => {
+    //                         let mut file_path = (*path).clone();
+    //                         file_path.push(format!("{}.json", start_date.format("%Y-%m")));
+    //                         let mut file = OpenOptions::new()
+    //                             .create(true)
+    //                             .write(true)
+    //                             .truncate(true)
+    //                             .open(file_path)
+    //                             .await?;
+    //                         let _ = file.write_all(&serde_json::to_vec(&data)?).await;
+    //                         Ok(())
+    //                     }
+    //                     Ok(None) => Ok(()),
+    //                     Err(e) => Err(anyhow!(
+    //                         "{} 获取失败，原因：{}",
+    //                         start_date.format("%Y-%m"),
+    //                         e.to_string()
+    //                     )),
+    //                 }
+    //             });
+    //         tasks.push(task);
+    //         start_date = get_first_day_next_month(&start_date);
+    //     }
 
-        // 获取年度数据
-        for year in start_year..=current_year {
-            // 使用异步可能造成校园网服务器来不及反应🤭
-            // let session_id = session_id.clone();
-            // let path = path.clone();
-            // let task: tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>> =
-            //     tokio::spawn(async move {
-            let mut month_pay_info = match get_month_pay(&session_id, year, user_type).await {
-                Ok(Some(v)) => Ok(v),
-                Ok(None) => Err(anyhow!("请确认是否已经登录")),
-                Err(e) => Err(anyhow!("Request Error，检查是否在校园网内: {}", e)),
-            }?;
-            // 翻转一下，因为后台给的数据是倒叙的
-            month_pay_info.monthly_data.reverse();
-            complete_month_pay_data(&mut month_pay_info, year, &session_id, user_type).await;
-            let mut file_path = (*path).clone();
-            file_path.push(format!("{}.json", year));
-            let mut file = OpenOptions::new()
-                .create(true)
-                .write(true)
-                .truncate(true)
-                .open(file_path)
-                .await?;
-                let _ = file.write_all(&serde_json::to_vec(&month_pay_info)?).await;
-            // Ok(())
-            //     });
-            // tasks.push(task);
-        }
+    //     // 获取年度数据
+    //     for year in start_year..=current_year {
+    //         // 使用异步可能造成校园网服务器来不及反应🤭
+    //         // let session_id = session_id.clone();
+    //         // let path = path.clone();
+    //         // let task: tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>> =
+    //         //     tokio::spawn(async move {
+    //         let mut month_pay_info = match get_month_pay(&session_id, year, user_type).await {
+    //             Ok(Some(v)) => Ok(v),
+    //             Ok(None) => Err(anyhow!("请确认是否已经登录")),
+    //             Err(e) => Err(anyhow!("Request Error，检查是否在校园网内: {}", e)),
+    //         }?;
+    //         // 翻转一下，因为后台给的数据是倒叙的
+    //         month_pay_info.monthly_data.reverse();
+    //         complete_month_pay_data(&mut month_pay_info, year, &session_id, user_type).await;
+    //         let mut file_path = (*path).clone();
+    //         file_path.push(format!("{}.json", year));
+    //         let mut file = OpenOptions::new()
+    //             .create(true)
+    //             .write(true)
+    //             .truncate(true)
+    //             .open(file_path)
+    //             .await?;
+    //             let _ = file.write_all(&serde_json::to_vec(&month_pay_info)?).await;
+    //         // Ok(())
+    //         //     });
+    //         // tasks.push(task);
+    //     }
 
-        let mut res = vec![];
-        res.push(format!("存储于：{}", path.to_string_lossy()));
-        for task in tasks {
-            if let Err(e) = task.await? {
-                // println!("{}", e);
-                res.push(e.to_string());
-            }
-        }
-        // println!("finished");
-        Ok(res)
-    }
+    //     let mut res = vec![];
+    //     res.push(format!("存储于：{}", path.to_string_lossy()));
+    //     for task in tasks {
+    //         if let Err(e) = task.await? {
+    //             // println!("{}", e);
+    //             res.push(e.to_string());
+    //         }
+    //     }
+    //     // println!("finished");
+    //     Ok(res)
+    // }
 
     pub fn get_local_data(
         &self,
@@ -251,20 +247,20 @@ impl CurrentUser {
     }
 }
 
-fn get_last_day_of_month(date: &NaiveDate) -> NaiveDate {
-    let first_day_next_month = get_first_day_next_month(date);
-    first_day_next_month.pred_opt().unwrap()
-}
+// fn get_last_day_of_month(date: &NaiveDate) -> NaiveDate {
+//     let first_day_next_month = get_first_day_next_month(date);
+//     first_day_next_month.pred_opt().unwrap()
+// }
 
-fn get_first_day_next_month(date: &NaiveDate) -> NaiveDate {
-    let (year, month) = (date.year(), date.month());
-    let first_day_next_month = if month == 12 {
-        NaiveDate::from_ymd_opt(year + 1, 1, 1)
-    } else {
-        NaiveDate::from_ymd_opt(year, month + 1, 1)
-    };
-    first_day_next_month.unwrap()
-}
+// fn get_first_day_next_month(date: &NaiveDate) -> NaiveDate {
+//     let (year, month) = (date.year(), date.month());
+//     let first_day_next_month = if month == 12 {
+//         NaiveDate::from_ymd_opt(year + 1, 1, 1)
+//     } else {
+//         NaiveDate::from_ymd_opt(year, month + 1, 1)
+//     };
+//     first_day_next_month.unwrap()
+// }
 
 #[cfg(test)]
 mod tests {

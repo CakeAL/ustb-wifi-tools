@@ -88,7 +88,7 @@ pub enum UserType {
 
 #[derive(Default)]
 pub struct AppState {
-    pub jsessionid: RwLock<Option<String>>,
+    pub cookie_str: RwLock<Option<String>>,
     pub cur_account: RwLock<CurrentUser>,
     pub setting: RwLock<Setting>,
     pub user_type: RwLock<UserType>,

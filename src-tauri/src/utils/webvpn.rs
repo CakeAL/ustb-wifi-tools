@@ -16,7 +16,7 @@ fn pad_text(text: &str) -> String {
     let seg = 16;
     let current_len = text.len();
     
-    if current_len % seg == 0 {
+    if current_len.is_multiple_of(seg) {
         text.to_string()
     } else {
         let append = seg - current_len % seg;

@@ -19,11 +19,7 @@ pub static CLIENT: LazyLock<Client> =
 
 // Ciallo～(∠・ω< )⌒☆
 // 该函数已经需要登录校园网才能获取数据
-pub async fn get_load_user_flow(
-    account: &str,
-    session_id: &str,
-    user_type: UserType,
-) -> Result<Value> {
+pub async fn get_load_user_flow(account: &str, cookie: &str, user_type: UserType) -> Result<Value> {
     let url = if !matches!(user_type, UserType::ViaVpn) {
         format!("http://202.204.48.66:801/eportal/portal/visitor/loadUserFlow?account={account}")
     } else {
@@ -31,10 +27,7 @@ pub async fn get_load_user_flow(
     };
     let mut req = CLIENT.get(url);
     if matches!(user_type, UserType::ViaVpn) {
-        req = req.header(
-            "Cookie",
-            format!("wengine_vpn_ticketelib_ustb_edu_cn={}", session_id),
-        );
+        req = req.header("Cookie", cookie);
     }
     let response = req.send().await?.text().await?;
     dbg!(&response);
@@ -68,15 +61,10 @@ pub async fn simulate_login(account: &str, password: &str) -> Result<Option<Stri
     // 获取登录页中的 header 里面的 cookie
     let res_header = res.headers().clone();
     let res_cookie = res_header.get_all(SET_COOKIE).iter().next();
-    let jsessionid = if let Some(jsessionid) = res_cookie {
-        Regex::new(r#"JSESSIONID=([^;]*)"#)?
-            .captures(jsessionid.to_str()?)
-            .and_then(|cap| cap.get(1))
-            .unwrap()
-            .as_str()
-    } else {
-        return Err(anyhow!("There is no jsessionid cookie in nav_login ?!"));
-    };
+    let cookie_str = res_cookie
+        .map(|c| c.to_str().unwrap_or_default())
+        .ok_or(anyhow!("There is no jsessionid cookie in nav_login ?!"))?;
+
     // 获取登录页中的 check_code 用来提交 post 请求使用
     let check_code = get_check_code(res).await?;
     // dbg!(check_code);
@@ -102,7 +90,7 @@ pub async fn simulate_login(account: &str, password: &str) -> Result<Option<Stri
         .header("content-type", "application/x-www-form-urlencoded")
         .header("upgrade-insecure-requests", "1")
         .header("origin", "https://zifuwu.ustb.edu.cn")
-        .header("Cookie", format!("JSESSIONID={}", jsessionid))
+        .header("Cookie", cookie_str)
         .header("Referer", "https://zifuwu.ustb.edu.cn/Self/login")
         .header("Referrer-Policy", "strict-origin-when-cross-origin")
         .body(format!(
@@ -120,7 +108,7 @@ pub async fn simulate_login(account: &str, password: &str) -> Result<Option<Stri
     {
         return Ok(None); // 账号或密码出现错误！
     }
-    Ok(Some(jsessionid.to_string()))
+    Ok(Some(cookie_str.to_string()))
 }
 
 pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Option<String>> {
@@ -128,15 +116,10 @@ pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Opt
     let res = CLIENT.get("https://elib.ustb.edu.cn/login").send().await?;
     let res_header = res.headers().clone();
     let res_cookie = res_header.get_all(SET_COOKIE).iter().next();
-    let wengine_vpn_ticketelib_ustb_edu_cn = if let Some(header_value) = res_cookie {
-        Regex::new(r#"wengine_vpn_ticketelib_ustb_edu_cn=([^;]*)"#)?
-            .captures(header_value.to_str()?)
-            .and_then(|cap| cap.get(1))
-            .unwrap()
-            .as_str()
-    } else {
-        return Err(anyhow!("There is no cookie in elib login ?!"));
-    };
+    let cookie_str = res_cookie
+        .map(|c| c.to_str().unwrap_or_default())
+        .ok_or(anyhow!("There is no cookie in elib login ?!"))?;
+
     // dbg!(wengine_vpn_ticketelib_ustb_edu_cn);
     // 获取 lib webvpn 登录页的 captcha_id
     let res_text = res.text().await?;
@@ -149,13 +132,7 @@ pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Opt
     // 发送登录请求
     let res = CLIENT
         .post("https://elib.ustb.edu.cn/do-login")
-        .header(
-            "Cookie",
-            format!(
-                "show_vpn=0; show_faq=0; wengine_vpn_ticketelib_ustb_edu_cn={}",
-                wengine_vpn_ticketelib_ustb_edu_cn
-            ),
-        )
+        .header("Cookie", cookie_str)
         .header("Referer", "https://elib.ustb.edu.cn/login")
         .header("Referrer-Policy", "strict-origin-when-cross-origin")
         .form(&[
@@ -175,7 +152,7 @@ pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Opt
     }
     // 访问校园网后台登录页
     let res = CLIENT.get("https://elib.ustb.edu.cn/https/77726476706e69737468656265737421eafe4789302526456d1c8be29d51367b8ada/Self/login/")
-    .header("Cookie", format!("wengine_vpn_ticketelib_ustb_edu_cn={}", wengine_vpn_ticketelib_ustb_edu_cn))
+    .header("Cookie", cookie_str)
     .send().await?;
     let check_code = get_check_code(res).await?;
     // dbg!(&check_code);
@@ -208,7 +185,7 @@ pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Opt
         .post("https://elib.ustb.edu.cn/https/77726476706e69737468656265737421eafe4789302526456d1c8be29d51367b8ada/Self/login/verify")
         .header("content-type", "application/x-www-form-urlencoded")
         .header("upgrade-insecure-requests", "1")
-        .header("Cookie", format!("wengine_vpn_ticketelib_ustb_edu_cn={}", wengine_vpn_ticketelib_ustb_edu_cn))
+        .header("Cookie", cookie_str)
         .header("Referer", "https://elib.ustb.edu.cn/https/77726476706e69737468656265737421eafe4789302526456d1c8be29d51367b8ada/Self/login/")
         .header("Referrer-Policy", "strict-origin-when-cross-origin")
         .body(format!(
@@ -225,24 +202,16 @@ pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Opt
     if response.contains("账号或密码出现错误！") {
         return Ok(None); // 账号或密码出现错误！
     }
-    Ok(Some(wengine_vpn_ticketelib_ustb_edu_cn.into()))
+    Ok(Some(cookie_str.into()))
 }
 
-pub async fn get_refresh_account(session_id: &str, user_type: UserType) -> Result<Option<String>> {
+pub async fn get_refresh_account(cookie_str: &str, user_type: UserType) -> Result<Option<String>> {
     let url = if !matches!(user_type, UserType::ViaVpn) {
         "http://202.204.60.7:8080/refreshaccount"
     } else {
         "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/refreshaccount"
     };
-    let mut req = CLIENT.get(url);
-    if !matches!(user_type, UserType::ViaVpn) {
-        req = req.header("Cookie", format!("JSESSIONID={}", session_id));
-    } else {
-        req = req.header(
-            "Cookie",
-            format!("wengine_vpn_ticketelib_ustb_edu_cn={}", session_id),
-        );
-    }
+    let req = CLIENT.get(url).header("Cookie", cookie_str);
 
     let response = req.send().await?.text().await?;
     // println!("{response}");
@@ -253,7 +222,7 @@ pub async fn get_refresh_account(session_id: &str, user_type: UserType) -> Resul
 }
 
 pub async fn get_month_pay(
-    session_id: &str,
+    cookie_str: &str,
     year: u16,
     user_type: UserType,
 ) -> Result<Option<MonthPayInfo>> {
@@ -262,15 +231,8 @@ pub async fn get_month_pay(
     } else {
         "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/MonthPayAction.action"
     };
-    let mut req = CLIENT.post(url);
-    if !matches!(user_type, UserType::ViaVpn) {
-        req = req.header("Cookie", format!("JSESSIONID={}", session_id));
-    } else {
-        req = req.header(
-            "Cookie",
-            format!("wengine_vpn_ticketelib_ustb_edu_cn={}", session_id),
-        );
-    }
+    let req = CLIENT.post(url).header("Cookie", cookie_str);
+
     let response = req
         .form(&[("type", 1), ("year", year)])
         .send()
@@ -333,7 +295,7 @@ pub async fn get_month_pay(
 // start_date 2024-05-01 end_date 2024-05-31
 // 校园网的API并不能返回全部数据，有条数限制。
 pub async fn get_user_login_log(
-    session_id: &str,
+    cookie_str: &str,
     start_date: &str,
     end_date: &str,
     user_type: UserType,
@@ -357,17 +319,8 @@ pub async fn get_user_login_log(
         }
     }
 
-    let mut req = CLIENT.post(url);
-    if !matches!(user_type, UserType::ViaVpn) {
-        req = req.header("Cookie", format!("JSESSIONID={}", session_id));
-    } else {
-        req = req.header(
-            "Cookie",
-            format!("wengine_vpn_ticketelib_ustb_edu_cn={}", session_id),
-        );
-    }
+    let req = CLIENT.post(url).header("Cookie", cookie_str);
     let response = req
-        .header("Cookie", format!("JSESSIONID={}", session_id))
         .form(&[
             ("type", _type.to_string().as_str()),
             ("month", _month.as_str()),
@@ -483,7 +436,7 @@ pub async fn get_user_login_log(
 }
 
 pub async fn get_mac_address(
-    session_id: &str,
+    cookie_str: &str,
     user_type: UserType,
     mac_custom_name: &HashMap<String, String>,
 ) -> Result<Option<Vec<MacAddress>>> {
@@ -492,21 +445,8 @@ pub async fn get_mac_address(
     } else {
         "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/nav_unBandMacJsp"
     };
-    let mut req = CLIENT.get(url);
-    if !matches!(user_type, UserType::ViaVpn) {
-        req = req.header("Cookie", format!("JSESSIONID={}", session_id));
-    } else {
-        req = req.header(
-            "Cookie",
-            format!("wengine_vpn_ticketelib_ustb_edu_cn={}", session_id),
-        );
-    }
-    let response = req
-        .header("Cookie", format!("JSESSIONID={}", session_id))
-        .send()
-        .await?
-        .text()
-        .await?;
+    let req = CLIENT.get(url).header("Cookie", cookie_str);
+    let response = req.send().await?.text().await?;
     // println!("{response}");
     if response.contains("nav_login") {
         return Ok(None); // Cookie无效，没有获取到account信息
@@ -544,7 +484,7 @@ pub async fn get_mac_address(
 
 // 这里传进来的是 **不需要** 解绑的macs
 pub async fn unbind_macs(
-    session_id: &str,
+    cookie_str: &str,
     macs: &Vec<String>,
     user_type: UserType,
 ) -> Result<Option<()>> {
@@ -559,17 +499,8 @@ pub async fn unbind_macs(
     }
     let _ = mac_str.pop(); // 删末尾分号
     dbg!(&mac_str);
-    let mut req = CLIENT.post(url);
-    if !matches!(user_type, UserType::ViaVpn) {
-        req = req.header("Cookie", format!("JSESSIONID={}", session_id));
-    } else {
-        req = req.header(
-            "Cookie",
-            format!("wengine_vpn_ticketelib_ustb_edu_cn={}", session_id),
-        );
-    }
+    let req = CLIENT.post(url).header("Cookie", cookie_str);
     let response = req
-        .header("Cookie", format!("JSESSIONID={}", session_id))
         .form(&[("macStr", mac_str), ("Submit", "解绑".to_string())])
         .send()
         .await?
@@ -734,7 +665,7 @@ fn get_params(location: &str) -> Result<(String, String, String)> {
     dbg!(location);
     let params = location
         .split('?')
-        .last()
+        .next_back()
         .ok_or(anyhow!("未获得重定向网址参数"))?
         .split('&')
         .map(|s| {
