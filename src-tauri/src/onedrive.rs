@@ -1,6 +1,5 @@
 use crate::{entities::AppState, requests::CLIENT, setting::Setting};
 use base64::{engine::general_purpose::URL_SAFE, Engine as _};
-use rand::Rng;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use tauri::{Manager, WebviewWindow};
@@ -219,7 +218,7 @@ fn generate_random_string(length: usize) -> String {
     const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
     let mut rng = rand::rng();
     (0..length)
-        .map(|_| CHARSET[rng.random_range(0..CHARSET.len())] as char)
+        .map(|_| CHARSET[rand::RngExt::random_range(&mut rng, 0..CHARSET.len())] as char)
         .collect()
 }
 

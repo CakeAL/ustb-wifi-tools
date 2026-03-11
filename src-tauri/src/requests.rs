@@ -2,7 +2,6 @@ use std::{collections::HashMap, f64, net::Ipv6Addr, sync::LazyLock, time::Durati
 
 use anyhow::{anyhow, Result};
 use chrono::NaiveDateTime;
-use rand::Rng;
 use regex::Regex;
 use reqwest::{
     header::{LOCATION, SET_COOKIE},

@@ -1,3 +1,5 @@
+pub mod webvpn;
+
 use anyhow::{anyhow, Result};
 use chrono::{Datelike, Local};
 use std::{fs::create_dir, path::PathBuf};
