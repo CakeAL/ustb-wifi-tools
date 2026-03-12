@@ -104,13 +104,13 @@ pub async fn logout(
 }
 
 #[tauri::command(async)]
-pub async fn load_refresh_account(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
+pub async fn load_user_dashboard(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
     let cookie_str = get_cookie_str(&app_state).await?;
     let user_type = *app_state.user_type.read().await;
     if let UserType::LocalUser = user_type {
         return Err("本地存储不适用此功能".to_string());
     }
-    match get_refresh_account(&cookie_str, user_type).await {
+    match get_user_dashboard(&cookie_str, user_type).await {
         Ok(Some(str)) => Ok(str),
         Ok(None) => Err("请确认是否已经登录".to_string()),
         Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),

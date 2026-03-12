@@ -2,6 +2,7 @@ use std::{collections::HashMap, f64, net::Ipv6Addr, sync::LazyLock, time::Durati
 
 use anyhow::{anyhow, Result};
 use chrono::NaiveDateTime;
+use rand::RngExt;
 use regex::Regex;
 use reqwest::{
     header::{LOCATION, SET_COOKIE},
@@ -23,18 +24,18 @@ pub async fn get_load_user_flow(account: &str, cookie: &str, user_type: UserType
     let url = if !matches!(user_type, UserType::ViaVpn) {
         format!("http://202.204.48.66:801/eportal/portal/visitor/loadUserFlow?account={account}")
     } else {
-        format!("https://elib.ustb.edu.cn/http-801/77726476706e69737468656265737421a2a713d275603c1e2a50c7face/eportal/portal/visitor/loadUserFlow?callback=dr1003&account={account}")
+        format!("https://elib.ustb.edu.cn/http-801/77726476706e69737468656265737421a2a713d275603c1e2a50c7face/eportal/portal/visitor/loadUserFlow?account={account}")
     };
     let mut req = CLIENT.get(url);
     if matches!(user_type, UserType::ViaVpn) {
         req = req.header("Cookie", cookie);
     }
     let response = req.send().await?.text().await?;
-    dbg!(&response);
-    let re = Regex::new(r"dr1003\((.*)\);")?;
+    let re = Regex::new(r"jsonpReturn\((.*)\);")?;
     let json_str = re
         .captures(&response)
         .and_then(|cap| Some(cap.get(1)?.as_str()));
+    dbg!(&json_str);
     Ok(serde_json::from_str(json_str.unwrap())?)
 }
 
@@ -69,20 +70,19 @@ pub async fn simulate_login(account: &str, password: &str) -> Result<Option<Stri
     let check_code = get_check_code(res).await?;
     // dbg!(check_code);
     tokio::time::sleep(Duration::from_millis(10)).await;
-    // [TODO]
     // 获取用户名/密码错误3次以上的随机验证码（密码输错3次以内是隐藏的），需要带 cookie，这是必要的
-    // CLIENT
-    //     .get(format!(
-    //         "http://202.204.60.7:8080/RandomCodeAction.action?randomNum={}",
-    //         rand::rng().random_range(0.0..1.0)
-    //     ))
-    //     .header(
-    //         "accept",
-    //         "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-    //     )
-    //     .header("cookie", format!("JSESSIONID={}", jsessionid))
-    //     .send()
-    //     .await?;
+    CLIENT
+        .get(format!(
+            "https://zifuwu.ustb.edu.cn/Self/login/randomCode?t={}",
+            rand::rng().random_range(0.0..1.0)
+        ))
+        .header(
+            "accept",
+            "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+        )
+        .header("cookie", cookie_str)
+        .send()
+        .await?;
     tokio::time::sleep(Duration::from_millis(10)).await;
     // 发送登录请求，携带 Cookie 和必要的 header，这样可以激活这个 cookie
     let response = CLIENT
@@ -117,7 +117,13 @@ pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Opt
     let res_header = res.headers().clone();
     let res_cookie = res_header.get_all(SET_COOKIE).iter().next();
     let cookie_str = res_cookie
-        .map(|c| c.to_str().unwrap_or_default())
+        .map(|c| {
+            c.to_str()
+                .unwrap_or_default()
+                .split(';')
+                .next()
+                .unwrap_or_default()
+        })
         .ok_or(anyhow!("There is no cookie in elib login ?!"))?;
 
     // dbg!(wengine_vpn_ticketelib_ustb_edu_cn);
@@ -157,28 +163,22 @@ pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Opt
     let check_code = get_check_code(res).await?;
     // dbg!(&check_code);
     tokio::time::sleep(Duration::from_millis(10)).await;
-    // [TODO]
     // 获取用户名/密码错误3次以上的随机验证码（密码输错3次以内是隐藏的），需要带 cookie，这是必要的
-    // 这里需要使用 webvpn 的 cookie
-    // CLIENT
-    //     .get(format!(
-    //         "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/RandomCodeAction.action?vpn-1&randomNum={}",
-    //         rand::rng().random_range(0.0..1.0)
-    //     ))
-    //     .header(
-    //         "accept",
-    //         "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-    //     )
-    //     .header(
-    //         "cookie",
-    //         format!(
-    //             "wengine_vpn_ticketelib_ustb_edu_cn={}",
-    //             wengine_vpn_ticketelib_ustb_edu_cn
-    //         ),
-    //     )
-    //     .send()
-    //     .await?;
-    //
+    CLIENT
+        .get(format!(
+            "https://elib.ustb.edu.cn/https/77726476706e69737468656265737421eafe4789302526456d1c8be29d51367b8ada/Self/login/randomCode?vpn-1&t={}",
+            rand::rng().random_range(0.0..1.0)
+        ))
+        .header(
+            "accept",
+            "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+        )
+        .header(
+            "cookie",
+            cookie_str
+        )
+        .send()
+        .await?;
     tokio::time::sleep(Duration::from_millis(10)).await;
     // 发送登录请求，携带 Cookie 和必要的 header，这样可以激活这个 cookie
     let response = CLIENT
@@ -189,7 +189,7 @@ pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Opt
         .header("Referer", "https://elib.ustb.edu.cn/https/77726476706e69737468656265737421eafe4789302526456d1c8be29d51367b8ada/Self/login/")
         .header("Referrer-Policy", "strict-origin-when-cross-origin")
         .body(format!(
-            "account={}&password={:x}&code=&checkcode={}",
+            "foo=&bar=&account={}&password={:x}&code=&checkcode={}",
             account,
             md5::compute(password),
             check_code
@@ -219,6 +219,24 @@ pub async fn get_refresh_account(cookie_str: &str, user_type: UserType) -> Resul
         return Ok(None); // Cookie无效，没有获取到account信息
     }
     Ok(Some(response))
+}
+
+// 用来获取 dashboard 页面一串奇怪的 user 信息，参考根目录 user-dashboard.json
+pub async fn get_user_dashboard(cookie_str: &str, user_type: UserType) -> Result<Option<String>> {
+    let url = if !matches!(user_type, UserType::ViaVpn) {
+        "https://zifuwu.ustb.edu.cn/Self/dashboard"
+    } else {
+        "https://elib.ustb.edu.cn/https/77726476706e69737468656265737421eafe4789302526456d1c8be29d51367b8ada/Self/dashboard"
+    };
+    let req = CLIENT.get(url).header("Cookie", cookie_str);
+    let response = req.send().await?.text().await?;
+    // dbg!(&response);
+    let re = Regex::new(r#"window\.user = user \|\| \{\};\s*\}\)\((\{.*\})\);"#).unwrap();
+    let res = re
+        .captures(&response)
+        .and_then(|cap| Some(cap.get(1)?.as_str().to_owned()));
+    // dbg!(&res);
+    Ok(res)
 }
 
 pub async fn get_month_pay(
