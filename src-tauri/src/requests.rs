@@ -53,7 +53,7 @@ async fn get_check_code(res: reqwest::Response) -> Result<String> {
 }
 
 // 该函数复活了
-pub async fn simulate_login(account: &str, password: &str) -> Result<Option<String>> {
+pub async fn simulate_login(account: &str, password: &str) -> Result<(Option<String>, Option<String>)> {
     // 访问登录页
     let res = CLIENT
         .get("https://zifuwu.ustb.edu.cn/Self/login/")
@@ -106,12 +106,16 @@ pub async fn simulate_login(account: &str, password: &str) -> Result<Option<Stri
     // dbg!(&response);
     if response.contains("账号或密码出现错误！") || response.contains("登录密码不正确")
     {
-        return Ok(None); // 账号或密码出现错误！
+        return Ok((None, None)); // 账号或密码出现错误！
     }
-    Ok(Some(cookie_str.to_string()))
+    let user_dashboard = Regex::new(r#"window\.user = user \|\| \{\};\s*\}\)\((\{.*\})\);"#)
+        .unwrap()
+        .captures(&response)
+        .and_then(|cap| Some(cap.get(1)?.as_str().to_owned()));
+    Ok((Some(cookie_str.to_string()), user_dashboard))
 }
 
-pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Option<String>> {
+pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<(Option<String>,Option<String>)> {
     // 访问 lib webvpn
     let res = CLIENT.get("https://elib.ustb.edu.cn/login").send().await?;
     let res_header = res.headers().clone();
@@ -154,7 +158,7 @@ pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Opt
         .await?;
     // dbg!(res.text().await?);
     if res.text().await?.contains("用户名或密码错误") {
-        return Ok(None); // 账号或密码出现错误！
+        return Ok((None, None)); // 账号或密码出现错误！
     }
     // 访问校园网后台登录页
     let res = CLIENT.get("https://elib.ustb.edu.cn/https/77726476706e69737468656265737421eafe4789302526456d1c8be29d51367b8ada/Self/login/")
@@ -198,27 +202,15 @@ pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<Opt
         .await?
         .text()
         .await?;
-    // dbg!(&response);
     if response.contains("账号或密码出现错误！") {
-        return Ok(None); // 账号或密码出现错误！
+        return Ok((None, None)); // 账号或密码出现错误！
     }
-    Ok(Some(cookie_str.into()))
-}
-
-pub async fn get_refresh_account(cookie_str: &str, user_type: UserType) -> Result<Option<String>> {
-    let url = if !matches!(user_type, UserType::ViaVpn) {
-        "http://202.204.60.7:8080/refreshaccount"
-    } else {
-        "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/refreshaccount"
-    };
-    let req = CLIENT.get(url).header("Cookie", cookie_str);
-
-    let response = req.send().await?.text().await?;
-    // println!("{response}");
-    if response.contains("nav_login") {
-        return Ok(None); // Cookie无效，没有获取到account信息
-    }
-    Ok(Some(response))
+    // dbg!(&response);
+    let user_dashboard = Regex::new(r#"window\.user = user \|\| \{\};\s*\}\)\((\{.*\})\);"#)
+        .unwrap()
+        .captures(&response)
+        .and_then(|cap| Some(cap.get(1)?.as_str().to_owned()));
+    Ok((Some(cookie_str.into()), user_dashboard))
 }
 
 // 用来获取 dashboard 页面一串奇怪的 user 信息，参考根目录 user-dashboard.json
@@ -231,8 +223,8 @@ pub async fn get_user_dashboard(cookie_str: &str, user_type: UserType) -> Result
     let req = CLIENT.get(url).header("Cookie", cookie_str);
     let response = req.send().await?.text().await?;
     // dbg!(&response);
-    let re = Regex::new(r#"window\.user = user \|\| \{\};\s*\}\)\((\{.*\})\);"#).unwrap();
-    let res = re
+    let res = Regex::new(r#"window\.user = user \|\| \{\};\s*\}\)\((\{.*\})\);"#)
+        .unwrap()
         .captures(&response)
         .and_then(|cap| Some(cap.get(1)?.as_str().to_owned()));
     // dbg!(&res);
@@ -748,13 +740,6 @@ mod tests {
         let account: &str = "stu_id";
         let password = "password";
         let res = simulate_login_via_vpn(account, password).await;
-        println!("{:?}", res);
-    }
-
-    #[tokio::test]
-    async fn test_get_refresh_account() {
-        let session_id = "session_id";
-        let res = get_refresh_account(session_id, UserType::Normal).await;
         println!("{:?}", res);
     }
 

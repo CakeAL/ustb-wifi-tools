@@ -30,7 +30,7 @@ pub fn run() {
         .manage(AppState::default())
         .invoke_handler(tauri::generate_handler![
             get_cookie,
-            load_user_dashboard,
+            refresh_user_dashboard,
             load_month_pay,
             load_user_login_log,
             load_mac_address,

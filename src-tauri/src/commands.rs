@@ -41,17 +41,17 @@ pub async fn get_cookie(
     user_name: String,
     password: String,
     via_vpn: bool,
-) -> Result<String, String> {
+) -> Result<Option<String>, String> {
     let app_state = app.state::<AppState>();
     if user_name.starts_with("local") {
         if !app_state.setting.read().await.has_local_account(&user_name) {
             return Err("本地账号不存在".to_string());
-        }
+    }   
         *app_state.user_type.write().await = UserType::LocalUser;
         *app_state.cookie_str.write().await = Some("local".to_string());
-        return Ok("local".to_string());
+        return Ok(Some("local".to_string()));
     }
-    let res = if !via_vpn {
+    let (cookie_str, user_dashboard) = if !via_vpn {
         simulate_login(&user_name, &password)
             .await
             .map_err(|err| err.to_string())?
@@ -60,7 +60,7 @@ pub async fn get_cookie(
             .await
             .map_err(|err| err.to_string())?
     };
-    let cookie_str = match res {
+    match cookie_str {
         Some(cookie_str) => {
             dbg!(&cookie_str);
             *app_state.cookie_str.write().await = Some(cookie_str.clone());
@@ -84,7 +84,7 @@ pub async fn get_cookie(
         }
         None => return Err("用户名或密码错误！".into()),
     };
-    Ok(cookie_str)
+    Ok(user_dashboard)
 }
 
 #[tauri::command(async)]
@@ -104,7 +104,7 @@ pub async fn logout(
 }
 
 #[tauri::command(async)]
-pub async fn load_user_dashboard(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
+pub async fn refresh_user_dashboard(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
     let cookie_str = get_cookie_str(&app_state).await?;
     let user_type = *app_state.user_type.read().await;
     if let UserType::LocalUser = user_type {

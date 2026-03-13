@@ -1,105 +1,33 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/core";
+import dayjs from "dayjs";
 import { useMessage } from "naive-ui";
 import { computed, onMounted, ref } from "vue";
 import { mb2gb } from "../helper";
-import { store } from "../store";
-
-interface Note {
-  leftFlow: string;
-  leftTime: null | string;
-  leftmoeny: string;
-  onlinestate: string;
-  overdate: string;
-  service: string;
-  status: string;
-  welcome: string;
-}
-
-interface Info {
-  date: string;
-  note: Note;
-  outmessage: null | string;
-  serverDate: string;
-}
-
-interface Data {
-  v4: number;
-  v6: number;
-}
-
-export interface Flow {
-  result: number;
-  data: Data;
-}
+import { store, UserDashboard } from "../store";
 
 const pop_message = useMessage();
 
-const account_info = ref<Info | null>(null);
-const account_flow = ref<Flow | null>(null);
-
 onMounted(() => {
-  load_user_dashboard();
+  if (store.userDashboard === undefined) {
+    refresh_user_dashboard();
+  }
 });
 
-const load_user_dashboard = async () => {
-  let res = await invoke("load_user_dashboard").catch((err) =>
+const refresh_user_dashboard = async () => {
+  let res = await invoke("refresh_user_dashboard").catch((err) =>
     pop_message.error(err)
   );
-  console.log(res);
 
-  account_info.value = JSON.parse(res as string);
-  //   console.log(account_info.value);
-  if (account_info !== null) {
-    setTimeout(() => {
-      load_user_flow();
-    }, 200);
-  }
+  store.userDashboard = JSON.parse(res as string) as UserDashboard;
 };
-
-const load_user_flow = async () => {
-  // console.log(store.userName);
-  let res = await invoke("load_user_flow", {
-    account: store.userName,
-  }).catch((err) => pop_message.error(err));
-  account_flow.value = JSON.parse(res as string);
-  console.log(account_flow.value);
-};
-
-const if_online = computed(() => {
-  if (account_info.value?.note.onlinestate === "1") {
-    return "在线";
-  } else {
-    return "离线";
-  }
-});
-
-const remain_flow = computed(() => {
-  if (
-    account_info.value?.note.leftFlow !== undefined
-    && account_flow.value?.data.v4 !== undefined
-  ) {
-    let remain = Math.max(
-      parseFloat(account_info.value?.note.leftFlow)
-        - account_flow.value?.data.v4,
-      0,
-    );
-    return parseFloat((remain / 1024).toFixed(2));
-  }
-});
 
 const remain_percentage = computed(() => {
-  if (
-    account_info.value?.note.leftFlow !== undefined
-    && account_flow.value?.data.v4 !== undefined
-  ) {
-    let per = Math.max(
-      (parseFloat(account_info.value?.note.leftFlow)
-        - account_flow.value?.data.v4)
-        / parseFloat(account_info.value?.note.leftFlow),
-      0,
+  if (store.userDashboard !== undefined) {
+    return parseFloat(
+      ((store.userDashboard.leftFlow / store.userDashboard.userGroup.flowStart)
+        * 100).toFixed(2),
     );
-    return parseFloat((per * 100).toFixed(2));
   }
   return 0;
 });
@@ -118,7 +46,7 @@ const progress_color = computed(() => {
 </script>
 
 <template>
-  <div v-if="account_info !== null">
+  <div v-if="store.userDashboard !== undefined">
     <n-h2 prefix="bar" type="success" style="margin-top: 15px">
       <n-text type="success"> 当前账号使用详情 </n-text>
     </n-h2>
@@ -133,15 +61,18 @@ const progress_color = computed(() => {
               <n-gi>
                 <p>用户类别:</p>
                 <n-tag :bordered="false" type="info">
-                  {{ account_info.note.service }}
+                  {{
+                    store.userDashboard.serviceDefault
+                    .defaultName
+                  }}
                 </n-tag>
               </n-gi>
               <n-gi>
                 <p>当前余额:</p>
                 <n-tag :bordered="false" type="info">
-                  {{ account_info.note.leftmoeny }}
+                  {{ store.userDashboard.leftMoney }}
                 </n-tag>
-              </n-gi>
+                <!-- </n-gi>
               <n-gi>
                 <p>是否在线:</p>
                 <n-tag :bordered="false" type="info">
@@ -152,11 +83,15 @@ const progress_color = computed(() => {
                 <p>用户状态:</p>
                 <n-tag :bordered="false" type="info">
                   {{ account_info.note.status }}
-                </n-tag>
+                </n-tag> -->
               </n-gi>
             </n-grid>
           </template>
-          更新日期: {{ account_info.serverDate }}
+          到期日期: {{
+            dayjs(store.userDashboard.invalidDate).format(
+              "YYYY-MM-DD",
+            )
+          }}
         </n-thing>
       </n-list-item>
       <n-list-item>
@@ -175,25 +110,36 @@ const progress_color = computed(() => {
                 <n-popover trigger="hover" placement="top-start">
                   <template #trigger>
                     <n-statistic label="ipv4 ⬇">
-                      {{ mb2gb(account_flow?.data.v4) }} GB
+                      {{
+                        mb2gb(
+                          store.userDashboard
+                            .internetDownFlow,
+                        )
+                      }} GB
                     </n-statistic>
                   </template>
-                  {{ account_flow?.data.v4 }} MB
+                  {{ store.userDashboard.internetDownFlow }} MB
                 </n-popover>
               </n-gi>
               <n-gi>
                 <n-popover trigger="hover" placement="top-start">
                   <template #trigger>
                     <n-statistic label="ipv6 ⬇">
-                      {{ mb2gb(account_flow?.data.v6) }} GB
+                      {{
+                        mb2gb(
+                          store.userDashboard
+                            .chinanetDownFlow,
+                        )
+                      }} GB
                     </n-statistic>
                   </template>
-                  {{ account_flow?.data.v6 }} MB
+                  {{ store.userDashboard.chinanetDownFlow }} MB
                 </n-popover>
               </n-gi>
             </n-grid>
           </template>
-          当前剩余 ipv4 下行流量：{{ remain_flow }} GB，大概是
+          当前剩余 ipv4 下行流量：{{ mb2gb(store.userDashboard.leftFlow) }}
+          GB，大概是
           {{ remain_percentage }} %
         </n-thing>
       </n-list-item>
@@ -201,7 +147,12 @@ const progress_color = computed(() => {
         <n-thing title="Tips" content-style="margin-top: 10px;">
           <template #description>
             <p>ipv6 上下行，ipv4 上行都是不计费的~</p>
-            <p>ipv4 下行超出 120 GB 的部分大约 0.6 RMB/GB</p>
+            <p>
+              ipv4 下行超出 {{ mb2gb(store.userDashboard.userGroup.flowStart) }}
+              GB 的部分大约 {{ store.userDashboard.userGroup.flowRate }}
+              RMB/MB，即 {{ store.userDashboard.userGroup.flowRate * 1024 }}
+              RMB/GB
+            </p>
           </template>
         </n-thing>
       </n-list-item>

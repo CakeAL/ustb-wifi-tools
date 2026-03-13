@@ -10,12 +10,11 @@ import {
 import { useLoadingBar, useMessage } from "naive-ui";
 import { onMounted, ref, watch } from "vue";
 import { railStyle } from "../helper";
-import { store } from "../store";
+import { store, UserDashboard } from "../store";
 import { check_update } from "../update";
 
 const loadingBar = useLoadingBar();
 const pop_message = useMessage();
-const sessionid = ref<string>("");
 const user_name = ref<string>("");
 const password = ref<string>("");
 const account = ref<[string, string]>(["", ""]);
@@ -63,7 +62,6 @@ const handleSelect = (key: number) => {
 const check_login_state = async () => {
   let res = (await invoke("get_stored_cookie_str")) as string;
   if (res.length > 0) {
-    sessionid.value = res;
     login_state.value = true;
   }
 };
@@ -80,7 +78,7 @@ const get_cookies = async () => {
   button_disabled.value = true;
   let has_error = false;
 
-  sessionid.value = (await invoke("get_cookie", {
+  let user_dashboard = (await invoke("get_cookie", {
     userName: user_name.value,
     password: password.value,
     viaVpn: login_via_vpn.value,
@@ -104,6 +102,10 @@ const get_cookies = async () => {
         login_state.value = false;
       }
     })) as string;
+
+  if (user_dashboard.length > 0) {
+    store.userDashboard = JSON.parse(user_dashboard) as UserDashboard;
+  }
 };
 
 const logout = async () => {
