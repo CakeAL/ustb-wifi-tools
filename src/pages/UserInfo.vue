@@ -57,7 +57,7 @@ const progress_color = computed(() => {
           content-style="margin-top: 10px;"
         >
           <template #description>
-            <n-grid x-gap="12" :cols="4">
+            <n-grid x-gap="12" :cols="2">
               <n-gi>
                 <p>用户类别:</p>
                 <n-tag :bordered="false" type="info">

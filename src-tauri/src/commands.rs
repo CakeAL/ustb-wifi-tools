@@ -46,7 +46,7 @@ pub async fn get_cookie(
     if user_name.starts_with("local") {
         if !app_state.setting.read().await.has_local_account(&user_name) {
             return Err("本地账号不存在".to_string());
-    }   
+        }
         *app_state.user_type.write().await = UserType::LocalUser;
         *app_state.cookie_str.write().await = Some("local".to_string());
         return Ok(Some("local".to_string()));
@@ -104,7 +104,9 @@ pub async fn logout(
 }
 
 #[tauri::command(async)]
-pub async fn refresh_user_dashboard(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
+pub async fn refresh_user_dashboard(
+    app_state: tauri::State<'_, AppState>,
+) -> Result<String, String> {
     let cookie_str = get_cookie_str(&app_state).await?;
     let user_type = *app_state.user_type.read().await;
     if let UserType::LocalUser = user_type {
@@ -122,30 +124,19 @@ pub async fn load_month_pay(app: tauri::AppHandle, year: u16) -> Result<String, 
     let app_state = app.state::<AppState>();
     let cookie_str = get_cookie_str(&app_state).await?;
     let user_type = *app_state.user_type.read().await;
-    if let UserType::LocalUser = user_type {
-        let month_pay_info = app_state
-            .cur_account
-            .read()
-            .await
-            .get_local_month_pay(&app, year)
-            .map_err(|e| e.to_string())?;
-        return Ok(serde_json::json!(month_pay_info).to_string());
-    }
+    // if let UserType::LocalUser = user_type {
+    //     let month_pay_info = app_state
+    //         .cur_account
+    //         .read()
+    //         .await
+    //         .get_local_month_pay(&app, year)
+    //         .map_err(|e| e.to_string())?;
+    //     return Ok(serde_json::json!(month_pay_info).to_string());
+    // }
 
-    let mut month_pay_info = match get_month_pay(&cookie_str, year, user_type).await {
-        Ok(Some(v)) => Ok(v),
-        Ok(None) => Err("请确认是否已经登录".to_string()),
-        Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
-    }?;
-    // 翻转一下，因为后台给的数据是倒叙的
-    month_pay_info.monthly_data.reverse();
-    if month_pay_info.monthly_data.is_empty() {
-        return Ok(serde_json::json!(month_pay_info).to_string());
-    }
-
-    // complete_month_pay_data(&mut month_pay_info, year, &cookie_str, user_type).await;
-
-    Ok(serde_json::json!(month_pay_info).to_string())
+    get_month_pay(&cookie_str, year, user_type)
+        .await
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command(async)]
@@ -383,7 +374,9 @@ pub async fn load_ip_address() -> Result<String, String> {
 }
 
 #[tauri::command(async)]
-pub async fn get_stored_cookie_str(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
+pub async fn get_stored_cookie_str(
+    app_state: tauri::State<'_, AppState>,
+) -> Result<String, String> {
     get_cookie_str(&app_state).await
 }
 

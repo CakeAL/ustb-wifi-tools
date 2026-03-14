@@ -1,4 +1,4 @@
-use std::{collections::HashMap, f64, net::Ipv6Addr, sync::LazyLock, time::Duration};
+use std::{collections::HashMap, net::Ipv6Addr, sync::LazyLock, time::Duration};
 
 use anyhow::{anyhow, Result};
 use chrono::NaiveDateTime;
@@ -11,9 +11,7 @@ use reqwest::{
 use scraper::{Html, Selector};
 use serde_json::Value;
 
-use crate::entities::{
-    AmmeterData, EveryLoginData, MacAddress, MonthPayInfo, MonthlyData, UserLoginLog, UserType,
-};
+use crate::entities::{AmmeterData, EveryLoginData, MacAddress, UserLoginLog, UserType};
 
 pub static CLIENT: LazyLock<Client> =
     LazyLock::new(|| Client::builder().no_proxy().build().unwrap_or_default());
@@ -53,7 +51,10 @@ async fn get_check_code(res: reqwest::Response) -> Result<String> {
 }
 
 // 该函数复活了
-pub async fn simulate_login(account: &str, password: &str) -> Result<(Option<String>, Option<String>)> {
+pub async fn simulate_login(
+    account: &str,
+    password: &str,
+) -> Result<(Option<String>, Option<String>)> {
     // 访问登录页
     let res = CLIENT
         .get("https://zifuwu.ustb.edu.cn/Self/login/")
@@ -115,7 +116,10 @@ pub async fn simulate_login(account: &str, password: &str) -> Result<(Option<Str
     Ok((Some(cookie_str.to_string()), user_dashboard))
 }
 
-pub async fn simulate_login_via_vpn(account: &str, password: &str) -> Result<(Option<String>,Option<String>)> {
+pub async fn simulate_login_via_vpn(
+    account: &str,
+    password: &str,
+) -> Result<(Option<String>, Option<String>)> {
     // 访问 lib webvpn
     let res = CLIENT.get("https://elib.ustb.edu.cn/login").send().await?;
     let res_header = res.headers().clone();
@@ -231,73 +235,21 @@ pub async fn get_user_dashboard(cookie_str: &str, user_type: UserType) -> Result
     Ok(res)
 }
 
-pub async fn get_month_pay(
-    cookie_str: &str,
-    year: u16,
-    user_type: UserType,
-) -> Result<Option<MonthPayInfo>> {
+pub async fn get_month_pay(cookie_str: &str, year: u16, user_type: UserType) -> Result<String> {
     let url = if !matches!(user_type, UserType::ViaVpn) {
-        "http://202.204.60.7:8080/MonthPayAction.action"
+        "https://zifuwu.ustb.edu.cn/Self/bill/getMonthPay"
     } else {
-        "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/MonthPayAction.action"
+        "https://elib.ustb.edu.cn/https/77726476706e69737468656265737421eafe4789302526456d1c8be29d51367b8ada/Self/bill/getMonthPay"
     };
-    let req = CLIENT.post(url).header("Cookie", cookie_str);
-
-    let response = req
-        .form(&[("type", 1), ("year", year)])
+    let req = CLIENT.get(url).header("Cookie", cookie_str);
+    let json_str = req
+        .query(&[("pageSize", 12), ("sortName", 0), ("year", year)])
+        .query(&[("sortOrder", "ASC")])
         .send()
         .await?
-        .text()
+        .text() 
         .await?;
-    // println!("{response}");
-    if response.contains("nav_login") {
-        return Ok(None); // Cookie无效，没有获取到account信息
-    }
-    let parsed_html = Html::parse_document(&response);
-    let redtext_selector = Selector::parse(".redtext").unwrap();
-    let redtexts = parsed_html
-        .select(&redtext_selector)
-        .flat_map(|ele| ele.text().collect::<Vec<&str>>())
-        .collect::<Vec<&str>>();
-    // println!("{:?}", redtexts); // ["0.00", "0.95", "616323", "330284.323"]
-    let monthly_data_selector = Selector::parse(".table4 > tbody > tr > td").unwrap();
-    let monthly_data_text = parsed_html
-        .select(&monthly_data_selector)
-        .flat_map(|ele| ele.text().collect::<Vec<&str>>());
-    // 不是，哥们，你这网页数据存这么多\n, \t干什么啊
-    let mut data_index = 0;
-    let mut monthly_datas = vec![];
-    let mut month_data = MonthlyData {
-        month: 0,
-        month_cost: 0.0,
-        month_used_flow: 0.0,
-        month_used_duration: 0,
-    };
-    for data in monthly_data_text {
-        // println!("{:?}", data);
-        // 依次匹配每行字符串，到7的时候设置为-1，然后+1变成0，说明再读取就到下一行了
-        match data_index {
-            0 => month_data.month = data[5..7].parse::<u8>()?,
-            4 => month_data.month_cost = data.trim().parse::<f64>()?,
-            5 => month_data.month_used_duration = data.trim().parse::<u32>()?,
-            6 => month_data.month_used_flow = data.trim().parse::<f64>()?,
-            7 => {
-                data_index = -1;
-                // println!("{:?}", month_data);
-                monthly_datas.push(month_data);
-            }
-            _ => (),
-        }
-        data_index += 1;
-    }
-    // println!("{:?}", monthly_datas);
-
-    Ok(Some(MonthPayInfo {
-        year_cost: redtexts.get(1).unwrap().parse()?,
-        year_used_duration: redtexts.get(2).unwrap().parse()?,
-        year_used_flow: redtexts.get(3).unwrap().parse()?,
-        monthly_data: monthly_datas,
-    }))
+    Ok(json_str)
 }
 
 // year_month 在 2023 年 7 月及之前是这样的形式 应该是类似于 202203

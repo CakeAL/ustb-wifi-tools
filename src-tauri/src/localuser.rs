@@ -6,7 +6,7 @@ use chrono::DateTime;
 use std::fs::{create_dir, File};
 use tauri::Manager;
 
-use crate::entities::{AppState, MonthPayInfo, UserLoginLog};
+use crate::entities::{AppState, UserLoginLog};
 use crate::utils::get_store_path;
 
 #[derive(Debug, Clone)]
@@ -236,15 +236,15 @@ impl CurrentUser {
         }
     }
 
-    pub fn get_local_month_pay(&self, app: &tauri::AppHandle, year: u16) -> Result<MonthPayInfo> {
-        let mut path = self.get_local_data_path(app)?;
-        path.push(format!("{}.json", year));
-        let mut json_file = File::open(path)?;
-        let mut buf = String::new();
-        json_file.read_to_string(&mut buf)?;
-        let value = serde_json::from_str::<MonthPayInfo>(&buf)?;
-        Ok(value)
-    }
+//     pub fn get_local_month_pay(&self, app: &tauri::AppHandle, year: u16) -> Result<MonthPayInfo> {
+//         let mut path = self.get_local_data_path(app)?;
+//         path.push(format!("{}.json", year));
+//         let mut json_file = File::open(path)?;
+//         let mut buf = String::new();
+//         json_file.read_to_string(&mut buf)?;
+//         let value = serde_json::from_str::<MonthPayInfo>(&buf)?;
+//         Ok(value)
+//     }
 }
 
 // fn get_last_day_of_month(date: &NaiveDate) -> NaiveDate {

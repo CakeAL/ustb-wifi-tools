@@ -3,7 +3,7 @@ import { onMounted, watch } from "vue";
 import { echarts, EChartsOption } from "../main";
 
 const props = defineProps<{
-  month: Array<number>;
+  month: Array<string>;
   data: Array<number>;
 }>();
 
@@ -35,7 +35,7 @@ watch(
   { deep: true },
 );
 
-function renderChart(month: Array<number>, data: Array<number>) {
+function renderChart(month: Array<string>, data: Array<number>) {
   var chartDom = document.getElementById("chart")!;
   var myChart = echarts.init(chartDom, "macarons");
   var option: EChartsOption = {
@@ -51,7 +51,7 @@ function renderChart(month: Array<number>, data: Array<number>) {
     xAxis: {
       type: "category",
       boundaryGap: false,
-      data: month.map((v) => v.toString() + "月"),
+      data: month,
     },
     yAxis: {
       type: "value",

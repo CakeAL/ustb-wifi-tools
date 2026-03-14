@@ -1,26 +1,37 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/core";
+import dayjs from "dayjs";
 import { useLoadingBar, useMessage } from "naive-ui";
 import { onMounted, ref } from "vue";
 import YearlyChart from "../components/YearlyChart.vue";
 import { mb2gb, min2day, min2hour } from "../helper";
 
-interface MonthlyData {
-  month: number;
-  month_cost: number;
-  month_used_flow: number;
-  month_used_duration: number;
+interface MonthPayData {
+  summary: Summary;
+  total: number;
+  rows: RowArray[];
 }
 
-interface YearlyData {
-  year_cost: number;
-  year_used_duration: number;
-  year_used_flow: number;
-  monthly_data: MonthlyData[];
+interface Summary {
+  USETIME: number;
+  USEBASEMONEY: number;
+  USEFLOW: number;
+  USEDMONEY: number;
 }
+
+type RowArray = [
+  number, // startTime (1769875200000)
+  number, // endTime (1772294400000)
+  string, // userType ("学生用户")
+  number, // baseMoney (0.0)
+  number, // usedMoney (0.0)
+  number, // usedTime (3615.0)
+  number, // usedFlow (22505.904)
+  number, // updateTime (1772294786000)
+];
 
 const pop_message = useMessage();
-const month_pay = ref<YearlyData | null>(null);
+const month_pay = ref<MonthPayData | null>(null);
 const year = ref<number>(
   new Date().getMonth() > 0
     ? new Date().getFullYear()
@@ -42,30 +53,26 @@ const monthly_columns = [
   {
     title: "月份",
     key: "month",
-    sorter: (row1: { month: number }, row2: { month: number }) =>
-      row1.month - row2.month,
+    render: (row: RowArray) => dayjs(row[0]).format("YY-MM"),
+    sorter: (row1: RowArray, row2: RowArray) => row1[0] - row2[0],
   },
   {
     title: "花费(元)",
     key: "month_cost",
-    sorter: (row1: { month_cost: number }, row2: { month_cost: number }) =>
-      row1.month_cost - row2.month_cost,
+    render: (row: RowArray) => row[4], // usedMoney is at index 4
+    sorter: (row1: RowArray, row2: RowArray) => row1[4] - row2[4],
   },
   {
     title: "流量(MB)",
     key: "month_used_flow",
-    sorter: (
-      row1: { month_used_flow: number },
-      row2: { month_used_flow: number },
-    ) => row1.month_used_flow - row2.month_used_flow,
+    render: (row: RowArray) => row[6], // usedFlow is at index 6
+    sorter: (row1: RowArray, row2: RowArray) => row1[6] - row2[6],
   },
   {
     title: "使用时长(分钟)",
     key: "month_used_duration",
-    sorter: (
-      row1: { month_used_duration: number },
-      row2: { month_used_duration: number },
-    ) => row1.month_used_duration - row2.month_used_duration,
+    render: (row: RowArray) => row[5], // usedTime is at index 5
+    sorter: (row1: RowArray, row2: RowArray) => row1[5] - row2[5],
   },
 ];
 
@@ -95,18 +102,17 @@ const tabValue = ref("flow");
 const handleUpdateValue = (value: string) => {
   switch (value) {
     case "cost":
-      chartData.value = month_pay?.value?.monthly_data.map(
-        (v) => v.month_cost,
+      chartData.value = month_pay?.value?.rows.map(
+        (v) => v[4], // usedMoney is at index 4
       ) as Array<number>;
       return true;
     case "flow":
-      chartData.value = month_pay?.value?.monthly_data.map((v) =>
-        mb2gb(v.month_used_flow)
+      chartData.value = month_pay?.value?.rows.map((v) => mb2gb(v[6]) // usedFlow is at index 6
       ) as Array<number>;
       return true;
     case "duration":
-      chartData.value = month_pay?.value?.monthly_data.map(
-        (v) => v.month_used_duration,
+      chartData.value = month_pay?.value?.rows.map(
+        (v) => v[5], // usedTime is at index 5
       ) as Array<number>;
       return true;
   }
@@ -128,17 +134,17 @@ const handleUpdateValue = (value: string) => {
         <n-grid x-gap="12" :cols="3">
           <n-gi>
             <n-statistic label="总共花费">
-              {{ month_pay?.year_cost.toFixed(2) }} 元
+              {{ month_pay?.summary.USEDMONEY }} 元
             </n-statistic>
           </n-gi>
           <n-gi>
             <n-popover trigger="hover" placement="top-start">
               <template #trigger>
                 <n-statistic label="使用流量">
-                  {{ mb2gb(month_pay?.year_used_flow) }} GB
+                  {{ mb2gb(month_pay?.summary.USEFLOW) }} GB
                 </n-statistic>
               </template>
-              {{ month_pay?.year_used_flow }} MB
+              {{ month_pay?.summary.USEFLOW }} MB
             </n-popover>
           </n-gi>
           <n-gi>
@@ -147,14 +153,14 @@ const handleUpdateValue = (value: string) => {
                 <n-statistic label="使用时长">
                   {{
                     min2hour(
-                      month_pay?.year_used_duration,
+                      month_pay?.summary.USETIME,
                     )
                   }} 小时
                 </n-statistic>
               </template>
-              {{ month_pay?.year_used_duration }} 分钟，约合
-              {{ min2hour(month_pay?.year_used_duration) }} 小时，{{
-                min2day(month_pay?.year_used_duration)
+              {{ month_pay?.summary.USETIME }} 分钟，约合
+              {{ min2hour(month_pay?.summary.USETIME) }} 小时，{{
+                min2day(month_pay?.summary.USETIME)
               }}
               天（不同设备使用时长会叠加）。
             </n-popover>
@@ -173,19 +179,18 @@ const handleUpdateValue = (value: string) => {
         </n-tab-pane>
       </n-tabs>
       <YearlyChart
-        :month="month_pay?.monthly_data.map((v) => v.month) ?? []"
+        :month="month_pay?.rows.map((v) => dayjs(v[0]).format('YY-MM')) ?? []"
         :data="chartData"
         style="margin-top: 5px"
       >
       </YearlyChart>
       <n-data-table
         :columns="monthly_columns"
-        :data="month_pay?.monthly_data"
+        :data="month_pay?.rows"
         style="margin-top: 12px"
       />
     </div>
   </div>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

@@ -14,7 +14,7 @@ pub async fn update_ammeter(
 ) -> Result<(Vec<RemainingElectricity>, String)> {
     let mut buf = vec![];
     let mut file = OpenOptions::new()
-        .truncate(true)
+        .create(true)
         .write(true)
         .read(true)
         .open(&file_path)
