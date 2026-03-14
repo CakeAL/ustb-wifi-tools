@@ -22,7 +22,7 @@ interface Summary {
 type RowArray = [
   number, // startTime (1769875200000)
   number, // endTime (1772294400000)
-  string, // userType ("学生用户")
+  string, // userType ("")
   number, // baseMoney (0.0)
   number, // usedMoney (0.0)
   number, // usedTime (3615.0)
@@ -107,8 +107,7 @@ const handleUpdateValue = (value: string) => {
       ) as Array<number>;
       return true;
     case "flow":
-      chartData.value = month_pay?.value?.rows.map((v) => mb2gb(v[6]) // usedFlow is at index 6
-      ) as Array<number>;
+      chartData.value = month_pay?.value?.rows.map((v) => parseFloat((v[6] / 1024).toFixed(2))) as Array<number>;
       return true;
     case "duration":
       chartData.value = month_pay?.value?.rows.map(
@@ -141,7 +140,7 @@ const handleUpdateValue = (value: string) => {
             <n-popover trigger="hover" placement="top-start">
               <template #trigger>
                 <n-statistic label="使用流量">
-                  {{ mb2gb(month_pay?.summary.USEFLOW) }} GB
+                  {{ mb2gb(month_pay?.summary.USEFLOW) }}
                 </n-statistic>
               </template>
               {{ month_pay?.summary.USEFLOW }} MB

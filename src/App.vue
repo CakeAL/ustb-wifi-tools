@@ -16,7 +16,7 @@ import OtherTools from "./pages/OtherTools.vue";
 import SpeedTest from "./pages/SpeedTest.vue";
 import UnbindMacs from "./pages/UnbindMacs.vue";
 import UserInfo from "./pages/UserInfo.vue";
-import UserLoginLog from "./pages/UserLoginLog.vue";
+import UserLoginLog from "./pages/UserOnlineLog.vue";
 import { store } from "./store";
 
 type RouteComponent = DefineComponent<{}, {}, any>;

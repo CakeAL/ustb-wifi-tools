@@ -1,12 +1,10 @@
-use std::io::Read;
 use std::path::PathBuf;
 
 use anyhow::{anyhow, Result};
-use chrono::DateTime;
-use std::fs::{create_dir, File};
+use std::fs::create_dir;
 use tauri::Manager;
 
-use crate::entities::{AppState, UserLoginLog};
+use crate::entities::AppState;
 use crate::utils::get_store_path;
 
 #[derive(Debug, Clone)]
@@ -169,82 +167,82 @@ impl CurrentUser {
     //     Ok(res)
     // }
 
-    pub fn get_local_data(
-        &self,
-        app: &tauri::AppHandle,
-        start_date: i64,
-        end_date: Option<i64>,
-    ) -> Result<Option<UserLoginLog>> {
-        let start_date_string = DateTime::from_timestamp(start_date, 0)
-            .unwrap()
-            .date_naive()
-            .format("%Y-%m");
-        let mut path = self.get_local_data_path(app)?;
-        path.push(format!("{}.json", start_date_string));
-        let mut json_file = File::open(path)?;
-        let mut buf = String::new();
-        json_file.read_to_string(&mut buf)?;
-        let value = serde_json::from_str::<UserLoginLog>(&buf)?;
-        if let Some(mut end_date) = end_date {
-            if end_date == start_date {
-                end_date += 24 * 3600;
-            }
-            let (ipv4_up, ipv4_down, ipv6_up, ipv6_down, used_flow, cost, used_duration, every) =
-                value
-                    .every_login_data
-                    .into_iter()
-                    .filter(|data| data.offline_time >= start_date && data.offline_time < end_date)
-                    .fold(
-                        (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, Vec::new()), // 初始值
-                        |(
-                            ipv4_up,
-                            ipv4_down,
-                            ipv6_up,
-                            ipv6_down,
-                            used_flow,
-                            cost,
-                            used_duration,
-                            mut every,
-                        ),
-                         data| {
-                            // 将每个 `data` 累加到对应的变量
-                            every.push(data.clone());
-                            (
-                                ipv4_up + data.ipv4_up,
-                                ipv4_down + data.ipv4_down,
-                                ipv6_up + data.ipv6_up,
-                                ipv6_down + data.ipv6_down,
-                                used_flow + data.used_flow,
-                                cost + data.cost,
-                                used_duration + data.used_duration,
-                                every,
-                            )
-                        },
-                    );
-            Ok(Some(UserLoginLog {
-                ipv4_up,
-                ipv4_down,
-                ipv6_up,
-                ipv6_down,
-                used_flow,
-                cost,
-                used_duration,
-                every_login_data: every,
-            }))
-        } else {
-            Ok(Some(value))
-        }
-    }
+    // pub fn get_local_data(
+    //     &self,
+    //     app: &tauri::AppHandle,
+    //     start_date: i64,
+    //     end_date: Option<i64>,
+    // ) -> Result<Option<UserLoginLog>> {
+    //     let start_date_string = DateTime::from_timestamp(start_date, 0)
+    //         .unwrap()
+    //         .date_naive()
+    //         .format("%Y-%m");
+    //     let mut path = self.get_local_data_path(app)?;
+    //     path.push(format!("{}.json", start_date_string));
+    //     let mut json_file = File::open(path)?;
+    //     let mut buf = String::new();
+    //     json_file.read_to_string(&mut buf)?;
+    //     let value = serde_json::from_str::<UserLoginLog>(&buf)?;
+    //     if let Some(mut end_date) = end_date {
+    //         if end_date == start_date {
+    //             end_date += 24 * 3600;
+    //         }
+    //         let (ipv4_up, ipv4_down, ipv6_up, ipv6_down, used_flow, cost, used_duration, every) =
+    //             value
+    //                 .every_login_data
+    //                 .into_iter()
+    //                 .filter(|data| data.offline_time >= start_date && data.offline_time < end_date)
+    //                 .fold(
+    //                     (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, Vec::new()), // 初始值
+    //                     |(
+    //                         ipv4_up,
+    //                         ipv4_down,
+    //                         ipv6_up,
+    //                         ipv6_down,
+    //                         used_flow,
+    //                         cost,
+    //                         used_duration,
+    //                         mut every,
+    //                     ),
+    //                      data| {
+    //                         // 将每个 `data` 累加到对应的变量
+    //                         every.push(data.clone());
+    //                         (
+    //                             ipv4_up + data.ipv4_up,
+    //                             ipv4_down + data.ipv4_down,
+    //                             ipv6_up + data.ipv6_up,
+    //                             ipv6_down + data.ipv6_down,
+    //                             used_flow + data.used_flow,
+    //                             cost + data.cost,
+    //                             used_duration + data.used_duration,
+    //                             every,
+    //                         )
+    //                     },
+    //                 );
+    //         Ok(Some(UserLoginLog {
+    //             ipv4_up,
+    //             ipv4_down,
+    //             ipv6_up,
+    //             ipv6_down,
+    //             used_flow,
+    //             cost,
+    //             used_duration,
+    //             every_login_data: every,
+    //         }))
+    //     } else {
+    //         Ok(Some(value))
+    //     }
+    // }
 
-//     pub fn get_local_month_pay(&self, app: &tauri::AppHandle, year: u16) -> Result<MonthPayInfo> {
-//         let mut path = self.get_local_data_path(app)?;
-//         path.push(format!("{}.json", year));
-//         let mut json_file = File::open(path)?;
-//         let mut buf = String::new();
-//         json_file.read_to_string(&mut buf)?;
-//         let value = serde_json::from_str::<MonthPayInfo>(&buf)?;
-//         Ok(value)
-//     }
+    //     pub fn get_local_month_pay(&self, app: &tauri::AppHandle, year: u16) -> Result<MonthPayInfo> {
+    //         let mut path = self.get_local_data_path(app)?;
+    //         path.push(format!("{}.json", year));
+    //         let mut json_file = File::open(path)?;
+    //         let mut buf = String::new();
+    //         json_file.read_to_string(&mut buf)?;
+    //         let value = serde_json::from_str::<MonthPayInfo>(&buf)?;
+    //         Ok(value)
+    //     }
 }
 
 // fn get_last_day_of_month(date: &NaiveDate) -> NaiveDate {

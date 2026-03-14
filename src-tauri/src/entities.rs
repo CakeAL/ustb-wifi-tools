@@ -3,56 +3,11 @@ use tokio::sync::RwLock;
 
 use crate::{localuser::CurrentUser, setting::Setting};
 
-// #[derive(Debug, Serialize, Deserialize)]
-// pub struct Flow {
-//     pub v4: f64,
-//     pub v6: f64,
-// }
-
-// #[derive(Debug, Serialize, Deserialize)]
-// pub struct UserFlow {
-//     pub result: i32,
-//     pub data: Flow,
-// }
-
-// #[derive(Debug, Serialize, Deserialize)]
-// pub struct GetUserFlowFailed {
-//     pub result: i32,
-//     pub msg: String,
-// }
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Account {
     pub user_name: String,
     pub password: String,
     pub code: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct UserLoginLog {
-    pub ipv4_up: f64,
-    pub ipv4_down: f64,
-    pub ipv6_up: f64,
-    pub ipv6_down: f64,
-    pub used_flow: f64, // 实际上就是ipv4下行
-    pub cost: f64,
-    pub used_duration: u32,
-    pub every_login_data: Vec<EveryLoginData>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct EveryLoginData {
-    pub online_time: i64, // 时间戳，UTC
-    pub offline_time: i64,
-    pub used_duration: u32,
-    pub used_flow: f64, // 实际上就是ipv4下行
-    pub cost: f64,
-    pub ipv4_up: f64,
-    pub ipv4_down: f64,
-    pub ipv6_up: f64,
-    pub ipv6_down: f64,
-    pub ipv4_addr: String,
-    pub ipv6_addr: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

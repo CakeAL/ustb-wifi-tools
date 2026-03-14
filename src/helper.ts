@@ -24,7 +24,8 @@ export const railStyle = ({
 };
 
 export const mb2gb = (mb: number | undefined) => {
-  return parseFloat(((mb as number) / 1024).toFixed(2));
+  if (mb as number < 1024) return mb + " MB";
+  return parseFloat(((mb as number) / 1024).toFixed(2)) + " GB";
 };
 
 export const min2hour = (min: number | undefined) => {
@@ -35,8 +36,8 @@ export const min2day = (min: number | undefined) => {
   return parseFloat(((min as number) / 60 / 24).toFixed(2));
 };
 
-export const unix_format = (unix: number) => {
-  return dayjs.unix(unix - 8 * 3600).format("YYYY-MM-DD HH:mm:ss");
+export const timestamp_format = (timestamp: number) => {
+  return dayjs(timestamp).format("YYYY-MM-DD HH:mm:ss");
 };
 
 export const date_format = (unix: number) => {

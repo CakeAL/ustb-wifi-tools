@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { mb2gb, min2hour } from "../helper";
-import { UserLoginLog } from "../pages/UserLoginLog.vue";
+import { UserOnlineLogSummary } from "../pages/UserOnlineLog.vue";
 
 const props = defineProps<{
   title?: String;
-  user_log: UserLoginLog | null;
+  summary: UserOnlineLogSummary | null;
 }>();
 </script>
 
@@ -30,10 +30,10 @@ const props = defineProps<{
         </thead>
         <tbody>
           <tr>
-            <td>{{ mb2gb(user_log?.ipv4_down) }} GB</td>
-            <td>{{ mb2gb(user_log?.ipv4_up) }} GB</td>
-            <td>{{ mb2gb(user_log?.ipv6_down) }} GB</td>
-            <td>{{ mb2gb(user_log?.ipv6_up) }} GB</td>
+            <td>{{ mb2gb(summary?.INTERNETDOWNFLOW) }}</td>
+            <td>{{ mb2gb(summary?.INTERNETUPFLOW) }}</td>
+            <td>{{ mb2gb(summary?.CHINANETDOWNFLOW) }}</td>
+            <td>{{ mb2gb(summary?.CHINANETUPFLOW) }}</td>
           </tr>
           <tr>
             <td>💰 花费:</td>
@@ -42,15 +42,15 @@ const props = defineProps<{
             <td></td>
           </tr>
           <tr>
-            <td>{{ user_log?.cost.toFixed(2) }} 元</td>
+            <td>{{ summary?.COSTMONEY }} 元</td>
             <td>
               {{
                 min2hour(
-                  user_log?.used_duration,
+                  summary?.TIME,
                 )
               }} h
             </td>
-            <td>{{ user_log?.used_flow.toFixed(2) }} MB</td>
+            <td>{{ summary?.FLOW }} MB</td>
             <td></td>
           </tr>
         </tbody>

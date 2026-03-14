@@ -6,7 +6,7 @@ import { onMounted, ref } from "vue";
 import MonthlyChart from "../components/MonthlyChart.vue";
 import SummaryTable from "../components/SummaryTable.vue";
 import { mb2gb, min2hour, railStyle } from "../helper";
-import { EveryLoginData, UserLoginLog } from "./UserLoginLog.vue";
+import { EveryLoginData, UserLoginLog } from "./UserOnlineLog.vue";
 
 const pop_message = useMessage();
 const monthly_user_log = ref<Array<EveryLoginData>>([]);

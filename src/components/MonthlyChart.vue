@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, watch } from "vue";
 import { echarts, EChartsOption } from "../main";
-import { EveryLoginData } from "../pages/UserLoginLog.vue";
+import { EveryLoginData } from "../pages/UserOnlineLog.vue";
 
 const props = defineProps<{
   monthly_user_log: Array<EveryLoginData>;
