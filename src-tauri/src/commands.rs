@@ -22,7 +22,7 @@ use crate::utils::update;
 pub async fn load_user_flow(
     account: String,
     app_state: tauri::State<'_, AppState>,
-) -> Result<String, String> {
+) -> Result<String, String> { 
     let user_type = *app_state.user_type.read().await;
     match user_type {
         UserType::Normal | UserType::ViaVpn => {
@@ -182,70 +182,6 @@ pub async fn load_user_online_log(
         }
     })
 }
-
-// #[tauri::command(async)]
-// pub async fn load_monthly_login_log(
-//     app: tauri::AppHandle,
-//     start_date: i64,
-//     days: i64,
-// ) -> Result<String, String> {
-//     let app_state = app.state::<AppState>();
-//     let cookie_str = get_cookie_str(&app_state).await?;
-//     let end_date = start_date + 3600 * 24 * days;
-//     let start_date_string = DateTime::from_timestamp(start_date, 0)
-//         .unwrap()
-//         .format("%Y-%m-%d")
-//         .to_string();
-//     let end_date_string = DateTime::from_timestamp(end_date, 0)
-//         .unwrap()
-//         .format("%Y-%m-%d")
-//         .to_string();
-//     let user_type = *app_state.user_type.read().await;
-//     let res = match user_type {
-//         UserType::Normal | UserType::ViaVpn => {
-//             get_user_online_log(&cookie_str, &start_date_string, &end_date_string, user_type).await
-//         }
-//         UserType::LocalUser => {
-//             // app_state
-//             // .cur_account
-//             // .read()
-//             // .await
-//             // .get_local_data(&app, start_date, None),
-//             Err(anyhow!("NO DATA"))
-//         }
-//     };
-//     match res {
-//         Ok(Some(value)) => {
-//             let mut flow_every_day: Vec<EveryLoginData> = vec![];
-//             for i in 0..days {
-//                 let mut sum = EveryLoginData::default();
-//                 value
-//                     .every_login_data
-//                     .iter()
-//                     .filter(|a_data| {
-//                         // a_data.online_time > start_date + i * 24 * 3600
-//                         //     && a_data.online_time < start_date + (i + 1) * 24 * 3600
-//                         // 过滤，只要今天到今晚, 学校的网站上是按照下线时间算的
-//                         a_data.offline_time >= start_date + i * 24 * 3600
-//                             && a_data.offline_time < start_date + (i + 1) * 24 * 3600
-//                     })
-//                     .for_each(|data| {
-//                         sum.cost += data.cost;
-//                         sum.ipv4_down += data.ipv4_down;
-//                         sum.ipv4_up += data.ipv4_up;
-//                         sum.ipv6_down += data.ipv6_down;
-//                         sum.ipv6_up += data.ipv6_up;
-//                         sum.used_duration += data.used_duration;
-//                         sum.used_flow += data.used_flow;
-//                     });
-//                 flow_every_day.push(sum);
-//             }
-//             Ok(serde_json::json!(flow_every_day).to_string())
-//         }
-//         Ok(None) => Err("请确认是否已经登录".to_string()),
-//         Err(e) => Err(e.to_string()),
-//     }
-// }
 
 #[tauri::command(async)]
 pub async fn load_mac_address(app_state: tauri::State<'_, AppState>) -> Result<String, String> {

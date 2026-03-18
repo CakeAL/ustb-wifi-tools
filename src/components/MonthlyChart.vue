@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { onMounted, watch } from "vue";
 import { echarts, EChartsOption } from "../main";
-import { EveryLoginData } from "../pages/UserOnlineLog.vue";
+import { UserOnlineLogRow } from "../pages/UserOnlineLog.vue";
 
 const props = defineProps<{
-  monthly_user_log: Array<EveryLoginData>;
+  daily_log: Array<UserOnlineLogRow>;
 }>();
 
 const label = {
@@ -14,31 +14,31 @@ const label = {
 };
 
 onMounted(() => {
-  if (props.monthly_user_log) {
-    renderChart(props.monthly_user_log);
+  if (props.daily_log) {
+    renderChart(props.daily_log);
   }
 });
 
 watch(
   () => {
-    props.monthly_user_log;
+    props.daily_log;
   },
   () => {
-    if (props.monthly_user_log) {
-      renderChart(props.monthly_user_log);
+    if (props.daily_log) {
+      renderChart(props.daily_log);
     }
   },
   { deep: true },
 );
 
-function renderChart(monthly_user_log: Array<EveryLoginData>) {
+function renderChart(daily_log: Array<UserOnlineLogRow>) {
   var end = 0;
-  for (var i = monthly_user_log.length; i > 0; i--) {
+  for (var i = daily_log.length; i > 0; i--) {
     if (
-      monthly_user_log[i - 1].ipv4_down
-          + monthly_user_log[i - 1].ipv4_up
-          + monthly_user_log[i - 1].ipv6_down
-          + monthly_user_log[i - 1].ipv6_up
+      daily_log[i - 1].flddownflowIPV4
+          + daily_log[i - 1].fldupflowIPV4
+          + daily_log[i - 1].flddownflowIPV6
+          + daily_log[i - 1].fldupflowIPV6
         === 0
     ) {
       end++;
@@ -46,9 +46,9 @@ function renderChart(monthly_user_log: Array<EveryLoginData>) {
       break;
     }
   }
-  var monthly_user_log = monthly_user_log.slice(
+  var daily_log = daily_log.slice(
     0,
-    monthly_user_log.length - end,
+    daily_log.length - end,
   );
   var chartDom = document.getElementById("chart")!;
   var myChart = echarts.init(chartDom, "macarons");
@@ -75,7 +75,7 @@ function renderChart(monthly_user_log: Array<EveryLoginData>) {
       {
         type: "category",
         boundaryGap: false,
-        data: Array.from({ length: monthly_user_log.length }, (_, i) => {
+        data: Array.from({ length: daily_log.length }, (_, i) => {
           i = i + 1;
           return i.toString() + "日";
         }),
@@ -103,7 +103,7 @@ function renderChart(monthly_user_log: Array<EveryLoginData>) {
             },
           },
         },
-        data: monthly_user_log.map((v) => v.ipv6_up),
+        data: daily_log.map((v) => v.fldupflowIPV6),
         label: label,
         tooltip: {
           valueFormatter: (value) => Math.round(value as number) + " MB",
@@ -117,7 +117,7 @@ function renderChart(monthly_user_log: Array<EveryLoginData>) {
         emphasis: {
           focus: "series",
         },
-        data: monthly_user_log.map((v) => v.ipv6_down),
+        data: daily_log.map((v) => v.flddownflowIPV6),
         label: label,
         tooltip: {
           valueFormatter: (value) => Math.round(value as number) + " MB",
@@ -131,7 +131,7 @@ function renderChart(monthly_user_log: Array<EveryLoginData>) {
         emphasis: {
           focus: "series",
         },
-        data: monthly_user_log.map((v) => v.ipv4_up),
+        data: daily_log.map((v) => v.fldupflowIPV4),
         label: label,
         tooltip: {
           valueFormatter: (value) => Math.round(value as number) + " MB",
@@ -152,7 +152,7 @@ function renderChart(monthly_user_log: Array<EveryLoginData>) {
         emphasis: {
           focus: "series",
         },
-        data: monthly_user_log.map((v) => v.ipv4_down),
+        data: daily_log.map((v) => v.flddownflowIPV4),
         tooltip: {
           valueFormatter: (value) => Math.round(value as number) + " MB",
         },

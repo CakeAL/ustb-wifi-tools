@@ -107,7 +107,9 @@ const handleUpdateValue = (value: string) => {
       ) as Array<number>;
       return true;
     case "flow":
-      chartData.value = month_pay?.value?.rows.map((v) => parseFloat((v[6] / 1024).toFixed(2))) as Array<number>;
+      chartData.value = month_pay?.value?.rows.map((v) =>
+        parseFloat((v[6] / 1024).toFixed(2))
+      ) as Array<number>;
       return true;
     case "duration":
       chartData.value = month_pay?.value?.rows.map(

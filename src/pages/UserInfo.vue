@@ -70,7 +70,7 @@ const progress_color = computed(() => {
               <n-gi>
                 <p>当前余额:</p>
                 <n-tag :bordered="false" type="info">
-                  {{ store.userDashboard.leftMoney }}
+                  {{ store.userDashboard.leftMoney }} 元
                 </n-tag>
                 <!-- </n-gi>
               <n-gi>
@@ -115,7 +115,7 @@ const progress_color = computed(() => {
                           store.userDashboard
                             .internetDownFlow,
                         )
-                      }} GB
+                      }}
                     </n-statistic>
                   </template>
                   {{ store.userDashboard.internetDownFlow }} MB
@@ -130,7 +130,7 @@ const progress_color = computed(() => {
                           store.userDashboard
                             .chinanetDownFlow,
                         )
-                      }} GB
+                      }}
                     </n-statistic>
                   </template>
                   {{ store.userDashboard.chinanetDownFlow }} MB
@@ -138,8 +138,7 @@ const progress_color = computed(() => {
               </n-gi>
             </n-grid>
           </template>
-          当前剩余 ipv4 下行流量：{{ mb2gb(store.userDashboard.leftFlow) }}
-          GB，大概是
+          当前剩余 ipv4 下行流量：{{ mb2gb(store.userDashboard.leftFlow) }}，大概是
           {{ remain_percentage }} %
         </n-thing>
       </n-list-item>

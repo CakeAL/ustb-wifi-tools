@@ -4,7 +4,7 @@ import { UserOnlineLogSummary } from "../pages/UserOnlineLog.vue";
 
 const props = defineProps<{
   title?: String;
-  summary: UserOnlineLogSummary | null;
+  summary: UserOnlineLogSummary | undefined;
 }>();
 </script>
 

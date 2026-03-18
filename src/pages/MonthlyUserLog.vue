@@ -6,11 +6,11 @@ import { onMounted, ref } from "vue";
 import MonthlyChart from "../components/MonthlyChart.vue";
 import SummaryTable from "../components/SummaryTable.vue";
 import { mb2gb, min2hour, railStyle } from "../helper";
-import { EveryLoginData, UserLoginLog } from "./UserOnlineLog.vue";
+import { UserOnlineLog, UserOnlineLogRow } from "./UserOnlineLog.vue";
 
 const pop_message = useMessage();
-const monthly_user_log = ref<Array<EveryLoginData>>([]);
-const sum_user_log = ref<UserLoginLog | null>(null);
+const user_online_log = ref<UserOnlineLog | null>(null);
+const daily_log = ref<Array<UserOnlineLogRow>>([]);
 // 把 start_date 设置为当前月第一天0点
 const start_date = ref<number>(
   dayjs().startOf("month").startOf("day").valueOf(),
@@ -58,7 +58,6 @@ const select_show_options = [
 ];
 // let flow_max = 0;
 const loadingBar = useLoadingBar();
-const mb_gb_select = ref(false);
 
 onMounted(() => {
   get_monthly_user_log();
@@ -66,53 +65,68 @@ onMounted(() => {
 
 const get_monthly_user_log = async () => {
   loadingBar.start();
-  let res = await invoke("load_monthly_login_log", {
-    startDate: Math.floor(start_date.value / 1000) + 8 * 3600,
-    days: dayjs.unix(start_date.value / 1000).daysInMonth(),
+  let startTimestamp = Math.floor(start_date.value / 1000) + 8 * 3600;
+  let days = dayjs.unix(start_date.value / 1000).daysInMonth();
+  let endTimestamp = startTimestamp + 24 * 3600 * days;
+  let res = await invoke("load_user_online_log", {
+    startDate: startTimestamp,
+    endDate: endTimestamp,
   }).catch((err) => {
     pop_message.error(err);
     loadingBar.error();
   });
-  monthly_user_log.value = JSON.parse(res as string);
-  // 算出合计
-  sum_user_log.value = {
-    ipv4_down: monthly_user_log.value.reduce(
-      (acc, cur) => acc + cur.ipv4_down,
-      0,
-    ),
-    ipv4_up: monthly_user_log.value.reduce(
-      (acc, cur) => acc + cur.ipv4_up,
-      0,
-    ),
-    ipv6_down: monthly_user_log.value.reduce(
-      (acc, cur) => acc + cur.ipv6_down,
-      0,
-    ),
-    ipv6_up: monthly_user_log.value.reduce(
-      (acc, cur) => acc + cur.ipv6_up,
-      0,
-    ),
-    cost: monthly_user_log.value.reduce(
-      (acc, cur) => acc + cur.cost,
-      0,
-    ),
-    used_duration: monthly_user_log.value.reduce(
-      (acc, cur) => acc + cur.used_duration,
-      0,
-    ),
-    used_flow: monthly_user_log.value.reduce(
-      (acc, cur) => acc + cur.used_flow,
-      0,
-    ),
-    every_login_data: [],
-  };
-  // 找出当月使用流量最大的
-  // flow_max = -1;
-  // monthly_user_log.value.forEach((value) => {
-  //   if (value.ipv4_down > flow_max) {
-  //     flow_max = value.ipv4_down;
-  //   }
-  // })
+  user_online_log.value = JSON.parse(res as string);
+  daily_log.value = [];
+  for (let i = 0; i < days; i++) {
+    let sum: UserOnlineLogRow = {
+      area: 0,
+      chinanetDownFlow: 0,
+      chinanetUpFlow: 0,
+      costId: 0,
+      costMoney: 0,
+      costStyleId: 0,
+      extend: "",
+      flddownflowIPV4: 0,
+      flddownflowIPV6: 0,
+      fldtotalflowIPV6: 0,
+      fldupflowIPV4: 0,
+      fldupflowIPV6: 0,
+      flduserip1: "",
+      flow: 0,
+      internetDownFlow: 0,
+      internetUpFlow: 0,
+      loginTime: 0,
+      logoutTime: 0,
+      macAddress: "",
+      mainControlId: 0,
+      mutliGroupId: 0,
+      nasIp: "",
+      nasPort: 0,
+      otherFlow: 0,
+      time: 0,
+      userAddress: "",
+      userGroupId: 0,
+      userId: 0,
+      userIp: "",
+      userName: "",
+      userPhone: "",
+      userRealName: ""
+    };
+    user_online_log.value?.rows.filter((item) => {
+      return item.logoutTime >= startTimestamp * 1000 + i * 24 * 3600 * 1000
+        && item.logoutTime < startTimestamp * 1000 + (i + 1) * 24 * 3600 * 1000;
+    }).forEach((item) => {
+      sum.costMoney += item.costMoney;
+      sum.flddownflowIPV4 += item.flddownflowIPV4;
+      sum.fldupflowIPV4 += item.fldupflowIPV4;
+      sum.flddownflowIPV6 += item.flddownflowIPV6;
+      sum.fldupflowIPV6 += item.fldupflowIPV6;
+      sum.time += item.time;
+      sum.flow += item.flow;
+    });
+    daily_log.value.push(sum);
+  }
+
   // 该月1日是星期几？前面空余几个格子
   the_week_of_first_day.value = [];
   for (let i = 0; i < dayjs.unix(start_date.value / 1000).day(); i++) {
@@ -155,17 +169,17 @@ const getBackgroundColor = (data_string: string) => {
   }
 };
 
-const select_to_data = (item: EveryLoginData): string => {
+const select_to_data = (item: UserOnlineLogRow): string => {
   const fieldMap: { [key: string]: number } = {
-    ipv4_down: item.ipv4_down,
-    ipv4_up: item.ipv4_up,
-    ipv6_down: item.ipv6_down,
-    ipv6_up: item.ipv6_up,
-    ipv4: item.ipv4_down + item.ipv4_up,
-    ipv6: item.ipv6_down + item.ipv6_up,
-    all: item.ipv4_down + item.ipv4_up + item.ipv6_down + item.ipv6_up,
-    cost: item.cost,
-    used_duration: item.used_duration,
+    ipv4_down: item.flddownflowIPV4,
+    ipv4_up: item.fldupflowIPV4,
+    ipv6_down: item.flddownflowIPV6,
+    ipv6_up: item.fldupflowIPV6,
+    ipv4: item.flddownflowIPV4 + item.fldupflowIPV4,
+    ipv6: item.flddownflowIPV6 + item.fldupflowIPV6,
+    all: item.flddownflowIPV4 + item.fldupflowIPV4 + item.flddownflowIPV6 + item.fldupflowIPV6,
+    cost: item.costMoney,
+    used_duration: item.time,
   };
   return (
     fieldMap[select_show_value.value].toFixed(
@@ -179,18 +193,13 @@ const data_type = (): string => {
     return "元";
   } else if (select_show_value.value == "used_duration") {
     return "分";
-  } else if (mb_gb_select.value === true) {
-    return "MB";
-  } else {
-    return "GB";
-  }
+  } else { return "" }
 };
 
 const select_mb_or_gb = (value: string) => {
   if (
     select_show_value.value === "used_duration"
     || select_show_value.value === "cost"
-    || mb_gb_select.value === true
   ) {
     return value;
   } else {
@@ -204,12 +213,7 @@ const select_mb_or_gb = (value: string) => {
     <n-h2 prefix="bar" type="success" style="margin-top: 15px">
       <n-text type="success"> 月度使用概览 </n-text>
     </n-h2>
-    <n-date-picker
-      v-model:value="start_date"
-      type="month"
-      clearable
-      @update:value="get_monthly_user_log"
-    />
+    <n-date-picker v-model:value="start_date" type="month" clearable @update:value="get_monthly_user_log" />
     <n-tabs type="segment" animated style="margin-top: 5px">
       <n-tab-pane name="calender" tab="日历" style="padding-top: 8px">
         <n-grid :x-gap="12" :y-gap="8" :cols="7" :key="refresh">
@@ -234,24 +238,14 @@ const select_mb_or_gb = (value: string) => {
           <n-grid-item class="gray">
             <p>六</p>
           </n-grid-item>
-          <n-grid-item
-            v-for="(_, index) in the_week_of_first_day"
-            :key="index"
-            class="gray"
-          >
+          <n-grid-item v-for="(_, index) in the_week_of_first_day" :key="index" class="gray">
           </n-grid-item>
-          <n-grid-item
-            v-for="(item, index) in monthly_user_log"
-            :key="index"
-            class="day"
-            :style="
-              {
-                backgroundColor: getBackgroundColor(
-                  select_to_data(item),
-                ),
-              }
-            "
-          ><n-popover trigger="hover">
+          <n-grid-item v-for="(item, index) in daily_log" :key="index" class="day" :style="{
+            backgroundColor: getBackgroundColor(
+              select_to_data(item),
+            ),
+          }
+            "><n-popover trigger="hover">
               <template #trigger>
                 <p style="margin: 3px; line-height: 1.5em; white-space: nowrap">
                   <b>{{ index + 1 }}日</b>
@@ -271,45 +265,30 @@ const select_mb_or_gb = (value: string) => {
                 </thead>
                 <tbody>
                   <tr>
-                    <td>{{ mb2gb(item.ipv4_down) }} GB</td>
-                    <td>{{ mb2gb(item.ipv4_up) }} GB</td>
-                    <td>{{ mb2gb(item.ipv6_down) }} GB</td>
-                    <td>{{ mb2gb(item.ipv6_up) }} GB</td>
+                    <td>{{ mb2gb(item.flddownflowIPV4) }}</td>
+                    <td>{{ mb2gb(item.fldupflowIPV4) }}</td>
+                    <td>{{ mb2gb(item.flddownflowIPV6) }}</td>
+                    <td>{{ mb2gb(item.fldupflowIPV6) }}</td>
                   </tr>
                   <tr>
                     <td>花费:</td>
-                    <td>{{ item.cost.toFixed(2) }} 元</td>
+                    <td>{{ item.costMoney }} 元</td>
                     <td>使用时长:</td>
-                    <td>{{ min2hour(item.used_duration) }} h</td>
+                    <td>{{ min2hour(item.time) }} h</td>
                   </tr>
                 </tbody>
               </n-table>
             </n-popover>
           </n-grid-item>
         </n-grid>
-        <SummaryTable :user_log="sum_user_log"></SummaryTable>
+        <SummaryTable :summary="user_online_log?.summary"></SummaryTable>
         <n-grid x-gap="12" :cols="4" style="margin-top: 8px">
-          <n-gi><n-p style="line-height: 34px"
-            >选择显示在日历上的内容：</n-p></n-gi>
-          <n-gi span="2"><n-select
-              v-model:value="select_show_value"
-              :options="select_show_options"
-            /></n-gi>
-          <n-gi>
-            <n-switch
-              v-model:value="mb_gb_select"
-              :rail-style="railStyle"
-              class="my-switch"
-              style="margin-top: calc((34px - 22px) / 2)"
-            >
-              <template #checked> MB </template>
-              <template #unchecked> GB </template>
-            </n-switch>
-          </n-gi>
+          <n-gi span="2"><n-p style="line-height: 34px">选择显示在日历上的内容：</n-p></n-gi>
+          <n-gi span="2"><n-select v-model:value="select_show_value" :options="select_show_options" /></n-gi>
         </n-grid>
       </n-tab-pane>
       <n-tab-pane name="chart" tab="折线图" style="padding-top: 8px">
-        <MonthlyChart :monthly_user_log="monthly_user_log"></MonthlyChart>
+        <MonthlyChart :daily_log="daily_log"></MonthlyChart>
       </n-tab-pane>
     </n-tabs>
     <n-card title="关于统计信息：" hoverable class="my-card">
