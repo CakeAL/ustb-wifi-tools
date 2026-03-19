@@ -16,25 +16,25 @@ pub static CLIENT: LazyLock<Client> =
     LazyLock::new(|| Client::builder().no_proxy().build().unwrap_or_default());
 
 // Ciallo～(∠・ω< )⌒☆
-// 该函数已经需要登录校园网才能获取数据
-pub async fn get_load_user_flow(account: &str, cookie: &str, user_type: UserType) -> Result<Value> {
-    let url = if !matches!(user_type, UserType::ViaVpn) {
-        format!("http://202.204.48.66:801/eportal/portal/visitor/loadUserFlow?account={account}")
-    } else {
-        format!("https://elib.ustb.edu.cn/http-801/77726476706e69737468656265737421a2a713d275603c1e2a50c7face/eportal/portal/visitor/loadUserFlow?account={account}")
-    };
-    let mut req = CLIENT.get(url);
-    if matches!(user_type, UserType::ViaVpn) {
-        req = req.header("Cookie", cookie);
-    }
-    let response = req.send().await?.text().await?;
-    let re = Regex::new(r"jsonpReturn\((.*)\);")?;
-    let json_str = re
-        .captures(&response)
-        .and_then(|cap| Some(cap.get(1)?.as_str()));
-    dbg!(&json_str);
-    Ok(serde_json::from_str(json_str.unwrap())?)
-}
+// 该函数已不可用
+// pub async fn get_load_user_flow(account: &str, cookie: &str, user_type: UserType) -> Result<Value> {
+//     let url = if !matches!(user_type, UserType::ViaVpn) {
+//         format!("http://202.204.48.66:801/eportal/portal/visitor/loadUserFlow?account={account}")
+//     } else {
+//         format!("https://elib.ustb.edu.cn/http-801/77726476706e69737468656265737421a2a713d275603c1e2a50c7face/eportal/portal/visitor/loadUserFlow?account={account}")
+//     };
+//     let mut req = CLIENT.get(url);
+//     if matches!(user_type, UserType::ViaVpn) {
+//         req = req.header("Cookie", cookie);
+//     }
+//     let response = req.send().await?.text().await?;
+//     let re = Regex::new(r"jsonpReturn\((.*)\);")?;
+//     let json_str = re
+//         .captures(&response)
+//         .and_then(|cap| Some(cap.get(1)?.as_str()));
+//     dbg!(&json_str);
+//     Ok(serde_json::from_str(json_str.unwrap())?)
+// }
 
 // 获取登录页中的 check_code 用来提交 post 请求使用
 async fn get_check_code(res: reqwest::Response) -> Result<String> {

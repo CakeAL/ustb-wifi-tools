@@ -1,6 +1,5 @@
 import dayjs from "dayjs";
 import { CSSProperties } from "vue";
-
 export const railStyle = ({
   focused,
   checked,

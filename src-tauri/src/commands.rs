@@ -1,10 +1,10 @@
-use std::{collections::HashSet, net::IpAddr, time::Duration};
+use std::{net::IpAddr, time::Duration};
 
 use anyhow::anyhow;
 use chrono::DateTime;
 use reqwest::Client;
 use serde::Serialize;
-use tauri::{ipc::Channel, utils::config::WindowConfig, Manager};
+use tauri::{Manager, ipc::Channel, utils::config::WindowConfig};
 
 use crate::{
     electric_bill::update_ammeter,
@@ -12,29 +12,29 @@ use crate::{
     localuser::CurrentUser,
     requests::*,
     setting::Setting,
-    utils::{get_cookie_str, get_store_path},
+    utils::{get_cookie_str, get_store_path, webvpn},
 };
 
 #[cfg(not(any(target_os = "android", target_os = "linux")))]
 use crate::utils::update;
 
-#[tauri::command(async)]
-pub async fn load_user_flow(
-    account: String,
-    app_state: tauri::State<'_, AppState>,
-) -> Result<String, String> {
-    let user_type = *app_state.user_type.read().await;
-    match user_type {
-        UserType::Normal | UserType::ViaVpn => {
-            let cookie = get_cookie_str(&app_state).await?;
-            get_load_user_flow(&account, &cookie, user_type)
-                .await
-                .map_err(|e| format!("Error while loading user flow: {}", e))
-                .map(|res| res.to_string())
-        }
-        UserType::LocalUser => Err("本地存储不适用此功能".to_string()),
-    }
-}
+// #[tauri::command(async)]
+// pub async fn load_user_flow(
+//     account: String,
+//     app_state: tauri::State<'_, AppState>,
+// ) -> Result<String, String> {
+//     let user_type = *app_state.user_type.read().await;
+//     match user_type {
+//         UserType::Normal | UserType::ViaVpn => {
+//             let cookie = get_cookie_str(&app_state).await?;
+//             get_load_user_flow(&account, &cookie, user_type)
+//                 .await
+//                 .map_err(|e| format!("Error while loading user flow: {}", e))
+//                 .map(|res| res.to_string())
+//         }
+//         UserType::LocalUser => Err("本地存储不适用此功能".to_string()),
+//     }
+// }
 
 #[tauri::command(async)]
 pub async fn get_cookie(
@@ -547,6 +547,22 @@ pub async fn get_ip_location(ip: String) -> Result<String, String> {
     let text = response.text().await.map_err(|e| e.to_string())?;
 
     Ok(text)
+}
+
+#[tauri::command]
+pub fn translate_up(raw_url: String) -> String {
+    match webvpn::translate_up(&raw_url) {
+        Ok(res) => res,
+        Err(e) => e.to_string(),
+    }
+}
+
+#[tauri::command]
+pub fn translate_down(vpn_url: String) -> String {
+    match webvpn::translate_down(&vpn_url) {
+        Ok(res) => res,
+        Err(e) => e.to_string(),
+    }
 }
 
 // #[tauri::command(async)]

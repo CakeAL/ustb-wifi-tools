@@ -43,7 +43,7 @@ pub fn run() {
             logout,
             manually_check_update,
             load_ammeter,
-            load_user_flow,
+            // load_user_flow,
             submit_login_ustb_wifi,
             return_os_type,
             set_background_image,
@@ -59,7 +59,9 @@ pub fn run() {
             set_current_user_name,
             create_local_user,
             // down_historical_data,
-            load_electric_bill
+            load_electric_bill,
+            translate_up,
+            translate_down,
         ])
         .setup(|app| {
             // {
