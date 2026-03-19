@@ -61,7 +61,7 @@ pub fn translate_up(raw_url: &str) -> Result<String> {
     }
     let path = parsed.path();
 
-    let encrypted = encrypt_host(&host);
+    let encrypted = encrypt_host(host);
 
     Ok(format!("{}/{}/{}{}", VPN_HOST, protocol, encrypted, path))
 }

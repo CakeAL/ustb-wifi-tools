@@ -61,6 +61,8 @@ const load_online_list = async () => {
     (await invoke("load_online_list").catch((err) =>
       pop_message.error(err)
     )) as string;
+      console.log(res);
+
   online_list.value = JSON.parse(res);
 };
 
@@ -68,7 +70,7 @@ const load_login_history = async () => {
   let res =
     (await invoke("load_login_history").catch((err) =>
       pop_message.error(err)
-    )) as string;
+    )) as string;  
   login_history.value = JSON.parse(res);
 };
 
@@ -230,8 +232,8 @@ const progress_color = computed(() => {
                   <td>{{ user.loginTime }}</td>
                   <td>{{ user.ip }}</td>
                   <td>{{ user.mac }}</td>
-                  <td>{{ user.useTime }}</td>
-                  <td>{{ user.downFlow }}</td>
+                  <td>{{ (parseInt(user.useTime) / 60).toFixed(0) }}</td>
+                  <td>{{ (parseInt(user.downFlow) / 1024).toFixed(3) }}</td>
                   <td>{{ user.hostName }}</td>
                   <td>{{ user.terminalType }}</td>
                   <td>

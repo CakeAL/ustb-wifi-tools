@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.3.0] - 2026-03-19
+
+本次更新可能导致以前的记录的config无法再使用。
+
+### Fixed
+
+- 适配校园网新后台
+
+### Added
+
+- 添加当前账号使用详情中的当前在线和近期记录
+
+### Changed
+
+- 删掉了本地账户功能
+- 删掉了其他工具中的查别人流量功能
+- WebVPN 转换改为本地转换
+
 ## [1.2.1] - 2025-03-27
 
 ### Fixed
@@ -223,6 +241,7 @@
 
 初始发布版本
 
+[1.3.0]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.3.0
 [1.2.1]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.2.1
 [1.2.0]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.2.0
 [1.1.4]: https://github.com/CakeAL/ustb-wifi-tools/releases/tag/v1.1.4

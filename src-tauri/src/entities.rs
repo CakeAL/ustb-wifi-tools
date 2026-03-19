@@ -13,7 +13,7 @@ pub struct Account {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MacList {
     total: i32,
-    rows: Vec<Vec<String>>,
+    pub rows: Vec<Vec<String>>,
 }
 
 #[derive(Default, Clone, Copy)]
