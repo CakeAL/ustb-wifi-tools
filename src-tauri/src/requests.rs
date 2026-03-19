@@ -10,7 +10,7 @@ use reqwest::{
 use scraper::{Html, Selector};
 use serde_json::Value;
 
-use crate::entities::{AmmeterData, MacAddress, UserType};
+use crate::entities::{AmmeterData, MacList, UserType};
 
 pub static CLIENT: LazyLock<Client> =
     LazyLock::new(|| Client::builder().no_proxy().build().unwrap_or_default());
@@ -283,79 +283,79 @@ pub async fn get_user_online_log(
 pub async fn get_mac_address(
     cookie_str: &str,
     user_type: UserType,
-    mac_custom_name: &HashMap<String, String>,
-) -> Result<Option<Vec<MacAddress>>> {
+) -> Result<(MacList, String)> {
     let url = if !matches!(user_type, UserType::ViaVpn) {
-        "http://202.204.60.7:8080/nav_unBandMacJsp"
+        "https://zifuwu.ustb.edu.cn/Self/service/myMac"
     } else {
-        "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/nav_unBandMacJsp"
+        "https://elib.ustb.edu.cn/https/77726476706e69737468656265737421eafe4789302526456d1c8be29d51367b8ada/Self/service/myMac"
+    };
+    // ajaxCsrfToken: 'a91fd92b-32c9-4867-bd70-297c76942f99'
+    let req = CLIENT.get(url).header("Cookie", cookie_str);
+    let res = req.send().await?.text().await?;
+    let ajax_csrf_token = Regex::new(r#"ajaxCsrfToken: '(.*?)'"#)
+        .unwrap()
+        .captures(&res)
+        .and_then(|cap| Some(cap.get(1)?.as_str().to_owned()))
+        .ok_or(anyhow!("ajaxCsrfToken not found"))?;
+
+    let url = if !matches!(user_type, UserType::ViaVpn) {
+        "https://zifuwu.ustb.edu.cn/Self/service/getMacList"
+    } else {
+        "https://elib.ustb.edu.cn/https/77726476706e69737468656265737421eafe4789302526456d1c8be29d51367b8ada/Self/service/getMacList"
     };
     let req = CLIENT.get(url).header("Cookie", cookie_str);
-    let response = req.send().await?.text().await?;
-    // println!("{response}");
-    if response.contains("nav_login") {
-        return Ok(None); // Cookie无效，没有获取到account信息
-    }
-    let parsed_html = Html::parse_document(&response);
-    let device_name_selector =
-        Selector::parse(".row > .v-col:first-of-type input[type=\"text\"]").unwrap();
-    let device_names_value = parsed_html
-        .select(&device_name_selector)
-        .flat_map(|ele| ele.value().attr("value"))
-        .collect::<Vec<&str>>();
-    let mac_address_selector =
-        Selector::parse(".row > .v-col:nth-of-type(2) input[type=\"text\"][name=\"macs\"]")
-            .unwrap();
-    let mac_address_value = parsed_html
-        .select(&mac_address_selector)
-        .flat_map(|ele| ele.value().attr("value"))
-        .collect::<Vec<&str>>();
-    // dbg!(device_names);
-    // dbg!(mac_address);
-    let mac_address = device_names_value
-        .iter()
-        .zip(mac_address_value.iter())
-        .map(|(&device_name, &mac_address)| MacAddress {
-            device_name: device_name.to_string(),
-            mac_address: mac_address.to_string(),
-            custom_name: mac_custom_name
-                .get(mac_address)
-                .cloned()
-                .unwrap_or_default(),
-        })
-        .collect::<Vec<_>>();
-    Ok(Some(mac_address))
+    let res = req.send().await?.text().await?;
+    let list = serde_json::from_str::<MacList>(&res)?;
+    Ok((list, ajax_csrf_token))
 }
 
-// 这里传进来的是 **不需要** 解绑的macs
-pub async fn unbind_macs(
+pub async fn update_terminal_name(
     cookie_str: &str,
-    macs: &Vec<String>,
     user_type: UserType,
-) -> Result<Option<()>> {
+    mac_address: &str,
+    terminal_name: &str,
+    ajax_csrf_token: &str,
+) -> Result<String> {
     let url = if !matches!(user_type, UserType::ViaVpn) {
-        "http://202.204.60.7:8080/nav_unbindMACAction.action"
+        "https://zifuwu.ustb.edu.cn/Self/service/updateTerminalName"
     } else {
-        "https://elib.ustb.edu.cn/http-8080/77726476706e69737468656265737421a2a713d275603c1e2858c7fb/nav_unbindMACAction.action"
+        "https://elib.ustb.edu.cn/https/77726476706e69737468656265737421eafe4789302526456d1c8be29d51367b8ada/Self/service/updateTerminalName"
     };
-    let mut mac_str = String::new();
-    for mac in macs {
-        mac_str = format!("{};{}", mac, mac_str);
-    }
-    let _ = mac_str.pop(); // 删末尾分号
-    dbg!(&mac_str);
+
     let req = CLIENT.post(url).header("Cookie", cookie_str);
     let response = req
-        .form(&[("macStr", mac_str), ("Submit", "解绑".to_string())])
+        .form(&[
+            ("macAddress", mac_address),
+            ("terminalName", terminal_name),
+            ("ajaxCsrfToken", ajax_csrf_token),
+        ])
         .send()
         .await?
         .text()
         .await?;
-    if response.contains("nav_login") {
-        return Ok(None); // Cookie无效，没有获取到account信息
-    }
+    Ok(response)
+}
 
-    Ok(Some(()))
+pub async fn unbind_mac(
+    cookie_str: &str,
+    user_type: UserType,
+    mac: &str,
+    ajax_csrf_token: &str
+) -> Result<()> {
+    let url = if !matches!(user_type, UserType::ViaVpn) {
+        "https://zifuwu.ustb.edu.cn/Self/service/unbindmac"
+    } else {
+        "https://elib.ustb.edu.cn/https/77726476706e69737468656265737421eafe4789302526456d1c8be29d51367b8ada/Self/service/unbindmac"
+    };
+    let req = CLIENT.get(url).header("Cookie", cookie_str);
+    req.query(&[
+        ("mac", mac),
+        ("ajaxCsrfToken", ajax_csrf_token),
+    ])
+    .send()
+    .await?;
+
+    Ok(())
 }
 
 pub async fn get_address() -> Result<Vec<String>> {

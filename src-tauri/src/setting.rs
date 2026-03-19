@@ -1,5 +1,4 @@
 use std::{
-    collections::HashMap,
     fs::{self, File, OpenOptions},
     io::{Read, Write},
     path::PathBuf,
@@ -14,7 +13,6 @@ use crate::utils::get_config_path;
 pub struct Setting {
     pub account: Vec<(String, String)>, // (username, password)
     pub ammeter_number: Option<u32>,
-    pub mac_custom_name: HashMap<String, String>,
     pub background_image_path: Option<String>,
     pub background_transparence: Option<u32>,
     pub background_blur: Option<u32>,
@@ -113,15 +111,6 @@ impl Setting {
 
     pub fn set_background_blur(&mut self, background_blur: u32) {
         self.background_blur = Some(background_blur);
-    }
-
-    pub fn set_mac_custom_name(&mut self, mac: &str, name: &str) {
-        self.mac_custom_name
-            .entry(mac.to_owned())
-            .and_modify(|n| {
-                *n = name.to_owned();
-            })
-            .or_insert(name.to_string());
     }
 
     pub fn set_collapsed(&mut self, collapsed: bool) {

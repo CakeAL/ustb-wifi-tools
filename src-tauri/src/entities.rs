@@ -11,10 +11,9 @@ pub struct Account {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MacAddress {
-    pub device_name: String, 
-    pub mac_address: String,
-    pub custom_name: String,
+pub struct MacList {
+    total: i32,
+    rows: Vec<Vec<String>>,
 }
 
 #[derive(Default, Clone, Copy)]

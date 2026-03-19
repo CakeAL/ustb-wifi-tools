@@ -22,7 +22,7 @@ use crate::utils::update;
 pub async fn load_user_flow(
     account: String,
     app_state: tauri::State<'_, AppState>,
-) -> Result<String, String> { 
+) -> Result<String, String> {
     let user_type = *app_state.user_type.read().await;
     match user_type {
         UserType::Normal | UserType::ViaVpn => {
@@ -190,33 +190,34 @@ pub async fn load_mac_address(app_state: tauri::State<'_, AppState>) -> Result<S
     if let UserType::LocalUser = user_type {
         return Err("本地存储不适用此功能".to_string());
     }
-    let mac_custom_address = app_state.setting.read().await.mac_custom_name.clone();
 
-    match get_mac_address(&cookie_str, user_type, &mac_custom_address).await {
-        Ok(Some(v)) => Ok(serde_json::json!(v).to_string()),
-        Ok(None) => Err("请确认是否已经登录".to_string()),
-        Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
-    }
+    get_mac_address(&cookie_str, user_type)
+        .await
+        .map(|res| serde_json::to_string(&res).unwrap_or_default())
+        .map_err(|e| e.to_string())
 }
 
-#[tauri::command(async)]
+#[tauri::command]
 pub async fn set_mac_custom_name(
     app_state: tauri::State<'_, AppState>,
-    app_handle: tauri::AppHandle,
-    mac: &str,
-    name: &str,
-) -> Result<(), String> {
-    app_state
-        .setting
-        .write()
-        .await
-        .set_mac_custom_name(mac, name);
-    app_state
-        .setting
-        .write()
-        .await
-        .write_setting(&app_handle)
-        .map_err(|e| e.to_string())
+    mac_address: String,
+    terminal_name: String,
+    ajax_csrf_token: String,
+) -> Result<String, String> {
+    let cookie_str = get_cookie_str(&app_state).await?;
+    let user_type = *app_state.user_type.read().await;
+    if let UserType::LocalUser = user_type {
+        return Err("本地存储不适用此功能".to_string());
+    }
+    update_terminal_name(
+        &cookie_str,
+        user_type,
+        &mac_address,
+        &terminal_name,
+        &ajax_csrf_token,
+    )
+    .await
+    .map_err(|e| e.to_string())
 }
 
 #[derive(Debug, Serialize)]
@@ -253,20 +254,20 @@ pub fn get_current_device_mac() -> Result<String, String> {
 
 // 传进来的应该是不需要解绑的，提醒。
 #[tauri::command(async)]
-pub async fn do_unbind_macs(
+pub async fn do_unbind_mac(
     app_state: tauri::State<'_, AppState>,
-    macs: Vec<String>,
+    mac: String,
+    ajax_csrf_token: String,
 ) -> Result<(), String> {
     let cookie_str = get_cookie_str(&app_state).await?;
     let user_type = *app_state.user_type.read().await;
     if let UserType::LocalUser = user_type {
         return Err("本地存储不适用此功能".to_string());
     }
-    match unbind_macs(&cookie_str, &macs, user_type).await {
-        Ok(Some(())) => Ok(()),
-        Ok(None) => Err("请确认是否已经登录".to_string()),
-        Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
-    }
+
+    unbind_mac(&cookie_str, user_type, &mac, &ajax_csrf_token)
+        .await
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command(async)]
@@ -548,70 +549,69 @@ pub async fn get_ip_location(ip: String) -> Result<String, String> {
     Ok(text)
 }
 
-#[tauri::command(async)]
-pub async fn switch_login_ustb_wifi(
-    app_state: tauri::State<'_, AppState>,
-    user_name: String,
-    password: String,
-) -> Result<String, String> {
-    // 获取本机 mac 地址
-    use if_addrs::Interface;
-    let ifaces = if_addrs::get_if_addrs()
-        .map_err(|e| e.to_string())?
-        .into_iter()
-        .filter_map(|iface| match iface.addr {
-            if_addrs::IfAddr::V4(_) if !iface.is_loopback() => Some(iface),
-            _ => None,
-        })
-        .collect::<Vec<Interface>>();
+// #[tauri::command(async)]
+// pub async fn switch_login_ustb_wifi(
+//     app_state: tauri::State<'_, AppState>,
+//     user_name: String,
+//     password: String,
+// ) -> Result<String, String> {
+//     // 获取本机 mac 地址
+//     use if_addrs::Interface;
+//     let ifaces = if_addrs::get_if_addrs()
+//         .map_err(|e| e.to_string())?
+//         .into_iter()
+//         .filter_map(|iface| match iface.addr {
+//             if_addrs::IfAddr::V4(_) if !iface.is_loopback() => Some(iface),
+//             _ => None,
+//         })
+//         .collect::<Vec<Interface>>();
 
-    let cur_device_macs: HashSet<String> = ifaces
-        .into_iter()
-        .map(|iface| {
-            mac_address::mac_address_by_name(&iface.name)
-                .unwrap_or_default()
-                .unwrap_or_default()
-                .to_string()
-                .replace(':', "")
-        })
-        .collect();
+//     let cur_device_macs: HashSet<String> = ifaces
+//         .into_iter()
+//         .map(|iface| {
+//             mac_address::mac_address_by_name(&iface.name)
+//                 .unwrap_or_default()
+//                 .unwrap_or_default()
+//                 .to_string()
+//                 .replace(':', "")
+//         })
+//         .collect();
 
-    // 获取该账号校园网记住的 mac 地址
-    let cookie_str = get_cookie_str(&app_state).await?;
-    let user_type = *app_state.user_type.read().await;
-    if let UserType::LocalUser | UserType::ViaVpn = user_type {
-        return Err("无法使用当前功能".to_string());
-    }
-    let mac_custom_address = app_state.setting.read().await.mac_custom_name.clone();
+//     // 获取该账号校园网记住的 mac 地址
+//     let cookie_str = get_cookie_str(&app_state).await?;
+//     let user_type = *app_state.user_type.read().await;
+//     if let UserType::LocalUser | UserType::ViaVpn = user_type {
+//         return Err("无法使用当前功能".to_string());
+//     }
 
-    let macs = match get_mac_address(&cookie_str, user_type, &mac_custom_address).await {
-        Ok(Some(value)) => Ok(value),
-        Ok(None) => Err("请确认是否已经登录".to_string()),
-        Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
-    }?
-    .into_iter()
-    .map(|v| v.mac_address)
-    .collect::<HashSet<String>>();
+//     let macs = match get_mac_address(&cookie_str, user_type).await {
+//         Ok(Some(value)) => Ok(value),
+//         Ok(None) => Err("请确认是否已经登录".to_string()),
+//         Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
+//     }?
+//     .into_iter()
+//     .map(|v| v.mac_address)
+//     .collect::<HashSet<String>>();
 
-    // 取差集，减去当前设备的匹配的校园网后台已存在的 MAC 地址
-    let diff_macs = macs
-        .difference(&cur_device_macs)
-        .cloned()
-        .collect::<Vec<String>>();
-    // dbg!(&diff_macs);
-    if diff_macs.len() == macs.len() {
-        return Err("无法匹配 MAC 地址，请确认当前账号是否已经在这台设备登录了。".to_string());
-    }
-    match unbind_macs(&cookie_str, &diff_macs, user_type).await {
-        Ok(Some(())) => Ok(()),
-        Ok(None) => Err("请确认是否已经登录".to_string()),
-        Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
-    }?;
+//     // 取差集，减去当前设备的匹配的校园网后台已存在的 MAC 地址
+//     let diff_macs = macs
+//         .difference(&cur_device_macs)
+//         .cloned()
+//         .collect::<Vec<String>>();
+//     // dbg!(&diff_macs);
+//     if diff_macs.len() == macs.len() {
+//         return Err("无法匹配 MAC 地址，请确认当前账号是否已经在这台设备登录了。".to_string());
+//     }
+//     match unbind_macs(&cookie_str, &diff_macs, user_type).await {
+//         Ok(Some(())) => Ok(()),
+//         Ok(None) => Err("请确认是否已经登录".to_string()),
+//         Err(e) => Err(format!("Request Error，检查是否在校园网内: {}", e)),
+//     }?;
 
-    // 登录新账号
-    tokio::time::sleep(Duration::from_millis(200)).await;
-    submit_login_ustb_wifi(user_name, password).await
-}
+//     // 登录新账号
+//     tokio::time::sleep(Duration::from_millis(200)).await;
+//     submit_login_ustb_wifi(user_name, password).await
+// }
 
 #[tauri::command(async)]
 pub async fn get_current_user_name(

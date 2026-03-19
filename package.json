@@ -12,13 +12,13 @@
   "dependencies": {
     "@tauri-apps/api": "^2.0.2",
     "@tauri-apps/plugin-clipboard-manager": "^2.2.0",
-    "@tauri-apps/plugin-dialog": "~2",
+    "@tauri-apps/plugin-dialog": "~2.6.0",
     "@tauri-apps/plugin-opener": "^2.2.6",
-    "@tauri-apps/plugin-os": "~2.2.1",
+    "@tauri-apps/plugin-os": "~2.3.2",
     "@tauri-apps/plugin-shell": "^2.0.0",
-    "@tauri-apps/plugin-updater": "~2",
+    "@tauri-apps/plugin-updater": "~2.10.0",
     "dayjs": "^1.11.13",
-    "echarts": "^5.5.1",
+    "echarts": "^6.0.0",
     "vue": "^3.5.12"
   },
   "devDependencies": {
@@ -26,9 +26,9 @@
     "@tauri-apps/cli": "2.4.0",
     "@vicons/ionicons5": "0.13.0",
     "@rsbuild/plugin-vue": "1.0.7",
-    "naive-ui": "^2.41.0",
+    "naive-ui": "^2.44.1",
     "typescript": "5.8.2",
-    "unplugin-auto-import": "19.1.2",
-    "unplugin-vue-components": "28.4.1"
+    "unplugin-auto-import": "21.0.0",
+    "unplugin-vue-components": "31.0.0"
   }
 }
