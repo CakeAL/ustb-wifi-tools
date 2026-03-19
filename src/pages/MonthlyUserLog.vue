@@ -110,7 +110,7 @@ const get_monthly_user_log = async () => {
       userIp: "",
       userName: "",
       userPhone: "",
-      userRealName: ""
+      userRealName: "",
     };
     user_online_log.value?.rows.filter((item) => {
       return item.logoutTime >= startTimestamp * 1000 + i * 24 * 3600 * 1000
@@ -177,7 +177,8 @@ const select_to_data = (item: UserOnlineLogRow): string => {
     ipv6_up: item.fldupflowIPV6,
     ipv4: item.flddownflowIPV4 + item.fldupflowIPV4,
     ipv6: item.flddownflowIPV6 + item.fldupflowIPV6,
-    all: item.flddownflowIPV4 + item.fldupflowIPV4 + item.flddownflowIPV6 + item.fldupflowIPV6,
+    all: item.flddownflowIPV4 + item.fldupflowIPV4 + item.flddownflowIPV6
+      + item.fldupflowIPV6,
     cost: item.costMoney,
     used_duration: item.time,
   };
@@ -193,7 +194,7 @@ const data_type = (): string => {
     return "元";
   } else if (select_show_value.value == "used_duration") {
     return "分";
-  } else { return "" }
+  } else return "";
 };
 
 const select_mb_or_gb = (value: string) => {
@@ -213,7 +214,12 @@ const select_mb_or_gb = (value: string) => {
     <n-h2 prefix="bar" type="success" style="margin-top: 15px">
       <n-text type="success"> 月度使用概览 </n-text>
     </n-h2>
-    <n-date-picker v-model:value="start_date" type="month" clearable @update:value="get_monthly_user_log" />
+    <n-date-picker
+      v-model:value="start_date"
+      type="month"
+      clearable
+      @update:value="get_monthly_user_log"
+    />
     <n-tabs type="segment" animated style="margin-top: 5px">
       <n-tab-pane name="calender" tab="日历" style="padding-top: 8px">
         <n-grid :x-gap="12" :y-gap="8" :cols="7" :key="refresh">
@@ -238,14 +244,24 @@ const select_mb_or_gb = (value: string) => {
           <n-grid-item class="gray">
             <p>六</p>
           </n-grid-item>
-          <n-grid-item v-for="(_, index) in the_week_of_first_day" :key="index" class="gray">
+          <n-grid-item
+            v-for="(_, index) in the_week_of_first_day"
+            :key="index"
+            class="gray"
+          >
           </n-grid-item>
-          <n-grid-item v-for="(item, index) in daily_log" :key="index" class="day" :style="{
-            backgroundColor: getBackgroundColor(
-              select_to_data(item),
-            ),
-          }
-            "><n-popover trigger="hover">
+          <n-grid-item
+            v-for="(item, index) in daily_log"
+            :key="index"
+            class="day"
+            :style="
+              {
+                backgroundColor: getBackgroundColor(
+                  select_to_data(item),
+                ),
+              }
+            "
+          ><n-popover trigger="hover">
               <template #trigger>
                 <p style="margin: 3px; line-height: 1.5em; white-space: nowrap">
                   <b>{{ index + 1 }}日</b>
@@ -283,8 +299,12 @@ const select_mb_or_gb = (value: string) => {
         </n-grid>
         <SummaryTable :summary="user_online_log?.summary"></SummaryTable>
         <n-grid x-gap="12" :cols="4" style="margin-top: 8px">
-          <n-gi span="2"><n-p style="line-height: 34px">选择显示在日历上的内容：</n-p></n-gi>
-          <n-gi span="2"><n-select v-model:value="select_show_value" :options="select_show_options" /></n-gi>
+          <n-gi span="2"><n-p style="line-height: 34px"
+            >选择显示在日历上的内容：</n-p></n-gi>
+          <n-gi span="2"><n-select
+              v-model:value="select_show_value"
+              :options="select_show_options"
+            /></n-gi>
         </n-grid>
       </n-tab-pane>
       <n-tab-pane name="chart" tab="折线图" style="padding-top: 8px">

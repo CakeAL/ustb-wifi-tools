@@ -1,14 +1,14 @@
 use std::{collections::HashMap, net::Ipv6Addr, sync::LazyLock, time::Duration};
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use rand::RngExt;
 use regex::Regex;
 use reqwest::{
+    Client,
     header::{LOCATION, SET_COOKIE},
-    redirect, Client,
+    redirect,
 };
 use scraper::{Html, Selector};
-use serde_json::Value;
 
 use crate::entities::{AmmeterData, MacList, UserType};
 
@@ -234,6 +234,40 @@ pub async fn get_user_dashboard(cookie_str: &str, user_type: UserType) -> Result
     Ok(res)
 }
 
+pub async fn get_online_list(cookie_str: &str, user_type: UserType) -> Result<String> {
+    let url = if !matches!(user_type, UserType::ViaVpn) {
+        "https://zifuwu.ustb.edu.cn/Self/dashboard/getOnlineList"
+    } else {
+        "https://elib.ustb.edu.cn/https/77726476706e69737468656265737421eafe4789302526456d1c8be29d51367b8ada/Self/dashboard/getOnlineList"
+    };
+    let req = CLIENT.get(url).header("Cookie", cookie_str);
+    let json_str = req.send().await?.text().await?;
+    Ok(json_str)
+}
+
+pub async fn get_login_history(cookie_str: &str, user_type: UserType) -> Result<String> {
+    let url = if !matches!(user_type, UserType::ViaVpn) {
+        "https://zifuwu.ustb.edu.cn/Self/dashboard/getLoginHistory"
+    } else {
+        "https://elib.ustb.edu.cn/https/77726476706e69737468656265737421eafe4789302526456d1c8be29d51367b8ada/Self/dashboard/getLoginHistory"
+    };
+    let req = CLIENT.get(url).header("Cookie", cookie_str);
+    let json_str = req.send().await?.text().await?;
+    Ok(json_str)
+}
+
+pub async fn to_offline(cookie_str: &str, user_type: UserType, session_id: &str) -> Result<()> {
+    let url = if !matches!(user_type, UserType::ViaVpn) {
+        "https://zifuwu.ustb.edu.cn/Self/dashboard/tooffline"
+    } else {
+        "
+https://elib.ustb.edu.cn/https/77726476706e69737468656265737421eafe4789302526456d1c8be29d51367b8ada/Self/dashboard/tooffline"
+    };
+    let req = CLIENT.get(url).header("Cookie", cookie_str);
+    req.query(&[("sessionid", session_id)]).send().await?;
+    Ok(())
+}
+
 pub async fn get_month_pay(cookie_str: &str, year: u16, user_type: UserType) -> Result<String> {
     let url = if !matches!(user_type, UserType::ViaVpn) {
         "https://zifuwu.ustb.edu.cn/Self/bill/getMonthPay"
@@ -280,10 +314,7 @@ pub async fn get_user_online_log(
     Ok(json_str)
 }
 
-pub async fn get_mac_address(
-    cookie_str: &str,
-    user_type: UserType,
-) -> Result<(MacList, String)> {
+pub async fn get_mac_address(cookie_str: &str, user_type: UserType) -> Result<(MacList, String)> {
     let url = if !matches!(user_type, UserType::ViaVpn) {
         "https://zifuwu.ustb.edu.cn/Self/service/myMac"
     } else {
@@ -340,7 +371,7 @@ pub async fn unbind_mac(
     cookie_str: &str,
     user_type: UserType,
     mac: &str,
-    ajax_csrf_token: &str
+    ajax_csrf_token: &str,
 ) -> Result<()> {
     let url = if !matches!(user_type, UserType::ViaVpn) {
         "https://zifuwu.ustb.edu.cn/Self/service/unbindmac"
@@ -348,12 +379,9 @@ pub async fn unbind_mac(
         "https://elib.ustb.edu.cn/https/77726476706e69737468656265737421eafe4789302526456d1c8be29d51367b8ada/Self/service/unbindmac"
     };
     let req = CLIENT.get(url).header("Cookie", cookie_str);
-    req.query(&[
-        ("mac", mac),
-        ("ajaxCsrfToken", ajax_csrf_token),
-    ])
-    .send()
-    .await?;
+    req.query(&[("mac", mac), ("ajaxCsrfToken", ajax_csrf_token)])
+        .send()
+        .await?;
 
     Ok(())
 }

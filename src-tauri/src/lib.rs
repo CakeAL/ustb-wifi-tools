@@ -31,6 +31,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_cookie,
             refresh_user_dashboard,
+            load_online_list,
+            load_login_history,
+            do_to_offline,
             load_month_pay,
             load_user_online_log,
             load_mac_address,

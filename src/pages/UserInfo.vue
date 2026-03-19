@@ -1,17 +1,51 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/core";
+import { CloseOutline } from "@vicons/ionicons5";
 import dayjs from "dayjs";
 import { useMessage } from "naive-ui";
 import { computed, onMounted, ref } from "vue";
-import { mb2gb } from "../helper";
+import { mb2gb, timestamp_format } from "../helper";
 import { store, UserDashboard } from "../store";
 
+interface OnlineUser {
+  brasid: string;
+  downFlow: string;
+  hostName: string;
+  ip: string;
+  loginTime: string;
+  mac: string;
+  sessionId: string;
+  terminalType: string;
+  upFlow: string;
+  useTime: string;
+  userId: number;
+}
+
+type LoginHistoryItem = [
+  number, // 开始时间戳（毫秒）
+  number, // 结束时间戳（毫秒）
+  string, // IP地址
+  string, // MAC信息
+  number, // 使用时长 min
+  number, // 使用流量
+  number, // 计费方式
+  number, // 计费金额
+  string | null, // 主机名
+  string, // 终端类型
+  string, // 设备类型
+  number, // 记录ID
+];
+
 const pop_message = useMessage();
+const online_list = ref<OnlineUser[] | null>(null);
+const login_history = ref<LoginHistoryItem[] | null>(null);
 
 onMounted(() => {
   if (store.userDashboard === undefined) {
     refresh_user_dashboard();
   }
+  load_online_list();
+  load_login_history();
 });
 
 const refresh_user_dashboard = async () => {
@@ -20,6 +54,33 @@ const refresh_user_dashboard = async () => {
   );
 
   store.userDashboard = JSON.parse(res as string) as UserDashboard;
+};
+
+const load_online_list = async () => {
+  let res =
+    (await invoke("load_online_list").catch((err) =>
+      pop_message.error(err)
+    )) as string;
+  online_list.value = JSON.parse(res);
+};
+
+const load_login_history = async () => {
+  let res =
+    (await invoke("load_login_history").catch((err) =>
+      pop_message.error(err)
+    )) as string;
+  login_history.value = JSON.parse(res);
+};
+
+const to_offline = async (sessionId: string) => {
+  await invoke("do_to_offline", { sessionId }).catch((err) =>
+    pop_message.error(err)
+  );
+  if (online_list.value) {
+    online_list.value = online_list.value.filter(item =>
+      item.sessionId !== sessionId
+    );
+  }
 };
 
 const remain_percentage = computed(() => {
@@ -138,8 +199,100 @@ const progress_color = computed(() => {
               </n-gi>
             </n-grid>
           </template>
-          当前剩余 ipv4 下行流量：{{ mb2gb(store.userDashboard.leftFlow) }}，大概是
+          当前剩余 ipv4 下行流量：{{
+            mb2gb(store.userDashboard.leftFlow)
+          }}，大概是
           {{ remain_percentage }} %
+        </n-thing>
+      </n-list-item>
+      <n-list-item>
+        <n-thing title="当前在线" content-style="margin-top: 10px;">
+          <template #description>
+            <n-table
+              :bordered="false"
+              :single-line="false"
+              v-if="online_list && online_list.length > 0"
+            >
+              <thead>
+                <tr>
+                  <th>上线时间</th>
+                  <th>IP地址</th>
+                  <th>MAC信息</th>
+                  <th>使用时长(mins)</th>
+                  <th>使用流量(MB)</th>
+                  <th>主机名</th>
+                  <th>终端类型</th>
+                  <th>注销</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="user in online_list">
+                  <td>{{ user.loginTime }}</td>
+                  <td>{{ user.ip }}</td>
+                  <td>{{ user.mac }}</td>
+                  <td>{{ user.useTime }}</td>
+                  <td>{{ user.downFlow }}</td>
+                  <td>{{ user.hostName }}</td>
+                  <td>{{ user.terminalType }}</td>
+                  <td>
+                    <n-button
+                      strong
+                      secondary
+                      circle
+                      type="warning"
+                      @click="to_offline(user.sessionId)"
+                    >
+                      <template #icon>
+                        <n-icon>
+                          <CloseOutline />
+                        </n-icon>
+                      </template>
+                    </n-button>
+                  </td>
+                </tr>
+              </tbody>
+            </n-table>
+            <p v-else>当前没有在线设备</p>
+          </template>
+        </n-thing>
+      </n-list-item>
+      <n-list-item>
+        <n-thing title="近期记录" content-style="margin-top: 10px;">
+          <template #description>
+            <n-table
+              :bordered="false"
+              :single-line="false"
+              v-if="login_history && login_history.length > 0"
+            >
+              <thead>
+                <tr>
+                  <th>上线时间</th>
+                  <th>注销时间</th>
+                  <th>IP地址</th>
+                  <th>MAC信息</th>
+                  <th>使用时长</th>
+                  <th>使用流量</th>
+                  <th>计费金额</th>
+                  <th>主机名</th>
+                  <th>终端类型</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in login_history">
+                  <td>{{ timestamp_format(item[0]) }}</td>
+                  <td>{{ timestamp_format(item[1]) }}</td>
+                  <td>{{ item[2] }}</td>
+                  <td>{{ item[3] }}</td>
+                  <td>{{ item[4] }}</td>
+                  <td>{{ item[5] }}</td>
+                  <td>{{ item[7] }}</td>
+                  <td>{{ item[8] }}</td>
+                  <td>{{ item[9] }}</td>
+                </tr>
+              </tbody>
+            </n-table>
+            <p v-else>无近期记录</p>
+          </template>
         </n-thing>
       </n-list-item>
       <n-list-item>

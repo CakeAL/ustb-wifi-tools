@@ -121,6 +121,45 @@ pub async fn refresh_user_dashboard(
 }
 
 #[tauri::command(async)]
+pub async fn load_online_list(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
+    let cookie_str = get_cookie_str(&app_state).await?;
+    let user_type = *app_state.user_type.read().await;
+    if let UserType::LocalUser = user_type {
+        return Err("本地存储不适用此功能".to_string());
+    }
+    get_online_list(&cookie_str, user_type)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command(async)]
+pub async fn load_login_history(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
+    let cookie_str = get_cookie_str(&app_state).await?;
+    let user_type = *app_state.user_type.read().await;
+    if let UserType::LocalUser = user_type {
+        return Err("本地存储不适用此功能".to_string());
+    }
+    get_login_history(&cookie_str, user_type)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command(async)]
+pub async fn do_to_offline(
+    app_state: tauri::State<'_, AppState>,
+    session_id: String,
+) -> Result<(), String> {
+    let cookie_str = get_cookie_str(&app_state).await?;
+    let user_type = *app_state.user_type.read().await;
+    if let UserType::LocalUser = user_type {
+        return Err("本地存储不适用此功能".to_string());
+    }
+    to_offline(&cookie_str, user_type, &session_id)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command(async)]
 pub async fn load_month_pay(app: tauri::AppHandle, year: u16) -> Result<String, String> {
     let app_state = app.state::<AppState>();
     let cookie_str = get_cookie_str(&app_state).await?;

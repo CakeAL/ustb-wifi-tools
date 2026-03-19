@@ -6,7 +6,7 @@ import { useLoadingBar } from "naive-ui";
 import { onMounted, ref } from "vue";
 
 const loadingBar = useLoadingBar();
-const user_name = ref("");
+// const user_name = ref("");
 const pop_message = useMessage();
 // const account_flow = ref<Flow | null>(null);
 const ammeter_number = ref("");
@@ -104,7 +104,13 @@ const copyToClipboard = async (str: string) => {
       </template>
 </n-card> -->
     <n-card title="查一下电费" hoverable class="my-card">
-      <n-input v-model:value="ammeter_number" type="text" placeholder="电表号" @blur="load_ammeter" round />
+      <n-input
+        v-model:value="ammeter_number"
+        type="text"
+        placeholder="电表号"
+        @blur="load_ammeter"
+        round
+      />
       <template #footer v-if="ammeter_data">
         还剩 {{ ammeter_data }} kW·h
       </template>
@@ -112,12 +118,22 @@ const copyToClipboard = async (str: string) => {
     <n-card title="WebVPN 转换" hoverable class="my-card">
       <n-grid x-gap="12" :cols="2">
         <n-gi>
-          <n-input v-model:value="raw_url" type="textarea" :placeholder="raw_url.length === 0 ? '原始网址' : raw_url"
-            @input="translate_up(raw_url)" @focus="raw_url.length !== 0 ? copyToClipboard(raw_url) : 0" />
+          <n-input
+            v-model:value="raw_url"
+            type="textarea"
+            :placeholder="raw_url.length === 0 ? '原始网址' : raw_url"
+            @input="translate_up(raw_url)"
+            @focus="raw_url.length !== 0 ? copyToClipboard(raw_url) : 0"
+          />
         </n-gi>
         <n-gi>
-          <n-input v-model:value="vpn_url" type="textarea" :placeholder="vpn_url.length === 0 ? 'elib网址' : vpn_url"
-            @input="translate_down(vpn_url)" @focus="vpn_url.length !== 0 ? copyToClipboard(vpn_url) : 0" />
+          <n-input
+            v-model:value="vpn_url"
+            type="textarea"
+            :placeholder="vpn_url.length === 0 ? 'elib网址' : vpn_url"
+            @input="translate_down(vpn_url)"
+            @focus="vpn_url.length !== 0 ? copyToClipboard(vpn_url) : 0"
+          />
         </n-gi>
       </n-grid>
       <template #footer>
