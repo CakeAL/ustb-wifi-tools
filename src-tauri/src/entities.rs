@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
 
-use crate::{localuser::CurrentUser, setting::Setting};
+use crate::setting::Setting;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Account {
@@ -21,13 +21,12 @@ pub enum UserType {
     #[default]
     Normal,
     ViaVpn,
-    LocalUser,
 }
 
 #[derive(Default)]
 pub struct AppState {
     pub cookie_str: RwLock<Option<String>>,
-    pub cur_account: RwLock<CurrentUser>,
+    pub cur_account: RwLock<String>,
     pub setting: RwLock<Setting>,
     pub user_type: RwLock<UserType>,
     pub onedrive_code_verifier: RwLock<Option<String>>, 

@@ -1,6 +1,5 @@
 use std::{net::IpAddr, time::Duration};
 
-use anyhow::anyhow;
 use chrono::DateTime;
 use reqwest::Client;
 use serde::Serialize;
@@ -9,7 +8,6 @@ use tauri::{Manager, ipc::Channel, utils::config::WindowConfig};
 use crate::{
     electric_bill::update_ammeter,
     entities::{AppState, DownloadEvent, UserType},
-    localuser::CurrentUser,
     requests::*,
     setting::Setting,
     utils::{get_cookie_str, get_store_path, webvpn},
@@ -44,14 +42,7 @@ pub async fn get_cookie(
     via_vpn: bool,
 ) -> Result<Option<String>, String> {
     let app_state = app.state::<AppState>();
-    if user_name.starts_with("local") {
-        if !app_state.setting.read().await.has_local_account(&user_name) {
-            return Err("本地账号不存在".to_string());
-        }
-        *app_state.user_type.write().await = UserType::LocalUser;
-        *app_state.cookie_str.write().await = Some("local".to_string());
-        return Ok(Some("local".to_string()));
-    }
+
     let (cookie_str, user_dashboard) = if !via_vpn {
         simulate_login(&user_name, &password)
             .await
@@ -110,9 +101,6 @@ pub async fn refresh_user_dashboard(
 ) -> Result<String, String> {
     let cookie_str = get_cookie_str(&app_state).await?;
     let user_type = *app_state.user_type.read().await;
-    if let UserType::LocalUser = user_type {
-        return Err("本地存储不适用此功能".to_string());
-    }
     match get_user_dashboard(&cookie_str, user_type).await {
         Ok(Some(str)) => Ok(str),
         Ok(None) => Err("请确认是否已经登录".to_string()),
@@ -124,9 +112,6 @@ pub async fn refresh_user_dashboard(
 pub async fn load_online_list(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
     let cookie_str = get_cookie_str(&app_state).await?;
     let user_type = *app_state.user_type.read().await;
-    if let UserType::LocalUser = user_type {
-        return Err("本地存储不适用此功能".to_string());
-    }
     get_online_list(&cookie_str, user_type)
         .await
         .map_err(|e| e.to_string())
@@ -136,9 +121,6 @@ pub async fn load_online_list(app_state: tauri::State<'_, AppState>) -> Result<S
 pub async fn load_login_history(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
     let cookie_str = get_cookie_str(&app_state).await?;
     let user_type = *app_state.user_type.read().await;
-    if let UserType::LocalUser = user_type {
-        return Err("本地存储不适用此功能".to_string());
-    }
     get_login_history(&cookie_str, user_type)
         .await
         .map_err(|e| e.to_string())
@@ -151,9 +133,6 @@ pub async fn do_to_offline(
 ) -> Result<(), String> {
     let cookie_str = get_cookie_str(&app_state).await?;
     let user_type = *app_state.user_type.read().await;
-    if let UserType::LocalUser = user_type {
-        return Err("本地存储不适用此功能".to_string());
-    }
     to_offline(&cookie_str, user_type, &session_id)
         .await
         .map_err(|e| e.to_string())
@@ -204,14 +183,6 @@ pub async fn load_user_online_log(
                 .to_string();
             get_user_online_log(&cookie_str, &start_date, &end_date, user_type).await
         }
-        UserType::LocalUser => {
-            // app_state
-            //     .cur_account
-            //     .read()
-            //     .await
-            //     .get_local_data(&app, start_date, Some(end_date))
-            Err(anyhow!("NO DATA"))
-        }
     }
     .map_err(|e| {
         if e.to_string() == "NO DATA" {
@@ -226,9 +197,6 @@ pub async fn load_user_online_log(
 pub async fn load_mac_address(app_state: tauri::State<'_, AppState>) -> Result<String, String> {
     let cookie_str = get_cookie_str(&app_state).await?;
     let user_type = *app_state.user_type.read().await;
-    if let UserType::LocalUser = user_type {
-        return Err("本地存储不适用此功能".to_string());
-    }
 
     get_mac_address(&cookie_str, user_type)
         .await
@@ -245,9 +213,6 @@ pub async fn set_mac_custom_name(
 ) -> Result<String, String> {
     let cookie_str = get_cookie_str(&app_state).await?;
     let user_type = *app_state.user_type.read().await;
-    if let UserType::LocalUser = user_type {
-        return Err("本地存储不适用此功能".to_string());
-    }
     update_terminal_name(
         &cookie_str,
         user_type,
@@ -300,9 +265,6 @@ pub async fn do_unbind_mac(
 ) -> Result<(), String> {
     let cookie_str = get_cookie_str(&app_state).await?;
     let user_type = *app_state.user_type.read().await;
-    if let UserType::LocalUser = user_type {
-        return Err("本地存储不适用此功能".to_string());
-    }
 
     unbind_mac(&cookie_str, user_type, &mac, &ajax_csrf_token)
         .await
@@ -672,10 +634,7 @@ pub fn translate_down(vpn_url: String) -> String {
 pub async fn get_current_user_name(
     app_state: tauri::State<'_, AppState>,
 ) -> Result<String, String> {
-    match app_state.cur_account.read().await.clone() {
-        CurrentUser::LocalUser(user_name) => Ok(user_name),
-        CurrentUser::OnlineUser(user_name) => Ok(user_name),
-    }
+    Ok(app_state.cur_account.read().await.clone())
 }
 
 #[tauri::command(async)]
@@ -685,39 +644,8 @@ pub async fn set_current_user_name(
 ) -> Result<(), String> {
     match *app_state.user_type.read().await {
         UserType::ViaVpn | UserType::Normal => {
-            *app_state.cur_account.write().await = CurrentUser::OnlineUser(user_name);
-        }
-        UserType::LocalUser => {
-            *app_state.cur_account.write().await = CurrentUser::LocalUser(user_name);
+            *app_state.cur_account.write().await = user_name;
         }
     }
     Ok(())
 }
-
-#[tauri::command(async)]
-pub async fn create_local_user(app: tauri::AppHandle) -> Result<String, String> {
-    CurrentUser::new_local_user(&app)
-        .await
-        .map_err(|e| e.to_string())
-}
-
-// #[tauri::command(async)]
-// pub async fn down_historical_data(
-//     app: tauri::AppHandle,
-//     start_date: i64,
-// ) -> Result<Vec<String>, String> {
-//     let app_state = app.state::<AppState>();
-//     let user_type = *app_state.user_type.read().await;
-//     if let UserType::LocalUser = user_type {
-//         return Err("本地存储不适用此功能".to_string());
-//     }
-//     #[allow(clippy::let_and_return)]
-//     let res = app_state
-//         .cur_account
-//         .read()
-//         .await
-//         .get_historical_data(&app, start_date)
-//         .await
-//         .map_err(|e| e.to_string());
-//     res
-// }

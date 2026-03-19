@@ -165,16 +165,16 @@ const set_background_blur = async () => {
 const open_config = async () => {
   // explorer 还是强的，能识别斜杠
   let path = (await dataDir()) + "/ustb-wifi-tools";
-  // console.log(path);
+  console.log(path);
   await open(path);
 };
 
 const open_changepassword = async () => {
-  await open("http://202.204.60.7:8080/nav_changePsw");
+  await open("https://zifuwu.ustb.edu.cn/Self/setting/changePassword");
 };
 
 const open_guide = async () => {
-  await open("https://mp.weixin.qq.com/s/1zavoaNZeqo7fNb2I_53Iw");
+  await open("https://mp.weixin.qq.com/s/7HBNktUNzvEAPWowcV82Nw");
 };
 
 const open_microsoft_login = async () => {
@@ -213,8 +213,6 @@ const switchLoginUstbWifi = async () => {
 };
 
 const start_date = ref<number>(Date.now());
-const get_data_result = ref<[string]>([""]);
-const show_res = ref<boolean>(false);
 watch(store, () => {
   if (store.userName !== "") {
     let year = parseInt(store.userName.slice(1, 5));
@@ -226,20 +224,6 @@ watch(store, () => {
     }
   }
 });
-const get_historial_data = async () => {
-  let res1 = await invoke("create_local_user").catch((e) =>
-    pop_message.warning(e)
-  );
-  if (res1 === "创建本地账户成功") {
-    pop_message.success(res1);
-  }
-  show_res.value = true;
-  let res2 = await invoke("down_historical_data", {
-    startDate: Math.floor(start_date.value / 1000) + 8 * 3600,
-  }).catch((e) => pop_message.error(e));
-  get_data_result.value = res2 as [string];
-  show_res.value = false;
-};
 </script>
 
 <template>
@@ -306,47 +290,6 @@ const get_historial_data = async () => {
         <n-h3 prefix="bar" type="success" style="margin-top: 15px"
         >您已登录 {{ store.userName }}<br
           />如果其他页面不能获取到信息，请点击登出再重新登录。</n-h3>
-        <n-card
-          title="建立本地账号"
-          hoverable
-          style="background-color: rgba(255, 255, 255, 0.1)"
-          v-if="store.userName.slice(0, 5) !== 'local'"
-        >
-          <n-p
-          >可以用来从校园网后台下载从入学之后的每个月数据，并在使用创建的本地账号浏览。这确实没有什么用，但是对大四的学生来说，毕业之后也可以看自己以前用了多少🤔，但是确实没有什么用。</n-p>
-          <n-p>使用方法：<br>1.
-            在下方选择自己的想要从何时（入学年月）开始下载数据，然后点击右侧按钮。<br
-            >2. 登出当前账号并使用生成的带 <i>local</i>
-            前缀的账号登陆（当然也可以点击下方的“打开配置文件夹”来查看本地存储内容）。<br
-            >3. 建议在校园网内操作</n-p>
-          <n-grid x-gap="12" :cols="6">
-            <n-gi span="5">
-              <n-date-picker
-                v-model:value="start_date"
-                type="month"
-                clearable
-              />
-            </n-gi>
-            <n-gi>
-              <n-button
-                strong
-                secondary
-                type="primary"
-                @click="get_historial_data"
-                :disabled="show_res"
-              >
-                我是按钮
-              </n-button>
-            </n-gi>
-          </n-grid>
-          <n-spin :show="show_res" style="margin-top: 10px">
-            <n-alert title="获取结果" type="warning">
-              <span v-for="(item, index) in get_data_result" :key="index">
-                {{ item }}<br>
-              </span>
-            </n-alert>
-          </n-spin>
-        </n-card>
       </div>
       <n-grid :x-gap="12" :y-gap="8" :cols="2" style="margin-top: 10px">
         <n-grid-item>

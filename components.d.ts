@@ -11,7 +11,6 @@ declare module 'vue' {
     ElectricChart: typeof import('./src/components/ElectricChart.vue')['default']
     Menu: typeof import('./src/components/Menu.vue')['default']
     MonthlyChart: typeof import('./src/components/MonthlyChart.vue')['default']
-    NAlert: typeof import('naive-ui')['NAlert']
     NButton: typeof import('naive-ui')['NButton']
     NCard: typeof import('naive-ui')['NCard']
     NCollapse: typeof import('naive-ui')['NCollapse']
